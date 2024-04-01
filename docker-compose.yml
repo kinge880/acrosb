@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  djangoappacross:
+    container_name: djangoappAcross
+    build:
+      context: .
+    ports:
+      - 8000:8000
+    volumes:
+      - ./djangoapp:/djangoapp
+      - ./data/web/static:/data/web/static/
+      - ./data/web/staticfiles:/data/web/staticfiles
+      - ./data/web/media:/data/web/media/
+    env_file:
+      - ./dotenv_files/.env
+    depends_on:
+      - psqlAcross
+    networks:
+      - acrosbook
+    deploy:
+      resources:
+        limits:
+          cpus: '1'  # Maximum of 0.5 CPU core
+          memory: 1G  # Maximum of 100MB memory
+
+  psqlAcross:
+    container_name: psqlAcross
+    image: postgres:13-alpine
+    volumes:
+      - ./data/postgres/data:/var/lib/postgresql/data/
+      - ./data/postgres/backups:/var/lib/postgresql/backups/
+    env_file:
+      - ./dotenv_files/.env
+    networks:
+      - acrosbook
+    ports:
+      - "54320:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'  # Maximum of 0.5 CPU core
+          memory: 1G  # Maximum of 100MB memory
+
+networks:
+  acrosbook:
+    driver: bridge
