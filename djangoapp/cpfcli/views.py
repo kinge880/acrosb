@@ -131,17 +131,24 @@ def campanhas(request):
     
     if request.method == 'POST':
         codigo = request.POST.get('codigo')
-        print(codigo)
+        descricao = request.POST.get('descricao')
+        dtinicial = request.POST.get('dtinicial')
+        dtfinal = request.POST.get('dtfinal')
+        valor = request.POST.get('valor')
+        multiplicador = request.POST.get('multiplicador')
+        usafornec = request.POST.get('usafornec')
+        usaprod = request.POST.get('usaprod')
+        
         if 'delete' in request.POST:
             cursor.execute(f'''
-                UPDATE MSCUPONAGEMCAMPANHA SET DTEXCLUSAO = SYSDATE 
+                UPDATE MSCUPONAGEMCAMPANHA SET DTEXCLUSAO = SYSDATE, DTULTALT=SYSDATE
                 WHERE IDCAMPANHA = {codigo}
             ''')
             messages.success(request, f"Campanha {codigo} deletada com sucesso")
         
         elif 'desative' in request.POST:
             cursor.execute(f'''
-                UPDATE MSCUPONAGEMCAMPANHA SET ATIVO = 'N' 
+                UPDATE MSCUPONAGEMCAMPANHA SET ATIVO = 'N', DTULTALT=SYSDATE 
                 WHERE IDCAMPANHA = {codigo}
             ''')
             messages.success(request, f"Campanha {codigo} desativada com sucesso")
@@ -157,12 +164,54 @@ def campanhas(request):
             
             if exist_active is None:
                 cursor.execute(f'''
-                    UPDATE MSCUPONAGEMCAMPANHA SET ATIVO = 'S' 
+                    UPDATE MSCUPONAGEMCAMPANHA SET ATIVO = 'S', DTULTALT=SYSDATE
                     WHERE IDCAMPANHA = {codigo}
                 ''')
                 messages.success(request, f"Campanha {codigo} ativada com sucesso")
             else:
                 messages.error(request, "Já existe uma campanha ativa, somente uma campanha ativa pode existir ao mesmo tempo")
+        
+        elif 'insert' in request.POST:
+            cursor.execute(f'''
+                SELECT 
+                    IDCAMPANHA
+                FROM MSCUPONAGEMCAMPANHA
+                WHERE ATIVO = 'S'
+            ''')
+            exist_active = cursor.fetchone()
+                
+            if exist_active is None:
+                cursor.execute(f'''
+                    INSERT INTO MSCUPONAGEMCAMPANHA
+                    (IDCAMPANHA, DESCRICAO, DTULTALT, DTINIT, DTFIM, MULTIPLICADOR, VALOR, USAFORNEC, USAPROD, ATIVO)
+                    VALUES((SELECT MAX(IDCAMPANHA) + 1 FROM MSCUPONAGEMCAMPANHA), '{descricao}', SYSDATE, to_date('{dtinicial}', 'yyyy-mm-dd'),
+                    to_date('{dtfinal}', 'yyyy-mm-dd'), {valor}, {multiplicador}, '{usafornec}' , '{usaprod}' , 'S')
+                ''')
+                messages.success(request, f"Campanha inserida com sucesso")
+            else:   
+                cursor.execute(f'''
+                    INSERT INTO MSCUPONAGEMCAMPANHA
+                    (IDCAMPANHA, DESCRICAO, DTULTALT, DTINIT, DTFIM, MULTIPLICADOR, VALOR, USAFORNEC, USAPROD, ATIVO)
+                    VALUES((SELECT MAX(IDCAMPANHA) + 1 FROM MSCUPONAGEMCAMPANHA), '{descricao}', SYSDATE, to_date('{dtinicial}', 'yyyy-mm-dd'),
+                    to_date('{dtfinal}', 'yyyy-mm-dd'), {valor}, {multiplicador}, '{usafornec}' , '{usaprod}' , 'N')
+                ''')
+                messages.success(request, f"Campanha inserida com sucesso")     
+        
+        elif 'edit' in request.POST:
+            cursor.execute(f'''
+                UPDATE MSCUPONAGEMCAMPANHA
+                SET  
+                    DESCRICAO='{descricao}', 
+                    DTULTALT=SYSDATE, 
+                    DTINIT=to_date('{dtinicial}', 'yyyy-mm-dd'), 
+                    DTFIM=to_date('{dtfinal}', 'yyyy-mm-dd'), 
+                    MULTIPLICADOR={multiplicador}, 
+                    VALOR={valor}, 
+                    USAFORNEC='{usafornec}', 
+                    USAPROD='{usaprod}'
+                WHERE IDCAMPANHA = {codigo} 
+            ''')
+            messages.success(request, f"Campanha {codigo} editada com sucesso")
 
     getTable()
     return render(request, 'campanhas/campanha.html', context)
