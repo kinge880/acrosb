@@ -1,0 +1,53 @@
+{% extends 'index.html' %}
+{% block title %}Número da sorte{% endblock %}
+{% load static %}
+{% block content %}
+<header class="masthead">
+    <div class="container position-relative h-100">
+        <div class="row justify-content-center h-100">
+            <div class="{% if not postmethod %} col-xl-8 {% else %} col-xl-10 {% endif %}">
+                {% if not postmethod %}
+                    <div class="text-center text-white">
+                        <h1 class="mb-5">Digite abaixo para verificar seus números da sorte!</h1>
+                        <form class="form-subscribe" id="cpfForm" method="POST">
+                            {% csrf_token %}
+                            <!-- Email address input-->
+                            <div class="row">
+                                <div class="col">
+                                    <input required class="form-control form-control-lg" id="cpf" name="cpf" type="number" placeholder="Cpf"  />
+                                </div>
+                                <div class="col">
+                                    <input required class="form-control form-control-lg" id="email" name="email" type="email" placeholder="Email"  />
+                                </div>
+                                <div class="col-auto"><button class="btn btn-primary btn-lg" id="submitButton" type="submit">Pesquisar</button></div>
+                            </div>
+                            {% include 'partials/message.html' %}
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="jumbotron card text-center" >
+                        <div class="card-body">
+                            <h1 class="display-4">{{cpf_exist.2}}</h1>
+                            <p class="lead">
+                                {% if currenttime.hour < 12 %}
+                                    Bom dia!
+                                {% elif currenttime.hour < 18 %}
+                                    Boa tarde!
+                                {% else %}
+                                    Boa noite!
+                                {% endif %}
+                                atualmente o seu cadastro possui <strong>{{num_da_sorte.0}}</strong> números da sorte na <strong>{{num_da_sorte.1}}</strong>
+                            </p>
+                            <p class="lead">
+                                Para obter mais números vamos as compras, a cada <strong>{{parametroValor}}</strong> reais em compras você recebe 1 número! Boa sorte
+                            </p>
+                            <a href="/" class="btn btn-primary">Finalizar consulta</a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
+
+{% endblock %}

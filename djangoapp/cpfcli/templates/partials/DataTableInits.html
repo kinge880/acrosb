@@ -1,0 +1,139 @@
+{% load static %}
+{% block content %}
+    <script>
+        function openEditModal(button) {
+            // Recuperar a linha da tabela
+            const row = button.closest('tr');
+            console.log(row)
+    
+            // Itera sobre os campos para definir os valores no modal
+            const fields = ['codigo', 'descricao', 'dt_inicial', 'dt_final', 'valor', 'multiplicador', 'usafornec', 'usaprod', 'ganhador', 'ativo'];
+            fields.forEach(field => {
+                const input = document.querySelector(`#editModal #${field}`);
+                if (input) {
+                    const valueElement = row.querySelector(`[data-field="${field}"]`);
+                    if (valueElement) {
+                        const value = valueElement.innerText.trim(); // Trim para remover espaços extras
+                        if (input.type === 'checkbox') {
+                            input.checked = value === 'Sim'; // Ou ajuste conforme sua lógica
+                        } else {
+                            input.value = value;
+                        }
+                    }
+                }
+            });
+    
+            // Mostrar o modal
+            $('#editModal').modal('show');
+        }
+
+        function openDeactivateModal(value) {
+            var items = value.split('@#$@#@');
+
+            {% for chave in columns_query_script %}
+                {% if chave.1 == 'F' %}
+                    $('#deactiveModal #id_{{chave.0}}').val(items[{{chave.2}}].split('-')[0].trim());
+                    $('#deactiveModal #id_{{chave.0}}').trigger('change');
+                {% else %}
+                    $('#deactiveModal #id_{{chave.0}}').val(items[{{chave.2}}]);
+                {% endif %}
+            {% endfor %}
+            
+            $('#deactiveModal #titulo').html(`
+            {% for chave in columns_query_script %}
+                {% if chave.1 == 'P' %}
+                    ${items[{{chave.2}}]} - 
+                {% endif %}
+                {% if chave.1 == 'D' %}
+                    ${items[{{chave.2}}]}
+                {% endif %}
+            {% endfor %}`);
+
+            $('#deactiveModal').modal('show');
+        }
+
+        function openActivateModal(value) {
+            var items = value.split('@#$@#@');
+
+            {% for chave in columns_query_script %}
+                {% if chave.1 == 'F' %}
+                    $('#activeModal #id_{{chave.0}}').val(items[{{chave.2}}].split('-')[0].trim());
+                    $('#activeModal #id_{{chave.0}}').trigger('change');
+                {% else %}
+                    $('#activeModal #id_{{chave.0}}').val(items[{{chave.2}}]);
+                {% endif %}
+            {% endfor %}
+
+            $('#activeModal #titulo').html(`
+            {% for chave in columns_query_script %}
+                {% if chave.1 == 'P' %}
+                    ${items[{{chave.2}}]} - 
+                {% endif %}
+                {% if chave.1 == 'D' %}
+                    ${items[{{chave.2}}]}
+                {% endif %}
+            {% endfor %}`);
+
+            $('#activeModal').modal('show');
+        }
+
+        function openDeleteModal(value) {
+            var items = value.split('@#$@#@');
+
+            {% for chave in columns_query_script %}
+                {% if chave.1 == 'F' %}
+                    $('#deleteModal #id_{{chave.0}}').val(items[{{chave.2}}].split('-')[0].trim());
+                    $('#deleteModal #id_{{chave.0}}').trigger('change');
+                {% else %}
+                    $('#deleteModal #id_{{chave.0}}').val(items[{{chave.2}}]);
+                {% endif %}
+            {% endfor %}
+
+            $('#deleteModal #titulo').html(`
+            {% for chave in columns_query_script %}
+                {% if chave.1 == 'P' %}
+                    ${items[{{chave.2}}]} - 
+                {% endif %}
+                {% if chave.1 == 'D' %}
+                    ${items[{{chave.2}}]}
+                {% endif %}
+            {% endfor %}`);
+
+            $('#deleteModal').modal('show');
+        }
+        $(document).ready(function() {
+            $('.tableSearch').DataTable({
+                "language": {
+                    "url": "{% static 'css/dataTables/ptbr10_19.json' %}"
+                },
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                dom: "<'row'<'col-sm-12 col-md-3 d-flex align-items-center'l><'d-flex justify-content-center col-12 col-md-6'B<'d-flex justify-content-center align-items-center'>><'col-sm-12 col-md-3 text-right'f>>" +
+                "<'row'<'col-sm-12'tr>>" +
+                "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                buttons: [
+                    {
+                        text: '{{tituloInsere}}',
+                        className: 'btn btn-sm btn-primary',
+                        action: function (e, dt, node, config) {
+                            $('#insertModal').modal('show');
+                        }
+                    },
+                ],
+                initComplete: function (settings, json) {
+                    $(".btnDataTable").removeClass("btn-secondary");
+                },
+            });
+
+
+        });
+
+        function loadSpinnerTH(elemento, colsp) {
+            // Seleciona o elemento pai
+            const pai = elemento.parentNode.parentNode
+            // Substitui o conteúdo pelo spinner
+            pai.innerHTML = '<th colspan="'+colsp+'" class="w-100 text-center"><i class="fas fa-spinner fa-spin spinner"></i></th>';
+        }
+
+    </script>
+
+{% endblock %}

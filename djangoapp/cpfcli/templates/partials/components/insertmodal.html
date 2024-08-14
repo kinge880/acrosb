@@ -1,0 +1,57 @@
+{% load static %}
+{% block content %}
+<!-- Modal de inserção -->
+<div class="modal fade" id="insertModal" data-bs-keyboard="false" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form novalidate class="modal-content needs-validation" method="POST">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">{{tituloInsere}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap" id="bodyinsere">
+                {% for campo in campos %}
+                    {% with nome=campo.0 tipo=campo.1 requerido=campo.2 col=campo.3 options=campo.4 placeholder=campo.5 %}
+                    {% if tipo != 'hidden' %}    
+                        <div class="{{col}} mb-3">
+                            <label for="{{ nome }}" class="form-label">
+                                {{ nome|capfirst }}{% if requerido %} <span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if tipo == 'text' %}
+                                <input type="text" class="form-control" id="{{ nome }}" name="{{ nome }}" placeholder="{{placeholder}}" {% if requerido %} required{% endif %}>
+                            {% elif tipo == 'number' %}
+                                <input type="number" class="form-control" id="{{ nome }}" name="{{ nome }}" placeholder="{{placeholder}}" {% if requerido %} required{% endif %}>
+                            {% elif tipo == 'date' %}
+                                <input type="date" class="form-control" id="{{ nome }}" name="{{ nome }}" placeholder="{{placeholder}}" {% if requerido %} required{% endif %}>
+                            {% elif tipo == 'select' %}
+                                <select class="form-select" id="{{ nome }}" name="{{ nome }}" >
+                                    <option value=''>Selecione uma opção</option>
+                                    {% for option in options %}
+                                        <option value='{{option.0}}'>{{option.1}}</option>
+                                    {% endfor %}
+                                </select>
+                            {% elif tipo == 'select2' %}
+                                <select class="form-select select2" id="{{ nome }}" name="{{ nome }}" >
+                                    
+                                </select>
+                            {% endif %}
+                            {% if requerido %}
+                                <div class="invalid-feedback">
+                                    Este campo é obrigatório.
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% endwith %}
+                {% endfor %}
+            </div>
+            <div class="modal-footer d-flex justify-content-between flex-nowrap">
+                <button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" name="insert" class="btn btn-primary btn-sm col-5">Salvar</button>
+                <button type="submit" name="insert2" class="btn btn-primary d-none">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

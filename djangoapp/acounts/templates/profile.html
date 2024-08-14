@@ -1,0 +1,484 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid">
+<div class="main-body">
+
+    {% comment %} <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="main-breadcrumb">
+        <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+        <li class="breadcrumb-item"><a href="javascript:void(0)">User</a></li>
+        <li class="breadcrumb-item active" aria-current="page">User Profile</li>
+        </ol>
+    </nav>
+    <!-- /Breadcrumb --> {% endcomment %}
+    <form method="post" class="needs-validation" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="row gutters-sm">
+            <div class="col-12 d-flex flex-start flex-wrap">
+                <div class="card col-md-4 col-12 mb-md-0 mb-3">
+                    <div class="card-body">
+                        <div class="d-flex flex-column align-items-center text-center">
+                            <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="Admin" class="rounded-circle" width="150">
+                            <div class="mt-3">
+                                {% if userbase.first_name %}
+                                    <h4>{{userbase.first_name}} {{userbase.last_name}}</h4>
+                                {% endif %}
+                                {% if editmode == 'S' %}
+                                    <div class="mb-3">
+                                        <input 
+                                            required 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="cargo" 
+                                            name="cargo" 
+                                            value = "{% if userInfo.cpf %}{{userInfo.cargo}}{% endif %}"
+                                            placeholder='Escreva o seu atual cargo'>
+                                    </div>
+                                    <div class="mb-3 input-group col-12">
+                                        <span class="input-group-text form-agroup" id="username-addon"><i class="fab fa-twitter fw-normal"></i></span>
+                                        <input  
+                                            type="text" 
+                                            class="form-control" 
+                                            id="twitter" 
+                                            name="twitter" 
+                                            maxlength="150"
+                                            value = "{% if userInfo.twitter %}{{userInfo.twitter}}{% endif %}"
+                                            placeholder='Digite sua página do twitter '>
+                                    </div>
+                                    <div class="mb-3 input-group col-12">
+                                        <span class="input-group-text form-agroup" id="username-addon"><i class="fab fa-facebook-f fw-normal"></i></span>
+                                        <input  
+                                            type="text" 
+                                            class="form-control" 
+                                            id="face" 
+                                            name="face" 
+                                            maxlength="150"
+                                            value = "{% if userInfo.face %}{{userInfo.face}}{% endif %}"
+                                            placeholder='Digite seu facebook '>
+                                    </div>
+                                    <div class="mb-3 input-group col-12">
+                                        <span class="input-group-text form-agroup" id="username-addon"><i class="fab fa-linkedin-in fw-normal"></i></span>
+                                        <input  
+                                            type="text" 
+                                            class="form-control" 
+                                            id="linkedin" 
+                                            name="linkedin" 
+                                            maxlength="150"
+                                            value = "{% if userInfo.linkedin %}{{userInfo.linkedin}}{% endif %}"
+                                            placeholder='Digite sua página do linkedin '>
+                                    </div>
+                                    <div class="mb-3 input-group col-12">
+                                        <span class="input-group-text form-agroup" id="username-addon"><i class="fab fa-instagram fw-normal"></i></span>
+                                        <input  
+                                            type="text" 
+                                            class="form-control" 
+                                            id="instagram" 
+                                            name="instagram" 
+                                            maxlength="150"
+                                            value = "{% if userInfo.instagram %}{{userInfo.instagram}}{% endif %}"
+                                            placeholder='Digite sua página instagram '>
+                                    </div>
+                                {% else %}
+                                    {% if userInfo.cargo %}
+                                        <h6 class="mb-2">{{userInfo.cargo}}</h6>
+                                        <div class="col-12 d-flex justify-content-center flex-wrap pe-3 ps-3">
+                                            <h6 class="d-inline-flex align-items-center"><a target="__blank" href="{{userInfo.twitter}}" class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2"><i class="fab fa-twitter fw-normal"></i></a></h6>    
+                                            <h6 class="d-inline-flex align-items-center"><a target="__blank" href="{{userInfo.face}}" class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2"><i class="fab fa-facebook-f fw-normal"></i></a></h6>
+                                            <h6 class="d-inline-flex align-items-center"><a target="__blank" href="{{userInfo.linkedin}}" class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2"><i class="fab fa-linkedin-in fw-normal"></i></a></h6>
+                                            <h6 class="d-inline-flex align-items-center"><a target="__blank" href="{{userInfo.instagram}}" class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2"><i class="fab fa-instagram fw-normal"></i></a></h6>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-12">
+                                        {% if edit_password_mode == 'S' %}
+                                            <div class="mb-3 mt-3" style="position: relative;">
+                                                <input 
+                                                    required 
+                                                    type="password" 
+                                                    class="form-control" 
+                                                    id="actual_password" 
+                                                    name="actual_password" 
+                                                    autocomplete="off"
+                                                    placeholder='Digite sua senha atual'>
+                                                <i id="olho" class="fa-solid fa-eye" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer;"></i>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div style="position: relative;">
+                                                    <input 
+                                                        required 
+                                                        type="password" 
+                                                        class="form-control" 
+                                                        id="password-input" 
+                                                        name="password-input" 
+                                                        placeholder='Digite sua nova senha' 
+                                                        autocomplete="off">
+                                                    <i id="new_olho" class="fa-solid fa-eye" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer;"></i>
+                                                </div>
+                                                <div class="password-meter">
+                                                    <div class="meter-section rounded me-2"></div>
+                                                    <div class="meter-section rounded me-2"></div>
+                                                    <div class="meter-section rounded me-2"></div>
+                                                    <div class="meter-section rounded"></div>
+                                                </div>
+                                                <div id="passwordHelp" class="form-text text-muted">Ao menos 8 valores entre letras, simbolo e/ou números.
+                                                </div>
+                                            </div>
+                                            <button type="submit" name="save_password" class="btn btn-success col-12" >Salvar</button>
+                                        {% elif editmode != 'S' %}
+                                            <button type="submit" name="edit" class="btn btn-info col-12 mb-3 mt-3" >Editar perfil</button>
+                                            <button type="submit" name="edit_password" class="btn btn-info col-12 mb-3" >Mudar senha</button>
+                                            <button type="button" name="getRegion" class="btn btn-info col-12" data-bs-toggle="modal" data-bs-target="#getacessmodal">Solicitar acesso a região</button>
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="getacessmodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-xl">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Solicite acesso a uma região</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <select id="regionSelectorget" name="regionSelectorget" class="form-select mb-3">
+                                                                {% for regiao in regioesGet %}
+                                                                <option value="{{regiao.idregional}}">{{regiao.idregional}} - {{regiao.nomeregional}}</option>
+                                                                {% endfor %}
+                                                            </select>
+
+                                                            <div class="table-responsive collapse" id="solicitacoesCollapse">
+                                                                <table class="table table-striped ">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Região</th>
+                                                                            <th>Aceito?</th>
+                                                                            <th>Motivo</th>
+                                                                            <th>Data da solicitação</th>
+                                                                            <th>Data da decisão</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% for solicitacao in solicites %}
+                                                                        <tr>
+                                                                            <td>{{ solicitacao.idregional.idregional }} - {{ solicitacao.idregional.nomeregional }}</td>
+                                                                            <td>
+                                                                                {% if solicitacao.get_acept_display %}
+                                                                                    {{ solicitacao.get_acept_display }}
+                                                                                {% else %}
+                                                                                    Não avaliado
+                                                                                {% endif %}
+                                                                            </td>
+                                                                            <td>
+                                                                                {% if solicitacao.motivo %}
+                                                                                    {{ solicitacao.motivo }}
+                                                                                {% endif %}
+                                                                            </td>
+                                                                            <td>{{ solicitacao.dtmov }}</td>
+                                                                            <td>{{ solicitacao.dtacept|default:"-" }}</td>
+                                                                        </tr>
+                                                                        {% empty %}
+                                                                        <tr>
+                                                                            <td colspan="5">Nenhuma solicitação foi realizada.</td>
+                                                                        </tr>
+                                                                        {% endfor %}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#solicitacoesCollapse" aria-expanded="false" aria-controls="solicitacoesCollapse">
+                                                                Mostrar solicitações realizadas
+                                                            </button>
+                                                            <button type="submit" name="getRegion" class="btn btn-primary">Solicitar</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        {% else %}
+                                            <button type="submit" name="save" class="btn btn-success col-12" href="https://www.bootdey.com/snippets/view/profile-edit-data-and-skills">Salvar</button>
+                                        {% endif %}
+                                        {% if messages %}
+                                            {% for message in messages %}
+                                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} mt-3 col-12 text-center" role="alert">{{ message }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card col-md-8 col-12 mb-md-0 mb-3">
+                    <div class="col-12 ms-3">
+                        <h4 class="mb-3 mt-3 text-center">Dados gerais</h4>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center"><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fa fa-user "></i></a>Nome:</h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <input 
+                                            required 
+                                            type="text" 
+                                            class="form-control w-100" 
+                                            id="name" 
+                                            name="name" 
+                                            maxlength="100"
+                                            value = "{{userbase.first_name}} {{userbase.last_name}}"
+                                            placeholder='Escreva o seu nome completo'>
+                                    </div>
+                                {% else %}
+                                    {% if userbase.first_name %} 
+                                        <h6 class="me-0 text-secondary">{{userbase.first_name}} {{userbase.last_name}}</h6>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center"><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fa fa-calendar"></i></a>Nascimento: </h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <input 
+                                            type="date" 
+                                            class="form-control w-100" 
+                                            id="birth_date" 
+                                            name="birth_date" 
+                                            maxlength="40"
+                                            value = "{% if userInfo.birth_date %}{{userInfo.birth_date|date:'Y-m-d'}}{% endif %}">
+                                    </div>
+                                {% else %}
+                                    {% if userInfo.birth_date %} 
+                                        <h6 class="me-0 text-secondary">{{userInfo.birth_date}}</h6>
+                                    {% endif %} 
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center"><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fas fa-restroom"></i></a>Sexo: </h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <select class="form-select" id="gender" name="gender">
+                                            <option {% if userInfo.gender == 'M' %} select {% endif %} value="M">Masculino</option>
+                                            <option {% if userInfo.gender == 'H' %} select {% endif %} value="F">Feminino</option>
+                                            <option {% if userInfo.gender == 'O' %} select {% endif %} value="O">Outros</option>
+                                            <option {% if userInfo.gender is none or userInfo.gender == ' ' %} select {% endif %} value=" ">Prefiro não informar</option>
+                                        </select>
+                                    </div>
+                                {% else %}
+                                    {% if userInfo.gender %} 
+                                        <h6 class="me-0 text-secondary">
+                                            {% if userInfo.gender == 'M' %}
+                                                Masculino
+                                            {% elif userInfo.gender == 'F' %}
+                                                Feminino
+                                            {% elif userInfo.gender == 'O' %}
+                                                Outros
+                                            {% endif %}
+                                        </h6>
+                                    {% endif %} 
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center"><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fa fa-address-card "></i></a>CPF:</h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <input 
+                                            type="text" 
+                                            class="form-control cpf w-100" 
+                                            id="cpf" 
+                                            name="cpf" 
+                                            maxlength="14"
+                                            minlength="14"
+                                            value = "{% if userInfo.cpf %}{{userInfo.cpf}}{% endif %}"
+                                            placeholder='Digite o seu cpf'>
+                                    </div>
+                                {% else %}
+                                    {% if userInfo.cpf %} 
+                                        <h6 class="me-0 text-secondary">{{userInfo.cpf}}</h6>
+                                    {% endif %} 
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center"><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fa fa-envelope"></i></a>Email:</h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <input 
+                                            required 
+                                            type="email" 
+                                            class="form-control email w-100" 
+                                            id="email" 
+                                            name="email"
+                                            maxlength="100"
+                                            minlength="5" 
+                                            value = "{% if userbase.email %}{{userbase.email}}{% endif %}"
+                                            placeholder='Digite um email válido'>
+                                    </div>
+                                {% else %}
+                                    {% if userbase.email %} 
+                                        <h6 class="me-0 text-secondary">{{userbase.email}}</h6>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100" >
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center"><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fa fa-phone "></i></a>Telefone:</h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <input 
+                                            type="text" 
+                                            class="form-control phone w-100" 
+                                            id="phone" 
+                                            name="phone"
+                                            maxlength="20"
+                                            minlength="14" 
+                                            value = "{% if userInfo.phone %}{{userInfo.phone}}{% endif %}"
+                                            placeholder='Digite seu celular'>
+                                    </div>
+                                {% else %}   
+                                    {% if userInfo.phone %} 
+                                        <h6 class="me-0 text-secondary">{{userInfo.phone}}</h6>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center "><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fa fa-home"></i></a>Endereço:</h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <input 
+                                            type="text" 
+                                            class="form-control w-100" 
+                                            id="adress" 
+                                            name="adress" 
+                                            maxlength="100"
+                                            minlength="4" 
+                                            value = "{% if userInfo.adress %}{{userInfo.adress}}{% endif %}"
+                                            placeholder='Digite seu endereço '>
+                                    </div>
+                                {% else %}   
+                                    {% if userInfo.adress %} 
+                                        <h6 class="me-0 text-secondary">{{userInfo.adress}}</h6>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="me-3">
+                                <h6 class="d-inline-flex align-items-center "><a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" ><i class="fas fa-address-book"></i></a>CEP:</h6>
+                            </div>
+                            <div class="text-secondary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <input 
+                                            type="text" 
+                                            class="form-control cep w-100" 
+                                            id="cep" 
+                                            name="cep" 
+                                            maxlength="10"
+                                            minlength="9" 
+                                            value = "{% if userInfo.cep %}{{userInfo.cep}}{% endif %}"
+                                            placeholder='Digite seu cep '>
+                                    </div>
+                                {% else %}   
+                                    {% if userInfo.cep %} 
+                                        <h6 class="me-0 text-secondary">{{userInfo.cep}}</h6>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="col-12 ms-3">
+                        <h4 class="mb-3 mt-3 text-center">Sobre</h4>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex justify-content-between w-100">
+                            <div class="text-primary d-flex align-items-center w-100">
+                                {% if editmode == 'S' %}
+                                    <div class="w-100">
+                                        <textarea id="name" name="bio" maxlength = '10000'>{% if userInfo.bio %}{{userInfo.bio}}{% endif %}</textarea>
+                                    </div>
+                                {% else %}
+                                    {% if userInfo.bio %} 
+                                        <h6 class="me-0 text-primary">{% if userInfo.bio %}{{ userInfo.bio|safe }}{% endif %}</h6>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </form>
+</div>
+</div>
+
+    <!-- Place the first <script> tag in your HTML's <head> -->
+    <script src="https://cdn.tiny.cloud/1/ck8rwtigr325lp5p2k3tbl8jaba1usb1p7irxyl43y6q81kn/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+    <!-- Place the following <script> and <textarea> tags your HTML's <body> -->
+    <script>
+        tinymce.init({
+            selector: 'textarea',
+            language_url: "{% static 'js/tinyMCE/pt_BR.js' %}",
+            language: 'pt_BR',
+            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage advtemplate ai mentions tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+            tinycomments_mode: 'embedded',
+            tinycomments_author: 'Bruno Maia da Costa',
+            ai_request: (request, respondWith) => respondWith.string(() => Promise.reject("See docs to implement AI Assistant")),
+        });
+
+    </script>
+    
+{% endblock %}

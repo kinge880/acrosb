@@ -1,0 +1,263 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+    <div class="container-fluid vh-75 d-flex flex-start flex-wrap">
+        <div class="container-fluid">
+            {% include 'partials/message.html' %}
+            <div class="mt-3">
+                <table class="table tableSearch table-primary table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-start">CÓDIGO</th>
+                            <th class="text-start">DESCRIÇÃO</th>
+                            <th class="text-start">DT INICIAL</th>
+                            <th class="text-start">DT FINAL</th>
+                            <th class="text-start">VALOR</th>
+                            <th class="text-start">MULTIPLICADOR</th>
+                            <th class="text-start">USAFORNEC</th>
+                            <th class="text-start">USAPROD</th>
+                            <th class="text-start">GANHADOR</th>
+                            <th class="text-start">ATIVO</th>
+                            <th class="text-start">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campanha in listacampanhas %}
+                            <tr>
+                                <td class="text-start">{{campanha.0}}</td>
+                                <td class="text-start">{{campanha.1}}</td>
+                                <td class="text-start">{{campanha.2}}</td>
+                                <td class="text-start">{{campanha.3}}</td>
+                                <td class="text-start">{{campanha.4}}</td>
+                                <td class="text-start">{% if campanha.5 %} {{campanha.5}} {% else %} Não usa {% endif %}</td>
+                                <td class="text-start">{{campanha.6}}</td>
+                                <td class="text-start">{{campanha.7}}</td>
+                                <td class="text-start">{% if campanha.9 %} {{campanha.8}} - {{campanha.9}} {% else %} Não sorteado {% endif %}</td>
+                                <td class="text-start">{{campanha.10}}</td>
+                                <td class="text-start col-2">
+                                    <a href="{{linkValue}}/{{projeto.idprojeto}}/" class="btn btn-info btn-sm">
+                                        <i class="fa-solid fa-door-open"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{campanha.0}}"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#desactiveModal{{campanha.0}}" ><i class="fas fa-ban"></i></button>
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#activeModal{{campanha.0}}" ><i class="fa fa-check"></i></button>
+                                    <button type="button" class="btn btn-danger btn-sm"  data-bs-toggle="modal" data-bs-target="#delete{{campanha.0}}" ><i class="fas fa-trash-alt"></i></button>
+                                </td>
+                            </tr>
+
+                            <!-- Modal de Edição -->
+                            <div class="modal fade" id="editModal{{campanha.0}}" tabindex="-1" aria-labelledby="editModal{{campanha.0}}ds" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <form novalidate class="modal-content needs-validation" method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editModal{{campanha.0}}ds">Editar {{campanha.1}}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
+                                                <input type="hidden" value="{{campanha.0}}" name="codigo" id="codigo"/>
+                                                <div class="col-12 mb-3">
+                                                    <label for="descricao" class="form-label">Descrição</label>
+                                                    <input type="text" class="form-control" name="descricao" id="descricao" value="{{campanha.1}}" placeholder="Digite a descrição">
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <label for="dtInicial" class="form-label">Data Inicial</label>
+                                                    <input type="date" class="form-control" name="dtinicial" id="dtinicial" value="{{campanha.11}}">
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <label for="dtFinal" class="form-label">Data Final</label>
+                                                    <input type="date" class="form-control" name="dtfinal" id="dtfinal" value="{{campanha.12}}">
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <label for="valor" class="form-label">Valor</label>
+                                                    <input type="number" class="form-control" name="valor" id="valor" value="{{campanha.4}}" placeholder="Digite o valor">
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <label for="multiplicador" class="form-label">Multiplicador</label>
+                                                    <input type="number" class="form-control" name="multiplicador" id="multiplicador" value="{{campanha.5}}" placeholder="Digite o multiplicador">
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <label for="usafornec" class="form-label">USAFORNEC</label>
+                                                    <select class="form-select" name="usafornec" id="usafornec" aria-label="Default select example">=
+                                                        <option {% if campanha.6|stringformat:'S' == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por fornecedor</option>
+                                                        <option {% if campanha.6|stringformat:'S' == 'N' %} selected {% endif %} value="N">Não Deve utilizar multiplicador por fornecedor</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <label for="usaprod" class="form-label">USAPROD</label>
+                                                    <select class="form-select" name="usaprod" id="usaprod" aria-label="Default select example">=
+                                                        <option {% if campanha.7|stringformat:'S' == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por produto</option>
+                                                        <option {% if campanha.7|stringformat:'S' == 'S' %} selected {% endif %} value="N">Não deve utilizar multiplicador por produto</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer d-flex justify-content-between flex-nowrap">
+                                                <button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" name="insert" class="btn btn-primary btn-sm col-5">Editar</button>
+                                                <button type="submit" name="insert2" class="btn btn-primary d-none">Salvar</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Modal de ativar -->
+                            <div class="modal fade" id="activeModal{{campanha.0}}" tabindex="-1" aria-labelledby="activeModal{{campanha.0}}ds" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <form class="modal-content needs-validation" method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editModal{{campanha.0}}ds">Ativar {{campanha.1}}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
+                                                <input type="hidden" value="{{campanha.0}}" name="codigo" id="codigo"/>
+                                                <div class="text-center w-100 mt-5 mb-4">
+                                                    <i class="fa fa-check fa-6x " style="color: Green;"></i>
+                                                </div>
+                                                <div class="text-center w-100 mb-3">
+                                                    <h4 class="modal-title">Você tem certeza?</h4>
+                                                </div>
+                                                <div class="form-group">
+                                                    <p class="text-center">Deseja realmente ativar a campanha? Somente uma campanha pode estar ativa ao mesmo tempo</p>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer d-flex justify-content-center flex-nowrap">
+                                                <button type="button" class="btn btn-secondary col-6" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" name="active" class="btn btn-success col-6">Ativar</button>
+                                                <button type="submit" name="insert2" class="btn btn-secondary d-none">Salvar</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Modal de desativar -->
+                            <div class="modal fade" id="desactiveModal{{campanha.0}}" tabindex="-1" aria-labelledby="activeModal{{campanha.0}}ds" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <form class="modal-content needs-validation" method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editModal{{campanha.0}}ds">Desativar {{campanha.1}}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
+                                                <input type="hidden" value="{{campanha.0}}" name="codigo" id="codigo"/>
+                                                <div class="text-center w-100 mt-5 mb-4">
+                                                    <i class="fas fa-ban fa-6x " style="color: #ffc107;"></i>
+                                                </div>
+                                                <div class="text-center w-100 mb-3">
+                                                    <h4 class="modal-title">Você tem certeza?</h4>
+                                                </div>
+                                                <div class="form-group">
+                                                    <p class="text-center">Deseja realmente desativar a campanha? Não será mais possivel pesquisar CPF nem gerar novos números</p>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer d-flex justify-content-center flex-nowrap">
+                                                <button type="button" class="btn btn-secondary col-6" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" name="desative" class="btn btn-danger col-6">Desativar</button>
+                                                <button type="submit" name="insert2" class="btn btn-secondary d-none">Salvar</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Modal de deletar -->
+                            <div class="modal fade" id="delete{{campanha.0}}" tabindex="-1" aria-labelledby="delete{{campanha.0}}ds" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <form class="modal-content needs-validation" method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editModal{{campanha.0}}ds">Deletar {{campanha.1}}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
+                                                <input type="hidden" value="{{campanha.0}}" name="codigo" id="codigo"/>
+                                                <div class="text-center w-100 mt-5 mb-4">
+                                                    <i class="fa-solid fa-circle-xmark fa-6x " style="color: Tomato;"></i>
+                                                </div>
+                                                <div class="text-center w-100 mb-3">
+                                                    <h4 class="modal-title">Você tem certeza?</h4>
+                                                </div>
+                                                <div class="form-group">
+                                                    <p class="text-center">Deseja realmente deletar a campanha? Essa ação não pode ser desfeita</p></p>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer d-flex justify-content-center flex-nowrap">
+                                                <button type="button" class="btn btn-secondary col-6" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" name="delete" class="btn btn-danger col-6">Deletar</button>
+                                                <button type="submit" name="insert2" class="btn btn-secondary d-none">Salvar</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% include 'partials/components/insertmodal.html' %} 
+            </div>
+            {% if idprojeto %}
+                <h2 class="text-center mt-5">Lista de preços na vigência {{idvig}} do projeto {{idprojeto}}</h2> 
+                {% if exist_sem_preco %}
+                <h5 class="text-center">Ainda existem <b class="text-danger">{{exist_sem_preco.0}} produtos</b> sem preço ou com preço igual a 0 na lista, nenhum produto pode estar assim durante o processamento!</h5> 
+                {% endif %}
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-12 col-md-4">
+                            <select class="form-select" name="sort">
+                                <option value="0">1 - Todos os produtos</option>
+                                <option {% if sort|stringformat:'s' == '1' %} selected {% endif %} value="1">2 - Produtos sem preço</option>
+                                <option {% if sort|stringformat:'s' == '2' %} selected {% endif %} value="2">3 - Produtos com preço</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <button type="submit" class="btn btn-primary col-12" name="pesq">Pesquisar</button>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <button type="submit" class="btn btn-primary col-12" name="edit">Salvar alterações</button>
+                        </div>
+                    </div> 
+                    <div class="mt-3 mb-3">
+                        <table class="table tableSearchButton table-primary table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="text-start col-2">ID</th>
+                                    <th class="text-start col-3">Categoria</th>
+                                    <th class="text-start col-3">Produto</th>
+                                    <th class="text-start col-2">Unidade</th>
+                                    <th class="text-start col-2">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prod in produtos %}
+                                    <tr>
+                                        <input name="id" value="{{prod.0}}" type="hidden"/>
+                                        <td class="text-start">{{prod.0}}</td>
+                                        <td class="text-start">{{prod.1}}</td>
+                                        <td class="text-start">{{prod.2}}</td>
+                                        <td class="text-start">{{prod.3}}</td>
+                                        <td class="text-start">
+                                            <span class="d-none">{{prod.4}}</span>
+                                            <input class="form-control" name="value" value="{{prod.5}}" type="number"/>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div> 
+
+{% endblock %}
