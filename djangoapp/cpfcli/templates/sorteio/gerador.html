@@ -1,0 +1,125 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+<style>
+    .number {
+        font-size: 5rem;
+        font-weight: bold;
+        color: #007bff; /* Azul padrão do Bootstrap */
+        animation: blink 1s step-start infinite;
+    }
+
+    .card {
+        margin-top: 20px;
+        
+    }
+    
+    .row {
+        opacity: 0; /* Começa invisível */
+        transition: opacity 1s ease-in-out; /* Animação suave */
+    }
+
+    .row.visible {
+        opacity: 1; /* Torna o card visível */
+    }
+</style>
+<div class="container mt-5 vh-75 ">
+    <h1 class="text-center mb-2">Resultado do Sorteio</h1>
+
+    <!-- Número Sorteado -->
+    <div id="fundosorteio" class="text-center mb-4">
+        <div id="number" class="number">
+            <!-- O número será inserido aqui pelo JavaScript -->
+        </div>
+    </div> 
+
+    <!-- Cards com informações do sorteio -->
+    <div class="row">
+        <!-- Card 1: Data e Hora do Sorteio -->
+        <p class="h5 w-100 text-center">Informações do sorteio</p>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Data e Hora</h5>
+                    <p class="card-text">{{ numsorteado.1 }}</p> <!-- Data e Hora do Sorteio -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Nome do Ganhador -->
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Ganhador</h5>
+                    <p class="card-text">{{ numsorteado.2 }}</p> <!-- Nome do Ganhador -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Quantidade de Números -->
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Sorteio entre</h5>
+                    <p class="card-text">{{ contnumsorteado.1 }} e {{ contnumsorteado.0 }}</p> <!-- Quantidade de Números -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const targetNumber = {{ numsorteado.0 }}; // Recebe o número sorteado do template
+        const numberElement = document.getElementById('number');
+        const cards = document.querySelectorAll('.row');
+        
+        // Função para gerar um número aleatório dentro do intervalo
+        function getRandomNumber(max) {
+            return Math.floor(Math.random() * (max + 1));
+        }
+
+        // Função para criar a animação
+        function animateNumber() {
+            const duration = 5000; // Duração da animação em milissegundos
+            const startTime = Date.now();
+            const interval = 50; // Intervalo de atualização em milissegundos
+            const maxNumber = targetNumber;
+
+            function update() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1); // Calcula o progresso da animação
+                const currentNumber = Math.floor(progress * maxNumber); // Calcula o número atual
+
+                // Atualiza o número na tela
+                numberElement.textContent = getRandomNumber(currentNumber);
+
+                if (progress < 1) {
+                    setTimeout(() => {
+                        requestAnimationFrame(update);
+                    }, interval);
+                } else {
+                    numberElement.textContent = targetNumber; // Garante que o número final seja o sorteado
+                    showCards(); // Mostra os cards após a animação do número
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // Função para mostrar os cards com animação suave
+        function showCards() {
+            cards.forEach(card => {
+                card.classList.add('visible');
+            });
+        }
+
+        // Inicia a animação quando a página estiver carregada
+        animateNumber();
+    });
+</script>
+
+{% endblock %}

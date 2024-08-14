@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from project.oracle import *
 from datetime import datetime
@@ -130,6 +130,7 @@ def campanhas(request):
         context['listacampanhas'] = cursor.fetchall()
     
     if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
         codigo = request.POST.get('codigo')
         descricao = request.POST.get('descricao')
         dtinicial = request.POST.get('dtinicial')
@@ -138,6 +139,9 @@ def campanhas(request):
         multiplicador = request.POST.get('multiplicador')
         usafornec = request.POST.get('usafornec')
         usaprod = request.POST.get('usaprod')
+        
+        if 'link' in request.POST:
+            return redirect(f'/campanhas/{idcampanha}/')
         
         if 'delete' in request.POST:
             cursor.execute(f'''
@@ -215,3 +219,163 @@ def campanhas(request):
 
     getTable()
     return render(request, 'campanhas/campanha.html', context)
+
+@login_required(login_url="/login/")
+def campanhasid(request, idcampanha):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['title'] = f'Lista de números da sorte na campanha {idcampanha}'
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE idcampanha = {idcampanha}
+    ''')
+    exist_active = cursor.fetchone()
+    
+    if exist_active is None:
+        messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
+        return redirect('campanha')
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE idcampanha = {idcampanha} AND DTEXCLUSAO IS NOT NULL
+    ''')
+    exist_delete = cursor.fetchone()
+    if exist_delete:
+        messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
+    
+    context['campanha'] = f'{exist_active[1]}'
+    
+    def getTable():
+        cursor.execute(f'''
+            SELECT 
+                MSCUPONAGEM.IDCAMPANHA, 
+                PCCLIENT.CODCLI, 
+                PCCLIENT.CLIENTE, 
+                COUNT(DISTINCT NUMSORTE)
+            FROM MSCUPONAGEM 
+                INNER JOIN PCCLIENT ON (pcclient.codcli = MSCUPONAGEM.codcli)
+            WHERE 
+                MSCUPONAGEM.IDCAMPANHA = {idcampanha} AND 
+                MSCUPONAGEM.NUMSORTE > 0 AND 
+                PCCLIENT.CODCLI > 0
+            GROUP BY 
+                PCCLIENT.CODCLI, 
+                MSCUPONAGEM.IDCAMPANHA, 
+                PCCLIENT.CODCLI, 
+                PCCLIENT.CLIENTE
+        ''')
+        context['listaclients'] = cursor.fetchall()
+    
+    if request.method == 'POST':
+        pass   
+
+    getTable()
+    return render(request, 'campanhas/campanhaNumeros.html', context)
+
+@login_required(login_url="/login/")
+def campanhasidclient(request, idcampanha, idclient):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['title'] = f'Lista de números da sorte do cliente {idclient}'
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE idcampanha = {idcampanha}
+    ''')
+    exist_active = cursor.fetchone()
+    
+    if exist_active is None:
+        messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
+        return redirect('campanha')
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE idcampanha = {idcampanha} AND DTEXCLUSAO IS NOT NULL
+    ''')
+    exist_delete = cursor.fetchone()
+    if exist_delete:
+        messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
+    
+    cursor.execute(f'''
+        SELECT IDCAMPANHA, CODCLI
+        FROM MSCUPONAGEM
+        WHERE idcampanha = {idcampanha} AND codcli = {idclient}
+    ''')
+    exist_client = cursor.fetchone()
+    
+    if exist_client is None:
+        messages.error(request, f'Não existe nenhum cupom registrado para o cliente {idclient} na campanha {idcampanha}')
+        return redirect(f'/campanhas/{idcampanha}/')
+    
+    context['campanha'] = f'{exist_active[1]}'
+    context['cliente'] = f'o cliente {idclient}'
+    
+    def getTable():
+        cursor.execute(f'''
+            SELECT 
+                MSCUPONAGEM.IDCAMPANHA, 
+                PCCLIENT.CODCLI, 
+                PCCLIENT.CLIENTE,
+                MSCUPONAGEM.VALOR,
+                MSCUPONAGEM.NUMSORTE,
+                TO_CHAR(PCPEDC."DATA", 'dd/mm/yyyy')
+                
+            FROM MSCUPONAGEM 
+                INNER JOIN PCCLIENT ON PCCLIENT.CODCLI = MSCUPONAGEM.CODCLI
+                LEFT JOIN PCPEDC ON MSCUPONAGEM.NUMPED = PCPEDC.NUMPED
+            WHERE 
+                MSCUPONAGEM.IDCAMPANHA = {idcampanha} AND 
+                MSCUPONAGEM.NUMSORTE > 0 AND 
+                PCCLIENT.CODCLI = {idclient}
+        ''')
+        context['listanumeros'] = cursor.fetchall()
+
+    getTable()
+    return render(request, 'campanhas/campanhaNumerosClient.html', context)
+
+@login_required(login_url="/login/")
+def gerador(request, idcampanha):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['title'] = f'Sorteio campanha {idcampanha}'
+    
+    def getTable():
+        cursor.execute(f'''
+            SELECT NUMSORTE, SYSDATE, cliente, codcli
+            FROM (
+                SELECT NUMSORTE, MSCUPONAGEM.codcli, PCCLIENT.cliente
+                FROM MSCUPONAGEM
+                JOIN PCCLIENT ON MSCUPONAGEM.codcli = PCCLIENT.CODCLI
+                WHERE MSCUPONAGEM.IDCAMPANHA = {idcampanha}
+                AND MSCUPONAGEM.NUMSORTE > 0
+                AND PCCLIENT.CODCLI > 0
+                ORDER BY DBMS_RANDOM.VALUE
+            )
+            WHERE ROWNUM = 1
+        ''')
+        context['numsorteado'] = cursor.fetchone()
+        
+        cursor.execute(f'''
+            SELECT MAX(NUMSORTE), MIN(NUMSORTE)
+            FROM MSCUPONAGEM
+            WHERE 
+                IDCAMPANHA = {idcampanha}
+                AND NUMSORTE > 0
+                AND CODCLI > 0
+        ''')
+        context['contnumsorteado'] = cursor.fetchone()
+
+    getTable()
+    return render(request, 'sorteio/gerador.html', context)
