@@ -7,17 +7,57 @@
                     "url": "{% static 'css/dataTables/ptbr10_19.json' %}"
                 },
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
-                dom: "<'row w-100 d-flex justify-content-between'<'col-12 col-md-4'l><'col-12 col-md-4 text-center'B><'col-12 col-md-4'f>>" +
+                dom: "<'row w-100 d-flex justify-content-between'<'col-12 col-sm-4'l><'col-12 col-sm-4 text-center'B><'col-12 col-sm-4'f>>" +
                 "<'row w-100'<'col-sm-12'tr>>" +
                 "<'row w-100 d-flex justify-content-between'<'col-12 col-md-6'i><'col-12 col-md-6 d-flex justify-content-end'p>>",
                 buttons: [
                     {
-                        text: '{{tituloInsere}}',
+                        text: '<i class="fa fa-plus" aria-hidden="true"></i>',
+                        titleAttr: '{{tituloInsere}}',
                         className: 'btn btn-sm btn-primary',
                         action: function (e, dt, node, config) {
                             $('#insertModal').modal('show');
                         }
                     },
+                    {% if permiteplanilha %}
+                    {
+                        text: '<i class="fa-solid fa-circle-plus"></i>',
+                        titleAttr: '{{tituloInsere}}',
+                        className: 'btn btn-sm btn-primary',
+                        action: function (e, dt, node, config) {
+                            $('#insertModalPlanilha').modal('show');
+                        }
+                    },
+                    {% endif %}
+                    {% if habilitaexportacao %}
+                        {
+                            extend: 'excel',
+                            className: 'btn-sm btn-success btnDataTable',
+                            titleAttr: 'Exportar dados para EXCEL',
+                            text: '<i class="fas fa-file-excel"></i>',
+                            exportOptions: {
+                                columns: ':visible',
+                                format: {
+                                    body: function(data, row, column, node) {
+                                        data = $('<p>' + data + '</p>').text();
+                                        return $.isNumeric(data.replace(',', '.')) ? data.replace(',', '.') : data;
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            extend: 'pdf',
+                            className: 'btn-sm btn-danger btnDataTable',
+                            titleAttr: 'Exportar dados para PDF',
+                            text: '<i class="fa-solid fa-file-pdf"></i>',
+                        },
+                        {
+                            extend: 'print',
+                            className: 'btn-sm btn-info btnDataTable',
+                            titleAttr: 'Imprimir dados',
+                            text: '<i class="fa-solid fa-print"></i>',
+                        }
+                    {% endif %}
                 ],
                 initComplete: function (settings, json) {
                     $(".btnDataTable").removeClass("btn-secondary");

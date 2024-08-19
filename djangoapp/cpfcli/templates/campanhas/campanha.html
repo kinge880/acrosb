@@ -18,7 +18,7 @@
                             <th class="text-start">MULTIPLICADOR</th>
                             <th class="text-start">USAFORNEC</th>
                             <th class="text-start">USAPROD</th>
-                            <th class="text-start">GANHADOR</th>
+                            {% comment %} <th class="text-start">GANHADOR</th> {% endcomment %}
                             <th class="text-start">ATIVO</th>
                             <th class="text-start">AÇÕES</th>
                         </tr>
@@ -34,7 +34,7 @@
                                 <td class="text-start">{% if campanha.5 %} {{campanha.5}} {% else %} Não usa {% endif %}</td>
                                 <td class="text-start">{{campanha.6}}</td>
                                 <td class="text-start">{{campanha.7}}</td>
-                                <td class="text-start">{% if campanha.9 %} {{campanha.8}} - {{campanha.9}} {% else %} Não sorteado {% endif %}</td>
+                                {% comment %} <td class="text-start">{% if campanha.9 %} {{campanha.8}} - {{campanha.9}} {% else %} Não sorteado {% endif %}</td> {% endcomment %}
                                 <td class="text-start">{{campanha.10}}</td>
                                 <td class="text-start col-2">
                                     <a href="{{campanha.0}}/" class="btn btn-info btn-sm">
@@ -81,16 +81,16 @@
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="usafornec" class="form-label">USAFORNEC</label>
-                                                    <select class="form-select" name="usafornec" id="usafornec" aria-label="Default select example">=
-                                                        <option {% if campanha.6|stringformat:'S' == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por fornecedor</option>
-                                                        <option {% if campanha.6|stringformat:'S' == 'N' %} selected {% endif %} value="N">Não Deve utilizar multiplicador por fornecedor</option>
+                                                    <select class="form-select" name="usafornec" id="usafornec">
+                                                        <option {% if campanha.6 == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por fornecedor</option>
+                                                        <option {% if campanha.6 == 'N' %} selected {% endif %} value="N">Não Deve utilizar multiplicador por fornecedor</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="usaprod" class="form-label">USAPROD</label>
-                                                    <select class="form-select" name="usaprod" id="usaprod" aria-label="Default select example">=
-                                                        <option {% if campanha.7|stringformat:'S' == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por produto</option>
-                                                        <option {% if campanha.7|stringformat:'S' == 'S' %} selected {% endif %} value="N">Não deve utilizar multiplicador por produto</option>
+                                                    <select class="form-select" name="usaprod" id="usaprod">
+                                                        <option {% if campanha.7 == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por produto</option>
+                                                        <option {% if campanha.7 == 'S' %} selected {% endif %} value="N">Não deve utilizar multiplicador por produto</option>
                                                     </select>
                                                 </div>
                                             </div>

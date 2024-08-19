@@ -1,8 +1,48 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.contrib import messages
 from project.oracle import *
 from datetime import datetime
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils.timezone import now
+import pandas as pd
+from io import BytesIO
+from django.views.decorators.http import require_http_methods
+
+def upload_planilha(file):
+    if file:
+        # Verifica a extensão do arquivo
+        if not file.name.endswith(('.xls', '.xlsx')):
+            return "Arquivo inválido. Por favor, envie um arquivo Excel."
+
+        # Tenta ler o arquivo com pandas
+        try:
+            df = pd.read_excel(file)
+            return df
+        except Exception as e:
+            return f'Erro ao ler o arquivo. Detalhes: {str(e)}'
+    else:
+        return 'Nenhum arquivo enviado.'
+
+# View para baixar o modelo de planilha
+def baixar_modelo(request, tipo):
+    # Cria um DataFrame com as colunas idcampanha e codprod
+    if tipo == 'P':
+        df = pd.DataFrame(columns=['idcampanha', 'codprod'])
+    elif tipo == 'F':
+        df = pd.DataFrame(columns=['idcampanha', 'codfornec'])
+    else:
+        return 'error'
+
+    # Salva o DataFrame em um buffer
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Modelo')
+    buffer.seek(0)
+
+    # Cria a resposta HttpResponse
+    response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=modelo_planilha.xlsx'
+    return response
 
 def validacpf(cpf):
     # Verifica se o CPF tem 11 dígitos e não é uma sequência de números iguais
@@ -76,12 +116,13 @@ def base(request):
         cursor.execute(f'''
             SELECT
                 COALESCE(COUNT(DISTINCT M.numsorte), 0) AS TotalCupons,
-                MC.DESCRICAO
+                MC.DESCRICAO,
+                MC.VALOR
             FROM MSCUPONAGEMCAMPANHA MC
                 LEFT JOIN MSCUPONAGEM M ON MC.IDCAMPANHA = M.IDCAMPANHA AND M.CODCLI = {cpf_exist[1]}
             WHERE 
                 MC.ATIVO = 'S'
-            GROUP BY MC.DESCRICAO
+            GROUP BY MC.DESCRICAO, MC.VALOR
         ''')
         num_da_sorte = cursor.fetchone()
         context['num_da_sorte'] = num_da_sorte
@@ -216,9 +257,289 @@ def campanhas(request):
                 WHERE IDCAMPANHA = {codigo} 
             ''')
             messages.success(request, f"Campanha {codigo} editada com sucesso")
-
+    
+    conexao.commit()
     getTable()
     return render(request, 'campanhas/campanha.html', context)
+
+@login_required(login_url="/login/")
+def produtos(request):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['tituloInsere'] = 'Adicionar produto'
+    context['tituloPlanilha'] = 'Adicionar planilha'
+    context['tipolink'] = 'P'
+    
+    campos = [
+        ['idcampanha', 'number', True, 'col-md-6 col-12', (), 'Código da campanha cadastrada'],       # Código
+        ['codprod', 'number', True, 'col-12 col-md-6', (), 'codprod winthor 203'],    # Descrição
+    ]
+    context['campos'] = campos
+    context['habilitaexportacao'] = 'Sim'
+    context['permiteplanilha'] = 'permiteplanilha'
+    
+    def getTable():
+        conexao.rollback()
+        cursor.execute(f'''
+            SELECT MSCUPONAGEMPROD.IDCAMPANHA, MSCUPONAGEMPROD.CODPROD, MSCUPONAGEMPROD.DTMOV, PCPRODUT.DESCRICAO
+            FROM MSCUPONAGEMPROD 
+            INNER JOIN PCPRODUT ON (MSCUPONAGEMPROD.CODPROD = PCPRODUT.CODPROD)
+        ''')
+        context['listprodutos'] = cursor.fetchall()
+    
+    if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
+        codprod = request.POST.get('codprod')
+        
+        if 'delete' in request.POST:
+            cursor.execute(f'''
+                DELETE FROM MSCUPONAGEMPROD
+                WHERE IDCAMPANHA = {idcampanha} AND CODPROD = {codprod}
+            ''')
+            messages.success(request, f"Produto {codprod} na campanha {idcampanha} deletado com sucesso")
+        
+        elif 'insert' in request.POST:
+            cursor.execute(f'''
+                SELECT CODPROD
+                FROM PCPRODUT
+                WHERE CODPROD = {codprod}
+            ''')
+            exist_prod = cursor.fetchone()
+            
+            if exist_prod is None:
+                messages.success(request, f"Não existe produto cadastrado no winthor com codprod {codprod}")
+            
+            cursor.execute(f'''
+                SELECT 
+                    IDCAMPANHA, CODPROD
+                FROM MSCUPONAGEMPROD
+                WHERE IDCAMPANHA = {idcampanha} AND CODPROD = {codprod}
+            ''')
+            exist_active = cursor.fetchone()
+                
+            if exist_active is None:
+                cursor.execute(f'''
+                    INSERT INTO MSCUPONAGEMPROD
+                    (IDCAMPANHA, CODPROD, DTMOV)
+                    VALUES({idcampanha}, {codprod}, SYSDATE)
+                ''')
+                messages.success(request, f"Produto {codprod} inserido com sucesso na campanha {idcampanha}")
+            else:   
+                messages.error(request, f"Produto {codprod} já cadastrado na campanha {idcampanha}")     
+        
+        elif 'insertp' in request.POST:
+            file = request.FILES["planilhas"]
+            if file:
+                df = upload_planilha(file)
+                
+                # Verifica se df é um DataFrame
+                if not isinstance(df, pd.DataFrame):
+                    getTable()
+                    messages.error(request, df) 
+                    return render(request, 'produtos/produtos.html', context)
+            else:
+                getTable()
+                messages.error(request, f"Nenhuma planilha enviada")     
+                return render(request, 'produtos/produtos.html', context)
+            
+            if not 'idcampanha' in df.columns or not 'codprod' in df.columns:
+                getTable()
+                messages.error(request, f"Planilha enviada no formato errado")     
+                return render(request, 'produtos/produtos.html', context)
+            
+            for index, row in df.iterrows():
+                idcampanha = row['idcampanha']
+                codprod = row['codprod']
+                
+                cursor.execute(f'''
+                    SELECT DESCRICAO
+                    FROM MSCUPONAGEMCAMPANHA 
+                    WHERE 
+                        IDCAMPANHA = {idcampanha}
+                ''')
+                exist_campanha = cursor.fetchone()
+                
+                if exist_campanha is None:
+                    getTable()
+                    messages.error(request, f"Não existe campanha cadastrada com código {idcampanha}, verifique a planilha")
+                    return render(request, 'produtos/produtos.html', context)
+                    
+                cursor.execute(f'''
+                    SELECT CODPROD
+                    FROM PCPRODUT
+                    WHERE CODPROD = {codprod}
+                ''')
+                exist_prod = cursor.fetchone()
+                
+                if exist_prod is None:
+                    getTable()
+                    messages.error(request, f"Não existe produto cadastrado no winthor com codprod {codprod}, verifique a planilha")
+                    return render(request, 'produtos/produtos.html', context)
+                
+                cursor.execute(f'''
+                    SELECT 
+                        IDCAMPANHA, CODPROD
+                    FROM MSCUPONAGEMPROD
+                    WHERE IDCAMPANHA = {idcampanha} AND CODPROD = {codprod}
+                ''')
+                exist_active = cursor.fetchone()
+                    
+                if exist_active is None:
+                    cursor.execute(f'''
+                        INSERT INTO MSCUPONAGEMPROD
+                        (IDCAMPANHA, CODPROD, DTMOV)
+                        VALUES({idcampanha}, {codprod}, SYSDATE)
+                    ''')
+                else:   
+                    getTable()
+                    messages.error(request, f"Produto {codprod} já cadastrado na campanha {idcampanha}, verifique a planilha")  
+                    return render(request, 'produtos/produtos.html', context)   
+            
+        messages.success(request, f"Todos os produtos foram inseridos com sucesso!")    
+        conexao.commit()
+    getTable()
+    return render(request, 'produtos/produtos.html', context)
+
+@login_required(login_url="/login/")
+def fornecedores(request):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['tituloInsere'] = 'Adicionar fornecedor'
+    context['tituloPlanilha'] = 'Adicionar planilha de fornecedor'
+    context['tipolink'] = 'F'
+    
+    campos = [
+        ['idcampanha', 'number', True, 'col-md-6 col-12', (), 'Código da campanha cadastrada'],       # Código
+        ['codfornec', 'number', True, 'col-12 col-md-6', (), 'codfornec winthor 202'],    # Descrição
+    ]
+    context['campos'] = campos
+    context['habilitaexportacao'] = 'Sim'
+    context['permiteplanilha'] = 'permiteplanilha'
+    
+    def getTable():
+        print('tabelou')
+        conexao.rollback()
+        cursor.execute(f'''
+            SELECT MSCUPONAGEMFORNEC.IDCAMPANHA, MSCUPONAGEMFORNEC.CODFORNEC, MSCUPONAGEMFORNEC.DTMOV, PCFORNEC.FORNECEDOR
+            FROM MSCUPONAGEMFORNEC 
+            INNER JOIN PCFORNEC ON (MSCUPONAGEMFORNEC.CODFORNEC = PCFORNEC.CODFORNEC)
+        ''')
+        context['listfornecs'] = cursor.fetchall()
+    
+    if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
+        codfornec = request.POST.get('codfornec')
+        
+        if 'delete' in request.POST:
+            cursor.execute(f'''
+                DELETE FROM MSCUPONAGEMFORNEC
+                WHERE IDCAMPANHA = {idcampanha} AND CODFORNEC = {codfornec}
+            ''')
+            messages.success(request, f"Fornecedor {codfornec} na campanha {idcampanha} deletado com sucesso")
+        
+        elif 'insert' in request.POST:
+            cursor.execute(f'''
+                SELECT CODFORNEC
+                FROM PCFORNEC
+                WHERE CODFORNEC = {codfornec}
+            ''')
+            exist_prod = cursor.fetchone()
+            
+            if exist_prod is None:
+                messages.success(request, f"Não existe fornecedor cadastrado no winthor com codfornec {codfornec}")
+            
+            cursor.execute(f'''
+                SELECT 
+                    IDCAMPANHA, CODFORNEC
+                FROM MSCUPONAGEMFORNEC
+                WHERE IDCAMPANHA = {idcampanha} AND CODFORNEC = {codfornec}
+            ''')
+            exist_active = cursor.fetchone()
+                
+            if exist_active is None:
+                cursor.execute(f'''
+                    INSERT INTO MSCUPONAGEMFORNEC
+                    (IDCAMPANHA, CODFORNEC, DTMOV)
+                    VALUES({idcampanha}, {codfornec}, SYSDATE)
+                ''')
+                messages.success(request, f"Fornecedor {codfornec} inserido com sucesso na campanha {idcampanha}")
+            else:   
+                messages.error(request, f"Fornecedor {codfornec} já cadastrado na campanha {idcampanha}")     
+        
+        elif 'insertp' in request.POST:
+            file = request.FILES["planilhas"]
+            if file:
+                df = upload_planilha(file)
+                
+                # Verifica se df é um DataFrame
+                if not isinstance(df, pd.DataFrame):
+                    getTable()
+                    messages.error(request, df) 
+                    return render(request, 'fornecedores/fornecedores.html', context)
+            else:
+                getTable()
+                messages.error(request, f"Nenhuma planilha enviada")     
+                return render(request, 'fornecedores/fornecedores.html', context)
+            
+            if not 'idcampanha' in df.columns or not 'codprod' in df.columns:
+                getTable()
+                messages.error(request, f"Planilha enviada no formato errado")     
+                return render(request, 'fornecedores/fornecedores.html', context)
+            
+            for index, row in df.iterrows():
+                idcampanha = row['idcampanha']
+                codfornec = row['codfornec']
+                
+                cursor.execute(f'''
+                    SELECT DESCRICAO
+                    FROM MSCUPONAGEMCAMPANHA 
+                    WHERE 
+                        IDCAMPANHA = {idcampanha}
+                ''')
+                exist_campanha = cursor.fetchone()
+                
+                if exist_campanha is None:
+                    getTable()
+                    messages.error(request, f"Não existe campanha cadastrada com código {idcampanha}, verifique a planilha")
+                    return render(request, 'produtos/produtos.html', context)
+                    
+                cursor.execute(f'''
+                    SELECT CODFORNEC
+                    FROM PCFORNEC
+                    WHERE CODFORNEC = {codfornec}
+                ''')
+                exist_prod = cursor.fetchone()
+                
+                if exist_prod is None:
+                    getTable()
+                    messages.error(request, f"Não existe fornecedor cadastrado no winthor com codfornec {codfornec}, verifique a planilha")
+                    return render(request, 'produtos/produtos.html', context)
+                
+                cursor.execute(f'''
+                    SELECT 
+                        IDCAMPANHA, CODFORNEC
+                    FROM MSCUPONAGEMFORNEC
+                    WHERE IDCAMPANHA = {idcampanha} AND CODFORNEC = {codfornec}
+                ''')
+                exist_active = cursor.fetchone()
+                    
+                if exist_active is None:
+                    cursor.execute(f'''
+                        INSERT INTO MSCUPONAGEMFORNEC
+                    (IDCAMPANHA, CODFORNEC, DTMOV)
+                    VALUES({idcampanha}, {codfornec}, SYSDATE)
+                    ''')
+                else:   
+                    getTable()
+                    messages.error(request, f"Fornecedor {codfornec} já cadastrado na campanha {idcampanha}, verifique a planilha")  
+                    return render(request, 'produtos/produtos.html', context)   
+            
+            messages.success(request, f"Todos os fornecedores foram inseridos com sucesso!")    
+        conexao.commit()
+    getTable()
+    return render(request, 'fornecedores/fornecedores.html', context)
 
 @login_required(login_url="/login/")
 def campanhasid(request, idcampanha):
@@ -352,6 +673,7 @@ def gerador(request, idcampanha):
     context['title'] = f'Sorteio campanha {idcampanha}'
     
     def getTable():
+        #obetem os dados gerais do sorteio
         cursor.execute(f'''
             SELECT NUMSORTE, SYSDATE, cliente, codcli
             FROM (
@@ -365,8 +687,10 @@ def gerador(request, idcampanha):
             )
             WHERE ROWNUM = 1
         ''')
-        context['numsorteado'] = cursor.fetchone()
+        numsorte = cursor.fetchone()
+        context['numsorteado'] = numsorte
         
+        #obtem o numero menor e maior de cupons da sorte
         cursor.execute(f'''
             SELECT MAX(NUMSORTE), MIN(NUMSORTE)
             FROM MSCUPONAGEM
@@ -376,6 +700,124 @@ def gerador(request, idcampanha):
                 AND CODCLI > 0
         ''')
         context['contnumsorteado'] = cursor.fetchone()
+        
+        #insere o vencedor
+        cursor.execute(f'''
+            INSERT INTO MSCUPONAGEMVENCEDORES
+            (IDCAMPANHA, CODCLI, DTSORTEIO, NUMSORTEIO, NUMSORTE)
+            VALUES(
+                {idcampanha}, 
+                {numsorte[3]}, 
+                SYSDATE, 
+                (
+                    select count(numsorte)
+                    from MSCUPONAGEMVENCEDORES 
+                    where 
+                        idcampanha = {idcampanha}
+                ) + 1, 
+                {numsorte[0]}
+            )
+        ''')
+        
+        conexao.commit()
+        
+        #obtem o numero do sorteio atual
+        cursor.execute(f'''
+            SELECT NUMSORTEIO
+            FROM MSCUPONAGEMVENCEDORES
+            WHERE 
+                IDCAMPANHA = {idcampanha} AND
+                NUMSORTE = {numsorte[0]} AND
+                CODCLI = {numsorte[3]}
+        ''')
+        context['numsorteio'] = cursor.fetchone()
 
     getTable()
     return render(request, 'sorteio/gerador.html', context)
+
+
+@login_required(login_url="/login/")
+def sorteio(request):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    
+    def getTable():
+        cursor.execute(f'''
+            SELECT 
+                IDCAMPANHA, 
+                DESCRICAO, 
+                to_char(DTINIT, 'dd/mm/yyyy'), 
+                to_char(DTFIM, 'dd/mm/yyyy'),
+                VALOR,
+                MULTIPLICADOR, 
+                USAFORNEC, 
+                USAPROD, 
+                CODGANHADOR,
+                GANHADOR,
+                ATIVO,
+                to_char(DTINIT, 'yyyy-mm-dd'),
+                to_char(DTFIM, 'yyyy-mm-dd'),
+                (SELECT COUNT(NUMSORTE) FROM MSCUPONAGEM WHERE IDCAMPANHA = MSCUPONAGEMCAMPANHA.IDCAMPANHA)
+            FROM MSCUPONAGEMCAMPANHA
+            WHERE DTEXCLUSAO IS NULL
+        ''')
+        listacampanhas = cursor.fetchall()
+        # Supondo que você tenha uma função para obter campanhas
+        campaigns = listacampanhas  # Substitua por sua lógica real de obtenção de campanhas
+
+        today = now().date()  # Obtém a data atual como datetime.date
+        processed_campaigns = []
+        for campanha in campaigns:
+            # Criar dicionário para cada campanha
+            campanha_dict = {
+                'IDCAMPANHA': campanha[0],
+                'DESCRICAO': campanha[1],
+                'dtinit': datetime.strptime(campanha[11], '%Y-%m-%d').date(),
+                'dtfim': datetime.strptime(campanha[12], '%Y-%m-%d').date(),
+                'VALOR': campanha[4],
+                'MULTIPLICADOR': campanha[5],
+                'USAFORNEC': campanha[6],
+                'USAPROD': campanha[7],
+                'CODGANHADOR': campanha[8],
+                'GANHADOR': campanha[9],
+                'ATIVO': campanha[10],
+                'count_cupons': campanha[13],
+            }
+
+            # Calcular total de dias e dias restantes
+            total_days = (campanha_dict['dtfim'] - campanha_dict['dtinit']).days
+            days_remaining = (campanha_dict['dtfim'] - today).days
+            # Calcular progresso
+            if total_days > 0 and days_remaining > 0:
+                progress = 100.0 - (days_remaining / total_days * 100)
+            else:
+                progress = 100.0
+
+            # Adicionar dados calculados ao dicionário
+            campanha_dict['total_days'] = total_days
+            campanha_dict['days_remaining'] = days_remaining
+            campanha_dict['progress'] = progress
+
+            # Adicionar dicionário à lista de campanhas processadas
+            processed_campaigns.append(campanha_dict)
+
+        context ['listacampanhas'] = processed_campaigns
+        return render(request, 'sorteio/campanhas.html', context)
+    
+    if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
+        codigo = request.POST.get('codigo')
+        descricao = request.POST.get('descricao')
+        dtinicial = request.POST.get('dtinicial')
+        dtfinal = request.POST.get('dtfinal')
+        valor = request.POST.get('valor')
+        multiplicador = request.POST.get('multiplicador')
+        usafornec = request.POST.get('usafornec')
+        usaprod = request.POST.get('usaprod')
+        
+        if 'pesq' in request.POST:
+            return redirect(f'/campanhas/{idcampanha}/')
+        
+    getTable()
+    return render(request, 'sorteio/campanhas.html', context)

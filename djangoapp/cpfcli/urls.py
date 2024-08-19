@@ -6,11 +6,15 @@ from django.conf import settings
 
 urlpatterns = [
     path('', views.base, name='paginicial'),
+    path('produtos/', views.produtos, name='produtos'),
+    path('fornecs/', views.fornecedores, name='fornecedores'),
     path('campanhas/', views.campanhas, name='campanha'),
     path('campanhas/<int:idcampanha>/', views.campanhasid, name='campanhasid'),
     path('campanhas/<int:idcampanha>/<int:idclient>/', views.campanhasidclient, name='campanhasid'),
-    path('sorteio/', views.base, name='sorteio'),
+    path('sorteio/', views.sorteio, name='sorteio'),
     path('sorteio/<int:idcampanha>/', views.gerador, name='sorteio'),
+    path('upload/', views.upload_planilha, name='upload_planilha'),
+    path('baixar-modelo/<str:tipo>/', views.baixar_modelo, name='baixar_modelo')
 ] 
 
 if settings.DEBUG:

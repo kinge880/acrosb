@@ -1,0 +1,44 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block title %}Campanhas{% endblock %}
+
+{% block content %}
+<div class="container-fluid vh-75 d-flex flex-start flex-wrap">
+    <div class="container-fluid">
+        {% include 'partials/message.html' %}
+
+        <div class="row mt-3">
+            {% for campanha in listacampanhas %}
+            <div class="col-md-6 col-12 mb-4 ">
+                <a class="card text-decoration-none" href="{{campanha.IDCAMPANHA}}/" >
+                    <div class="card-body">
+                        <h5 class="card-title w-100 text-center">Código {{ campanha.IDCAMPANHA }} - {{ campanha.DESCRICAO }}</h5>
+                        <h6 class="card-subtitle mb-3 text-muted w-100 text-center">{{ campanha.dtinit }} - {{ campanha.dtfim }}</h6>
+
+                        <div class="progress mb-3">
+                            <!-- Exibe o valor da progress como texto -->
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                    role="progressbar" 
+                                    style="width: {{campanha.progress|floatformat:0}}%;" 
+                                    aria-valuenow="{{ campanha.progress}}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                    {{ campanha.progress|floatformat:1 }}%
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="card-text ">
+                                Status: <span class="badge {% if campanha.ATIVO == 'S' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if campanha.ATIVO == 'S' %}Ativa{% else %}Inativa{% endif %}
+                                </span>
+                            </p>
+                            <h5 class="card-text mb-3">{{ campanha.count_cupons }} Números Gerados</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

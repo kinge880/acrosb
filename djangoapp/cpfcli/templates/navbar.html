@@ -14,6 +14,8 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 {% if request.user.username %}  
+                    <a href="/produtos" class="nav-link">Produtos</a>
+                    <a href="/fornecs" class="nav-link">Fornecedores</a>
                     <a href="/campanhas" class="nav-link">Campanhas</a>
                     <a href="/sorteio" class="nav-link">Sorteio</a> 
                     {% if request.user.is_staff %}

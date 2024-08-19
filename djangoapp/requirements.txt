@@ -6,3 +6,6 @@ django-redis==5.4.0
 django-pandas==0.6.6
 plotly==5.14.1
 cx-Oracle==8.3.0
+xlsxwriter==3.2.0
+openpyxl==3.1.5
+gunicorn==23.0.0
