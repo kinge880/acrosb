@@ -3,18 +3,47 @@
 {% block title %}Campanhas{% endblock %}
 
 {% block content %}
+<style>
+    .card-body {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-options {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .card:hover .card-options {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .card-body:hover {
+    }
+</style>
 <div class="container-fluid vh-75 d-flex flex-start flex-wrap">
     <div class="container-fluid">
         {% include 'partials/message.html' %}
-
+        
         <div class="row mt-3">
             {% for campanha in listacampanhas %}
-            <div class="col-md-6 col-12 mb-4 ">
-                <a class="card text-decoration-none" href="{{campanha.IDCAMPANHA}}/" >
+            <div class="col-md-6 col-12 mb-4">
+                <div class="card">
                     <div class="card-body">
                         <h5 class="card-title w-100 text-center">Código {{ campanha.IDCAMPANHA }} - {{ campanha.DESCRICAO }}</h5>
                         <h6 class="card-subtitle mb-3 text-muted w-100 text-center">{{ campanha.dtinit }} - {{ campanha.dtfim }}</h6>
-
+            
                         <div class="progress mb-3">
                             <!-- Exibe o valor da progress como texto -->
                             <div class="progress-bar progress-bar-striped progress-bar-animated" 
@@ -27,15 +56,20 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <p class="card-text ">
+                            <p class="card-text">
                                 Status: <span class="badge {% if campanha.ATIVO == 'S' %}bg-success{% else %}bg-danger{% endif %}">
                                     {% if campanha.ATIVO == 'S' %}Ativa{% else %}Inativa{% endif %}
                                 </span>
                             </p>
                             <h5 class="card-text mb-3">{{ campanha.count_cupons }} Números Gerados</h5>
                         </div>
+                        <!-- Container for additional options -->
+                        <div class="card-options">
+                            <a class="btn btn-primary btn-sm" href="{{campanha.IDCAMPANHA}}/">Sortear</a>
+                            <a class="btn btn-secondary btn-sm" href="/ganhadores/{{campanha.IDCAMPANHA}}/">Ganhadores</a>
+                        </div>
                     </div>
-                </a>
+                </div>
             </div>
             {% endfor %}
         </div>

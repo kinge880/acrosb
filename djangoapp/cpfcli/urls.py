@@ -12,7 +12,8 @@ urlpatterns = [
     path('campanhas/<int:idcampanha>/', views.campanhasid, name='campanhasid'),
     path('campanhas/<int:idcampanha>/<int:idclient>/', views.campanhasidclient, name='campanhasid'),
     path('sorteio/', views.sorteio, name='sorteio'),
-    path('sorteio/<int:idcampanha>/', views.gerador, name='sorteio'),
+    path('sorteio/<int:idcampanha>/', views.gerador, name='gerador'),
+    path('ganhadores/<int:idcampanha>/', views.sorteioganhadores, name='ganhadores'),
     path('upload/', views.upload_planilha, name='upload_planilha'),
     path('baixar-modelo/<str:tipo>/', views.baixar_modelo, name='baixar_modelo')
 ] 

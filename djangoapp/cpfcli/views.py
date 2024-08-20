@@ -145,7 +145,8 @@ def campanhas(request):
         ['valor', 'number', True, 'col-6', (), 'Valor por número da sorte'],      # Valor
         ['multiplicador', 'number', False, 'col-6', (), 'Valor do multiplicador'],  # Multiplicador
         ['usafornec', 'select', True, 'col-6', (('S','Deve utilizar multiplicador por fornecedor'), ('N','Não deve utilizar multiplicador por fornecedor')), 'Valor do multiplicador'],    # USAFORNEC
-        ['usaprod', 'select', True, 'col-6', (('S','Deve utilizar multiplicador por produto'), ('N','Não deve utilizar multiplicador por produto')), 'Valor do multiplicador'],      # USAPROD
+        ['usaprod', 'select', True, 'col-6', (('S','Deve utilizar multiplicador por produto'), ('N','Não deve utilizar multiplicador por produto')), 'Valor do multiplicador'], # USAPROD
+        ['usaemail', 'select', True, 'col-6', (('S','Enviar email ao cliente informando os cupons obtidos'), ('N','Não enviar email')), 'Deve enviar email?'], # USAEMAIL
     ]
     context['campos'] = campos
     
@@ -164,7 +165,8 @@ def campanhas(request):
                 GANHADOR,
                 ATIVO,
                 to_char(DTINIT, 'yyyy-mm-dd'),
-                to_char(DTFIM, 'yyyy-mm-dd')
+                to_char(DTFIM, 'yyyy-mm-dd'),
+                ENVIAEMAIL
             FROM MSCUPONAGEMCAMPANHA
             WHERE DTEXCLUSAO IS NULL
         ''')
@@ -180,6 +182,7 @@ def campanhas(request):
         multiplicador = request.POST.get('multiplicador')
         usafornec = request.POST.get('usafornec')
         usaprod = request.POST.get('usaprod')
+        usaemail = request.POST.get('usaemail')
         
         if 'link' in request.POST:
             return redirect(f'/campanhas/{idcampanha}/')
@@ -228,17 +231,41 @@ def campanhas(request):
             if exist_active is None:
                 cursor.execute(f'''
                     INSERT INTO MSCUPONAGEMCAMPANHA
-                    (IDCAMPANHA, DESCRICAO, DTULTALT, DTINIT, DTFIM, MULTIPLICADOR, VALOR, USAFORNEC, USAPROD, ATIVO)
-                    VALUES((SELECT MAX(IDCAMPANHA) + 1 FROM MSCUPONAGEMCAMPANHA), '{descricao}', SYSDATE, to_date('{dtinicial}', 'yyyy-mm-dd'),
-                    to_date('{dtfinal}', 'yyyy-mm-dd'), {valor}, {multiplicador}, '{usafornec}' , '{usaprod}' , 'S')
+                    (
+                        IDCAMPANHA, 
+                        DESCRICAO, 
+                        DTULTALT, 
+                        DTINIT, 
+                        DTFIM, 
+                        MULTIPLICADOR, 
+                        VALOR, 
+                        USAFORNEC, 
+                        USAPROD, 
+                        ATIVO,
+                        ENVIAEMAIL
+                    )
+                    VALUES(
+                        (
+                            SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA), 
+                            '{descricao}', 
+                            SYSDATE, 
+                            to_date('{dtinicial}', 'yyyy-mm-dd'),
+                            to_date('{dtfinal}', 'yyyy-mm-dd'), 
+                            {valor}, 
+                            {multiplicador}, 
+                            '{usafornec}', 
+                            '{usaprod}', 
+                            'S',
+                            '{usaemail}'
+                        )
                 ''')
                 messages.success(request, f"Campanha inserida com sucesso")
             else:   
                 cursor.execute(f'''
                     INSERT INTO MSCUPONAGEMCAMPANHA
-                    (IDCAMPANHA, DESCRICAO, DTULTALT, DTINIT, DTFIM, MULTIPLICADOR, VALOR, USAFORNEC, USAPROD, ATIVO)
-                    VALUES((SELECT MAX(IDCAMPANHA) + 1 FROM MSCUPONAGEMCAMPANHA), '{descricao}', SYSDATE, to_date('{dtinicial}', 'yyyy-mm-dd'),
-                    to_date('{dtfinal}', 'yyyy-mm-dd'), {valor}, {multiplicador}, '{usafornec}' , '{usaprod}' , 'N')
+                    (IDCAMPANHA, DESCRICAO, DTULTALT, DTINIT, DTFIM, MULTIPLICADOR, VALOR, USAFORNEC, USAPROD, ATIVO, ENVIAEMAIL)
+                    VALUES((SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA), '{descricao}', SYSDATE, to_date('{dtinicial}', 'yyyy-mm-dd'),
+                    to_date('{dtfinal}', 'yyyy-mm-dd'), {valor}, {multiplicador}, '{usafornec}' , '{usaprod}' , 'N', '{usaemail}')
                 ''')
                 messages.success(request, f"Campanha inserida com sucesso")     
         
@@ -253,7 +280,8 @@ def campanhas(request):
                     MULTIPLICADOR={multiplicador}, 
                     VALOR={valor}, 
                     USAFORNEC='{usafornec}', 
-                    USAPROD='{usaprod}'
+                    USAPROD='{usaprod}',
+                    ENVIAEMAIL = '{usaemail}'
                 WHERE IDCAMPANHA = {codigo} 
             ''')
             messages.success(request, f"Campanha {codigo} editada com sucesso")
@@ -821,3 +849,63 @@ def sorteio(request):
         
     getTable()
     return render(request, 'sorteio/campanhas.html', context)
+
+
+@login_required(login_url="/login/")
+def sorteioganhadores(request, idcampanha):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['title'] = f'Lista de números da sorte na campanha {idcampanha}'
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE idcampanha = {idcampanha}
+    ''')
+    exist_active = cursor.fetchone()
+    
+    if exist_active is None:
+        messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
+        return redirect('campanha')
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE idcampanha = {idcampanha} AND DTEXCLUSAO IS NOT NULL
+    ''')
+    exist_delete = cursor.fetchone()
+    if exist_delete:
+        messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
+    
+    context['campanha'] = f'{exist_active[1]}'
+    
+    def getTable():
+        cursor.execute(f'''
+            SELECT 
+                MSCUPONAGEMVENCEDORES.IDCAMPANHA, 
+                MSCUPONAGEMVENCEDORES.NUMSORTEIO,
+                PCCLIENT.CODCLI, 
+                PCCLIENT.CLIENTE, 
+                MSCUPONAGEMVENCEDORES.NUMSORTE,
+                MSCUPONAGEMVENCEDORES.DTSORTEIO,
+                PCCLIENT.EMAIL,
+                PCCLIENT.TELCOB,
+                PCCLIENT.CGCENT
+            FROM MSCUPONAGEMCAMPANHA 
+                INNER JOIN MSCUPONAGEMVENCEDORES ON (MSCUPONAGEMCAMPANHA.IDCAMPANHA = MSCUPONAGEMVENCEDORES.IDCAMPANHA)
+                INNER JOIN PCCLIENT ON (pcclient.codcli = MSCUPONAGEMVENCEDORES.codcli)
+            WHERE 
+                MSCUPONAGEMCAMPANHA.IDCAMPANHA = {idcampanha}
+            ORDER BY 
+                MSCUPONAGEMVENCEDORES.NUMSORTE
+        ''')
+        context['listaclients'] = cursor.fetchall()
+    
+    if request.method == 'POST':
+        pass   
+
+    getTable()
+    return render(request, 'sorteio/ganhadores.html', context)

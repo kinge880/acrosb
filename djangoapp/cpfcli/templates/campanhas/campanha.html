@@ -19,6 +19,7 @@
                             <th class="text-start">USAFORNEC</th>
                             <th class="text-start">USAPROD</th>
                             {% comment %} <th class="text-start">GANHADOR</th> {% endcomment %}
+                            <th class="text-start">ENVIAEMAIL</th>
                             <th class="text-start">ATIVO</th>
                             <th class="text-start">AÇÕES</th>
                         </tr>
@@ -35,6 +36,7 @@
                                 <td class="text-start">{{campanha.6}}</td>
                                 <td class="text-start">{{campanha.7}}</td>
                                 {% comment %} <td class="text-start">{% if campanha.9 %} {{campanha.8}} - {{campanha.9}} {% else %} Não sorteado {% endif %}</td> {% endcomment %}
+                                <td class="text-start">{{campanha.13}}</td>
                                 <td class="text-start">{{campanha.10}}</td>
                                 <td class="text-start col-2">
                                     <a href="{{campanha.0}}/" class="btn btn-info btn-sm">
@@ -61,36 +63,43 @@
                                                 <input type="hidden" value="{{campanha.0}}" name="codigo" id="codigo"/>
                                                 <div class="col-12 mb-3">
                                                     <label for="descricao" class="form-label">Descrição</label>
-                                                    <input type="text" class="form-control" name="descricao" id="descricao" value="{{campanha.1}}" placeholder="Digite a descrição">
+                                                    <input required type="text" class="form-control" name="descricao" id="descricao" value="{{campanha.1}}" placeholder="Digite a descrição">
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="dtInicial" class="form-label">Data Inicial</label>
-                                                    <input type="date" class="form-control" name="dtinicial" id="dtinicial" value="{{campanha.11}}">
+                                                    <input required type="date" class="form-control" name="dtinicial" id="dtinicial" value="{{campanha.11}}">
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="dtFinal" class="form-label">Data Final</label>
-                                                    <input type="date" class="form-control" name="dtfinal" id="dtfinal" value="{{campanha.12}}">
+                                                    <input required type="date" class="form-control" name="dtfinal" id="dtfinal" value="{{campanha.12}}">
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="valor" class="form-label">Valor</label>
-                                                    <input type="number" class="form-control" name="valor" id="valor" value="{{campanha.4}}" placeholder="Digite o valor">
+                                                    <input required type="number" class="form-control" name="valor" id="valor" value="{{campanha.4}}" placeholder="Digite o valor">
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="multiplicador" class="form-label">Multiplicador</label>
-                                                    <input type="number" class="form-control" name="multiplicador" id="multiplicador" value="{{campanha.5}}" placeholder="Digite o multiplicador">
+                                                    <input required type="number" class="form-control" name="multiplicador" id="multiplicador" value="{{campanha.5}}" placeholder="Digite o multiplicador">
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="usafornec" class="form-label">USAFORNEC</label>
-                                                    <select class="form-select" name="usafornec" id="usafornec">
+                                                    <select required class="form-select" name="usafornec" id="usafornec">
                                                         <option {% if campanha.6 == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por fornecedor</option>
                                                         <option {% if campanha.6 == 'N' %} selected {% endif %} value="N">Não Deve utilizar multiplicador por fornecedor</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-6 mb-3">
                                                     <label for="usaprod" class="form-label">USAPROD</label>
-                                                    <select class="form-select" name="usaprod" id="usaprod">
+                                                    <select required class="form-select" name="usaprod" id="usaprod">
                                                         <option {% if campanha.7 == 'S' %} selected {% endif %} value="S">Deve utilizar multiplicador por produto</option>
-                                                        <option {% if campanha.7 == 'S' %} selected {% endif %} value="N">Não deve utilizar multiplicador por produto</option>
+                                                        <option {% if campanha.7 == 'N' %} selected {% endif %} value="N">Não deve utilizar multiplicador por produto</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-6 mb-3">
+                                                    <label for="usaemail" class="form-label">ENVIAEMAIL</label>
+                                                    <select required class="form-select" name="usaemail" id="usaemail">
+                                                        <option {% if campanha.7 == 'S' %} selected {% endif %} value="S">Enviar email ao cliente informando os cupons obtidos</option>
+                                                        <option {% if campanha.7 == 'S' %} selected {% endif %} value="N">Não enviar email</option>
                                                     </select>
                                                 </div>
                                             </div>

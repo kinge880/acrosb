@@ -34,6 +34,10 @@ ALLOWED_HOSTS = [
     if h.strip()
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://172.16.20.150:1337',
+]
+
 # Application definition
 
 INSTALLED_APPS = [

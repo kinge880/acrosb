@@ -18,14 +18,14 @@ smtp_username = "deeptrackemails@gmail.com"
 smtp_password = "egqpqsoxbacwulkl"
 
 # Função que envia o e-mail
-def enviaremail(qtnumeros, nome, email_destinatario, email, qtcupons_total, numcupom):
+def enviaremail(qtnumeros, nome, email, qtcupons_total, numcupom):
 
-    if email_destinatario:
+    if email:
         # Configuração da mensagem
         print('iniciando envio do email')
         msg = MIMEMultipart()
         msg['From'] = smtp_username
-        msg['To'] = email_destinatario
+        msg['To'] = email
         msg['Subject'] = f'Parabéns {nome} você está concorrendo a um prêmio!'
         
         # Corpo do e-mail
@@ -46,7 +46,7 @@ def enviaremail(qtnumeros, nome, email_destinatario, email, qtcupons_total, numc
         
         print('enviando')
         # Enviar e-mail
-        server.sendmail(smtp_username, email_destinatario, msg.as_string())
+        server.sendmail(smtp_username, email, msg.as_string())
         print('encerrando')
         # Encerrar conexão
         server.quit()
@@ -58,7 +58,9 @@ def processacupom():
     
     cursor.execute(f'''
         SELECT
-            IDCAMPANHA, DESCRICAO, USAFORNEC, USAPROD, VALOR, MULTIPLICADOR, to_char(DTINIT, 'yyyy-mm-dd'), to_char(DTFIM, 'yyyy-mm-dd')
+            IDCAMPANHA, DESCRICAO, USAFORNEC, USAPROD, VALOR,
+             MULTIPLICADOR, to_char(DTINIT, 'yyyy-mm-dd'), 
+             to_char(DTFIM, 'yyyy-mm-dd'), ENVIAEMAIL
         FROM MSCUPONAGEMCAMPANHA
         WHERE 
             ATIVO = 'S'
@@ -76,6 +78,8 @@ def processacupom():
     multiplicador_cupom = campanha[5]
     dt_inicial = campanha[6]
     dt_final = campanha[7]
+    envia_email = campanha[8]
+    testa_envio_email = True
     listprodsWhere = ',NULL'
     produtoFornecWhere = ',NULL'
 
@@ -165,10 +169,16 @@ def processacupom():
             qtcupons_total = cursor.fetchone()
             
             conexao.commit()
-            print(f'enviando email para {ped[5]}')
-            enviaremail(qtcupons, ped[4], 'brunomaya10@gmail.com', ped[5], qtcupons_total, ped[0])
+            
+            if envia_email and envia_email == 'S':
+                print(f'enviando email para {ped[5]}')
+                if testa_envio_email:
+                    enviaremail(qtcupons, ped[4], 'brunomaya10@gmail.com', qtcupons_total, ped[0])
+                else:
+                    enviaremail(qtcupons, ped[4], ped[5], qtcupons_total, ped[0])
+            
         cont += 1
-        print('fpedido {ped} finalizado ')
+        print(f'pedido {ped} finalizado ')
 
     print('todos os pedidos finalizados')
     conexao.close() 
