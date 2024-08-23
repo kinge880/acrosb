@@ -22,7 +22,7 @@ def enviaremail(qtnumeros, nome, email, qtcupons_total, numcupom):
 
     if email:
         # Configuração da mensagem
-        print('iniciando envio do email')
+        print(f'iniciando envio do email para {email}')
         msg = MIMEMultipart()
         msg['From'] = smtp_username
         msg['To'] = email
@@ -60,7 +60,7 @@ def processacupom():
         SELECT
             IDCAMPANHA, DESCRICAO, USAFORNEC, USAPROD, VALOR,
              MULTIPLICADOR, to_char(DTINIT, 'yyyy-mm-dd'), 
-             to_char(DTFIM, 'yyyy-mm-dd'), ENVIAEMAIL
+             to_char(DTFIM, 'yyyy-mm-dd'), ENVIAEMAIL, TIPOINTENSIFICADOR, FORNECVALOR, PRODVALOR
         FROM MSCUPONAGEMCAMPANHA
         WHERE 
             ATIVO = 'S'
@@ -79,11 +79,15 @@ def processacupom():
     dt_inicial = campanha[6]
     dt_final = campanha[7]
     envia_email = campanha[8]
+    tipo_intensificador = campanha[9]
+    valor_fornecedor = campanha[10]
+    valor_prod = campanha[11]
     testa_envio_email = True
     listprodsWhere = ',NULL'
     produtoFornecWhere = ',NULL'
 
-    if usa_prod:
+    #parametros de produto
+    if usa_prod and usa_prod == 'C':
         cursor.execute(f'''
             SELECT codprod FROM MSCUPONAGEMPROD WHERE IDCAMPANHA = {idcampanha}
         ''')
@@ -96,8 +100,12 @@ def processacupom():
 
         if len(listaprods) > 0:
             listprodsWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1) AS LISTPROD'
-
-    if usa_fornec:
+    
+    elif usa_prod and usa_prod == 'M':
+        listprodsWhere = f',(SELECT COUNT(DISTINCT CODPROD) FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AS LISTPROD'
+    
+    #parametros de fornecedor  
+    if usa_fornec and usa_fornec == 'C':
         cursor.execute(f'''
             SELECT codprod FROM MSCUPONAGEMPROD WHERE IDCAMPANHA = {idcampanha}
         ''')
@@ -110,7 +118,10 @@ def processacupom():
 
         if len(listfornecs) > 0:
             produtoFornecWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN {listfornecs} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1) AS LISTFORNEC'
-
+    
+    elif usa_prod and usa_prod == 'M':
+        produtoFornecWhere = f',(SELECT COUNT(DISTINCT CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED)) AS LISTPROD'
+    
     print('iniciando pesquisa de pedidos...')
 
     cursor.execute(f'''
@@ -122,12 +133,13 @@ def processacupom():
             (SELECT CLIENTE FROM PCCLIENT WHERE CODCLI = PCPEDC.CODCLI ),
             (SELECT EMAIL FROM PCCLIENT WHERE CODCLI = PCPEDC.CODCLI)
             {produtoFornecWhere}
-      		{listprodsWhere}
+            {listprodsWhere}
         FROM PCPEDC 
         WHERE 
             "DATA" BETWEEN to_date('{dt_inicial}', 'yyyy-mm-dd') AND to_date('{dt_final}', 'yyyy-mm-dd') AND
             POSICAO = 'F' AND 
-            ORIGEMPED = 'A' AND 
+            ORIGEMPED IN ('F', 'T', 'R', 'B', 'A') AND 
+            CONDVENDA != 10 AND
             NOT EXISTS (
                 SELECT 1
                 FROM MSCUPONAGEM
@@ -148,19 +160,28 @@ def processacupom():
         qtcupons = int(math.floor(ped[1] / valor))
 
         if ped[6] is not None or ped[7] is not None:
-            qtcupons = qtcupons * multiplicador_cupom
             bonificadoWhere = 'S'
+            
+            if tipo_intensificador == 'M':
+                qtcupons = qtcupons * multiplicador_cupom
+            elif tipo_intensificador == 'S':
+                if ped[6] and ped[6] > valor_fornecedor:
+                    qtcupons = qtcupons + multiplicador_cupom
+                if ped[6] and ped[6] > valor_fornecedor:
+                    qtcupons = qtcupons + multiplicador_cupom
+            else:
+                bonificadoWhere = 'N'
         else:
             bonificadoWhere = 'N'
         
         if qtcupons >= 1:
             for i in range(qtcupons):
-                print(f'''gerando numero da sorte pedido {ped}''')
+                print(f'''gerando numero da sorte pedido {ped[0]} volume {i + 1} de {qtcupons}''')
                 cursor.execute(f'''
                     INSERT INTO MSCUPONAGEM
                     (ID, DATAPED, DTMOV, NUMPED, VALOR, BONIFICADO, NUMSORTE, CODCLI, IDCAMPANHA)
-                    VALUES((SELECT MAX(id) + 1 FROM MSCUPONAGEM), '{dateFormat(ped[2])}', TRUNC(SYSDATE), {ped[0]}, {ped[1]}, 
-                    '{bonificadoWhere}', (SELECT MAX(NUMSORTE) + 1 FROM MSCUPONAGEM WHERE IDCAMPANHA = {idcampanha}), {ped[3]}, {idcampanha})
+                    VALUES((SELECT COALESCE(MAX(id), 0) + 1 FROM MSCUPONAGEM), TO_DATE('{ped[2]}', 'yyyy-mm-dd'), SYSDATE, {ped[0]}, {ped[1]}, 
+                    '{bonificadoWhere}', (SELECT COALESCE(MAX(NUMSORTE), 0) + 1 FROM MSCUPONAGEM WHERE IDCAMPANHA = {idcampanha}), {ped[3]}, {idcampanha})
                 ''')
             
             cursor.execute(f'''
@@ -171,7 +192,6 @@ def processacupom():
             conexao.commit()
             
             if envia_email and envia_email == 'S':
-                print(f'enviando email para {ped[5]}')
                 if testa_envio_email:
                     enviaremail(qtcupons, ped[4], 'brunomaya10@gmail.com', qtcupons_total, ped[0])
                 else:

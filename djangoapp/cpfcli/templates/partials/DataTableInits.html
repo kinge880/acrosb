@@ -29,7 +29,7 @@
                         }
                     },
                     {% endif %}
-                    {% if habilitaexportacao %}
+                    {% if habilitaexportacao or habilitaexportacaoplanilha %}
                         {
                             extend: 'excel',
                             className: 'btn-sm btn-success btnDataTable',
@@ -45,6 +45,8 @@
                                 }
                             }
                         },
+                    {% endif %}
+                    {% if habilitaexportacao %}
                         {
                             extend: 'pdf',
                             className: 'btn-sm btn-danger btnDataTable',

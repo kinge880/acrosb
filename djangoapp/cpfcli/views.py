@@ -137,16 +137,53 @@ def campanhas(request):
     cursor = conexao.cursor()
     context['tituloInsere'] = 'Criar nova campanha'
     context['tituloEdit'] = 'Editar campanha'
+    context['habilitaexportacaoplanilha'] = 'habilitaexportacaoplanilha'
     campos = [
-        ['codigo', 'hidden', True, 'col-6', (), ' '],       # Código
-        ['descricao', 'text', True, 'col-12', (), 'Descrição da campanha'],    # Descrição
-        ['dtinicial', 'date', True, 'col-6', (), 'Data inicial da campanha'],   # Data Inicial
-        ['dtfinal', 'date', True, 'col-6', (), 'Data final da campanha'],     # Data Final
-        ['valor', 'number', True, 'col-6', (), 'Valor por número da sorte'],      # Valor
-        ['multiplicador', 'number', False, 'col-6', (), 'Valor do multiplicador'],  # Multiplicador
-        ['usafornec', 'select', True, 'col-6', (('S','Deve utilizar multiplicador por fornecedor'), ('N','Não deve utilizar multiplicador por fornecedor')), 'Valor do multiplicador'],    # USAFORNEC
-        ['usaprod', 'select', True, 'col-6', (('S','Deve utilizar multiplicador por produto'), ('N','Não deve utilizar multiplicador por produto')), 'Valor do multiplicador'], # USAPROD
-        ['usaemail', 'select', True, 'col-6', (('S','Enviar email ao cliente informando os cupons obtidos'), ('N','Não enviar email')), 'Deve enviar email?'], # USAEMAIL
+        ['codigo', 'hidden', True, 'col-6', (), ' ', 'Codigo interno'],       # Código
+        ['descricao', 'text', True, 'col-12', (), 'Nome completo da campanha', 'Descrição da campanha'],    # Descrição
+        ['dtinicial', 'date', True, 'col-3', (), 'Data inicial da campanha', 'Data inicial',],   # Data Inicial
+        ['dtfinal', 'date', True, 'col-3', (), 'Data final da campanha', 'Data final'],     # Data Final
+        ['valor', 'number', True, 'col-3', (), 'R$', 'Valor por número'],      # Valor
+        ['usaemail', 'select', True, 'col-3', 
+            (
+                ('N','1 - Não enviar email'),
+                ('S','2 - Enviar email ao cliente informando os números da sorte obtidos'),
+            ), 
+            'Deve enviar email?', 
+            'Envia email'
+        ], 
+        ['tipointensificador', 'select', True, 'col-4', 
+            (
+                ('N','1 - Não utilizar intensificador'),
+                ('M','2 - Multiplicação'), 
+                ('S','3 - Soma'),
+            ), 
+            'Valor do multiplicador', 
+            'Tipo de intensificador'
+        ],  
+        [   'usafornec', 'select', True, 'col-4',
+            (
+                
+                ('N','1 - Não utilizar intensificador por fornecedor'),
+                ('C','2 - Intensificador por fornecedor cadastrado'),
+                ('M','3 - Intensificador por fornecedor multiplo'),
+            ),
+            'Valor do multiplicador',
+            'Utiliza fornecedor'
+        ],  
+        ['usaprod', 'select', True, 'col-4', 
+            (
+                
+                ('N','1 - Não utilizar intensificador por produto'),
+                ('C','2 - Utilizar intensificador por produto cadastrado'), 
+                ('M','3 - Utilizar intensificador por produto multiplo'),
+            ), 
+            'Valor do multiplicador', 
+            'Utiliza produto' 
+        ],
+        ['multiplicador', 'number', True, 'col-4', (), 'valor', 'Valor do intensificador'], 
+        ['fornecvalor', 'number', True, 'col-4', (), 'Digite a quantidade', 'Quantidade de fornecedores'], 
+        ['prodvalor', 'number', True, 'col-4', (), 'Digite a quantidade', 'Quantidade de produtos'], 
     ]
     context['campos'] = campos
     
@@ -166,7 +203,10 @@ def campanhas(request):
                 ATIVO,
                 to_char(DTINIT, 'yyyy-mm-dd'),
                 to_char(DTFIM, 'yyyy-mm-dd'),
-                ENVIAEMAIL
+                ENVIAEMAIL,
+                TIPOINTENSIFICADOR,
+                FORNECVALOR,
+                PRODVALOR
             FROM MSCUPONAGEMCAMPANHA
             WHERE DTEXCLUSAO IS NULL
         ''')
@@ -183,13 +223,16 @@ def campanhas(request):
         usafornec = request.POST.get('usafornec')
         usaprod = request.POST.get('usaprod')
         usaemail = request.POST.get('usaemail')
+        tipointensificador = request.POST.get('tipointensificador')
+        fornecvalor = request.POST.get('fornecvalor')
+        prodvalor = request.POST.get('prodvalor')
         
         if 'link' in request.POST:
             return redirect(f'/campanhas/{idcampanha}/')
         
         if 'delete' in request.POST:
             cursor.execute(f'''
-                UPDATE MSCUPONAGEMCAMPANHA SET DTEXCLUSAO = SYSDATE, DTULTALT=SYSDATE
+                UPDATE MSCUPONAGEMCAMPANHA SET DTEXCLUSAO = SYSDATE, DTULTALT=SYSDATE, ATIVO = 'N'
                 WHERE IDCAMPANHA = {codigo}
             ''')
             messages.success(request, f"Campanha {codigo} deletada com sucesso")
@@ -229,45 +272,48 @@ def campanhas(request):
             exist_active = cursor.fetchone()
                 
             if exist_active is None:
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMCAMPANHA
+                ativoWhere = 'S'
+            else:
+                ativoWhere = 'N'
+                
+            cursor.execute(f'''
+                INSERT INTO MSCUPONAGEMCAMPANHA
+                (
+                    IDCAMPANHA, 
+                    DESCRICAO, 
+                    DTULTALT, 
+                    DTINIT, 
+                    DTFIM, 
+                    MULTIPLICADOR, 
+                    VALOR, 
+                    USAFORNEC, 
+                    USAPROD, 
+                    ATIVO,
+                    ENVIAEMAIL,
+                    TIPOINTENSIFICADOR,
+                    FORNECVALOR,
+                    PRODVALOR
+                )
+                VALUES(
                     (
-                        IDCAMPANHA, 
-                        DESCRICAO, 
-                        DTULTALT, 
-                        DTINIT, 
-                        DTFIM, 
-                        MULTIPLICADOR, 
-                        VALOR, 
-                        USAFORNEC, 
-                        USAPROD, 
-                        ATIVO,
-                        ENVIAEMAIL
+                        SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA), 
+                        '{descricao}', 
+                        SYSDATE, 
+                        to_date('{dtinicial}', 'yyyy-mm-dd'),
+                        to_date('{dtfinal}', 'yyyy-mm-dd'), 
+                        {multiplicador}, 
+                        {valor},
+                        '{usafornec}', 
+                        '{usaprod}', 
+                        '{ativoWhere}',
+                        '{usaemail}',
+                        '{tipointensificador}',
+                        '{fornecvalor}',
+                        '{prodvalor}'
+                        
                     )
-                    VALUES(
-                        (
-                            SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA), 
-                            '{descricao}', 
-                            SYSDATE, 
-                            to_date('{dtinicial}', 'yyyy-mm-dd'),
-                            to_date('{dtfinal}', 'yyyy-mm-dd'), 
-                            {valor}, 
-                            {multiplicador}, 
-                            '{usafornec}', 
-                            '{usaprod}', 
-                            'S',
-                            '{usaemail}'
-                        )
-                ''')
-                messages.success(request, f"Campanha inserida com sucesso")
-            else:   
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMCAMPANHA
-                    (IDCAMPANHA, DESCRICAO, DTULTALT, DTINIT, DTFIM, MULTIPLICADOR, VALOR, USAFORNEC, USAPROD, ATIVO, ENVIAEMAIL)
-                    VALUES((SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA), '{descricao}', SYSDATE, to_date('{dtinicial}', 'yyyy-mm-dd'),
-                    to_date('{dtfinal}', 'yyyy-mm-dd'), {valor}, {multiplicador}, '{usafornec}' , '{usaprod}' , 'N', '{usaemail}')
-                ''')
-                messages.success(request, f"Campanha inserida com sucesso")     
+            ''')
+            messages.success(request, f"Campanha inserida com sucesso")    
         
         elif 'edit' in request.POST:
             cursor.execute(f'''
@@ -281,7 +327,10 @@ def campanhas(request):
                     VALOR={valor}, 
                     USAFORNEC='{usafornec}', 
                     USAPROD='{usaprod}',
-                    ENVIAEMAIL = '{usaemail}'
+                    ENVIAEMAIL = '{usaemail}',
+                    TIPOINTENSIFICADOR = '{tipointensificador}',
+                    FORNECVALOR = '{fornecvalor}',
+                    PRODVALOR = '{prodvalor}'
                 WHERE IDCAMPANHA = {codigo} 
             ''')
             messages.success(request, f"Campanha {codigo} editada com sucesso")
@@ -424,7 +473,7 @@ def produtos(request):
                     messages.error(request, f"Produto {codprod} já cadastrado na campanha {idcampanha}, verifique a planilha")  
                     return render(request, 'produtos/produtos.html', context)   
             
-        messages.success(request, f"Todos os produtos foram inseridos com sucesso!")    
+            messages.success(request, f"Todos os produtos foram inseridos com sucesso!")    
         conexao.commit()
     getTable()
     return render(request, 'produtos/produtos.html', context)
