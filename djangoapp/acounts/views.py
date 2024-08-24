@@ -57,3 +57,12 @@ def login(request):
             return render(request, 'login.html')
     else:
         return render(request, 'login.html', {'login': 'login'})
+
+#painel com as config visuais da tela de cliente
+@login_required(login_url="/login/")
+def config_user_page(request):
+    context = {}
+    if request.method == 'POST':
+        pass
+            
+    return render(request, 'config/user_panel.html', context)

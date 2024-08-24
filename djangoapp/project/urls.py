@@ -7,6 +7,7 @@ urlpatterns = [
     path('', include("cpfcli.urls")),
     path('accounts/', include("acounts.urls")),
     path('admin/', admin.site.urls),
+    path('reusables/', include("reusable.urls")),
 ]  
 
 if settings.DEBUG:

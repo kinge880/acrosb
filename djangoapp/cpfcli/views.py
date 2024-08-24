@@ -5,6 +5,7 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.timezone import now
 import pandas as pd
+from reusable.views import *
 from io import BytesIO
 from django.views.decorators.http import require_http_methods
 

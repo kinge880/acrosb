@@ -6,7 +6,11 @@
 <div class="position-relative p-0  {% if request.path != '/' %} {% endif %}">
     <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 {% if request.path != '/' %} sticky-top on-top shadow-sm {% else %} navbarstickyhome {% endif %}">
         <a href="/" class="navbar-brand p-0">
-            <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>MTK</h1>
+            {% if variaveis_globais.navbarlogourl %}
+                <img src="{{variaveis_globais.navbarlogourl}}" class="img-fluid" alt="Responsive image">
+            {% else %}
+                <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>{{variaveis_globais.navbarlogotext}}</h1>
+            {% endif %}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
             <span class="fa fa-bars"></span>
@@ -24,6 +28,7 @@
                     <div class="dropdown">
                         <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{request.user.first_name}}</a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/accounts/config/userpage/"><i class="fa-solid fa-gear me-2"></i>Configurar página do cliente</a></li>
                             <li><a class="dropdown-item" href="/accounts/deslogar"><i class="fa fa-power-off me-2"></i>Deslogar</a></li>
                         </ul>
                     </div>
@@ -35,28 +40,5 @@
     </nav>
 </div>
 <!-- Navbar End -->
-
-<!-- Modal -->
-<div class="modal fade" id="regionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Selecione uma região para acessar</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <select id="regionSelector" class="form-select">
-                {% for regiao in regioes %}
-                    <option value="{{regiao.0}}">{{regiao.0}} - {{regiao.1}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="redirectMenu()">Acessar</button>
-        </div>
-    </div>
-    </div>
-</div>
 
 {% endblock %}

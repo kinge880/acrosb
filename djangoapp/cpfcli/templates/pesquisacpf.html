@@ -8,7 +8,7 @@
             <div class="{% if not postmethod %} col-xl-8 {% else %} col-xl-10 {% endif %}">
                 {% if not postmethod %}
                     <div class="text-center text-white">
-                        <h1 class="mb-5">Digite abaixo para verificar seus números da sorte!</h1>
+                        <h1 class="mb-5">{{ variaveis_globais.textoinicial }}</h1>
                         <form class="form-subscribe" id="cpfForm" method="POST">
                             {% csrf_token %}
                             <!-- Email address input-->
