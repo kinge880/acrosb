@@ -71,6 +71,7 @@ def validacpf(cpf):
     return True
 
 # Create your views here.
+@login_required(login_url="/accounts/login/")
 def base(request):
     context = {}
     if request.method == 'POST':
@@ -131,7 +132,7 @@ def base(request):
             
     return render(request, 'pesquisacpf.html', context)
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def campanhas(request):
     context = {}
     conexao = conexao_oracle()
@@ -340,7 +341,7 @@ def campanhas(request):
     getTable()
     return render(request, 'campanhas/campanha.html', context)
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def produtos(request):
     context = {}
     conexao = conexao_oracle()
@@ -479,7 +480,7 @@ def produtos(request):
     getTable()
     return render(request, 'produtos/produtos.html', context)
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def fornecedores(request):
     context = {}
     conexao = conexao_oracle()
@@ -619,7 +620,7 @@ def fornecedores(request):
     getTable()
     return render(request, 'fornecedores/fornecedores.html', context)
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def campanhasid(request, idcampanha):
     context = {}
     conexao = conexao_oracle()
@@ -677,7 +678,7 @@ def campanhasid(request, idcampanha):
     getTable()
     return render(request, 'campanhas/campanhaNumeros.html', context)
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def campanhasidclient(request, idcampanha, idclient):
     context = {}
     conexao = conexao_oracle()
@@ -743,7 +744,7 @@ def campanhasidclient(request, idcampanha, idclient):
     getTable()
     return render(request, 'campanhas/campanhaNumerosClient.html', context)
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def gerador(request, idcampanha):
     context = {}
     conexao = conexao_oracle()
@@ -814,7 +815,7 @@ def gerador(request, idcampanha):
     return render(request, 'sorteio/gerador.html', context)
 
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def sorteio(request):
     context = {}
     conexao = conexao_oracle()
@@ -901,7 +902,7 @@ def sorteio(request):
     return render(request, 'sorteio/campanhas.html', context)
 
 
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def sorteioganhadores(request, idcampanha):
     context = {}
     conexao = conexao_oracle()

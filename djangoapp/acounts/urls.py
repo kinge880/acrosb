@@ -6,7 +6,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('login/', views.login, name='login'),
-    path('config/userpage/', views.config_user_page, name='login'),
+    path('config/userpage/', views.config_user_page, name='userpagepanel'),
     path('deslogar/', views.logout_view, name='logout')
 ] 
 

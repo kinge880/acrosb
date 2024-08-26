@@ -1,22 +1,42 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+import os
+
+class empresa(models.Model):
+    empresa = models.TextField(max_length=255, blank=True, null=True)
+    dtcadastro = models.DateTimeField(blank=True, null=True)
+    ativo = models.CharField(max_length=100, choices=[('S', 'Sim'), ('N', 'Não')], default='S')
+    
+    def __str__(self):
+        return 'empresas cadastradas'
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(blank=True, null=True, max_length=1000)
-    adress = models.CharField(max_length=100, blank=True, null=True)
-    city = models.CharField(max_length=50, blank=True, null=True)
-    cep = models.CharField(max_length=10, blank=True, null=True)
-    birth_date = models.DateField(null=True, blank=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    cpf = models.CharField(max_length=14, null=True, blank=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    gender = models.CharField(max_length=1, choices=[('M', 'Masculino'), ('F', 'Feminino'), ('O', 'Outros')], blank=True, null=True)
-    twitter = models.CharField(max_length=150, blank=True, null=True)
-    face = models.CharField(max_length=150, blank=True, null=True)
-    linkedin = models.CharField(max_length=150, blank=True, null=True)
-    instagram = models.CharField(max_length=150, blank=True, null=True)
-    cargo = models.CharField(max_length=100, blank=True, null=True)
+    idempresa = models.ForeignKey(empresa, on_delete=models.CASCADE)
 
     def __str__(self) :
-        return self.user.first_name + ' ' + self.user.last_name
+        return self.idempresa
+    
+class PresentationSettings(models.Model):
+    idempresa = models.ForeignKey(empresa, db_column='idempresa', on_delete=models.CASCADE)
+    background_type = models.CharField(max_length=10, choices=[('color', 'Cor'), ('url', 'URL')], blank=True, null=True)
+    background_color = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #FFFFFF
+    background_url = models.ImageField( blank=True, null=True)
+    filter_color = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #000000
+    initial_text = models.TextField(blank=True, null=True)
+    logo_type = models.CharField(max_length=10, choices=[('text', 'Texto'), ('image', 'Imagem')], default='text')
+    logo_text = models.CharField(max_length=255, blank=True, null=True)
+    logo_image = models.ImageField( blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        self.logo_image.name = f'logos/{self.idempresa.id}/logo.png'
+        self.background_url.name = f'background/{self.idempresa.id}/background.png'
+        
+        super().save(*args, **kwargs)
+                
+    def __str__(self):
+        return 'Configurações de Apresentação'
+    

@@ -6,10 +6,10 @@
 <div class="position-relative p-0  {% if request.path != '/' %} {% endif %}">
     <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 {% if request.path != '/' %} sticky-top on-top shadow-sm {% else %} navbarstickyhome {% endif %}">
         <a href="/" class="navbar-brand p-0">
-            {% if variaveis_globais.navbarlogourl %}
-                <img src="{{variaveis_globais.navbarlogourl}}" class="img-fluid" alt="Responsive image">
+            {% if variaveis_globais.logo_type and  variaveis_globais.logo_type == 'image' %}
+                <img src="/media/{{variaveis_globais.logo_image}}" class="img-fluid" alt="Responsive image">
             {% else %}
-                <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>{{variaveis_globais.navbarlogotext}}</h1>
+                <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>{{variaveis_globais.logo_text}}</h1>
             {% endif %}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -17,18 +17,22 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
-                {% if request.user.username %}  
-                    <a href="/produtos" class="nav-link">Produtos</a>
-                    <a href="/fornecs" class="nav-link">Fornecedores</a>
-                    <a href="/campanhas" class="nav-link">Campanhas</a>
-                    <a href="/sorteio" class="nav-link">Sorteio</a> 
-                    {% if request.user.is_staff %}
-                        <a href="/admin/" class="nav-link">Painel administrativo</a>
+                {% if request.user.username %} 
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                        <a href="/produtos" class="nav-link">Produtos</a>
+                        <a href="/fornecs" class="nav-link">Fornecedores</a>
+                        <a href="/campanhas" class="nav-link">Campanhas</a>
+                        <a href="/sorteio" class="nav-link">Sorteio</a> 
+                        {% if request.user.is_superuser %}
+                            <a href="/admin/" class="nav-link">Painel administrativo</a>
+                        {% endif %}
                     {% endif %}
                     <div class="dropdown">
                         <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{request.user.first_name}}</a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/accounts/config/userpage/"><i class="fa-solid fa-gear me-2"></i>Configurar página do cliente</a></li>
+                            {% if request.user.is_staff %}
+                                <li><a class="dropdown-item" href="/accounts/config/userpage/"><i class="fa-solid fa-gear me-2"></i>Configurar página do cliente</a></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="/accounts/deslogar"><i class="fa fa-power-off me-2"></i>Deslogar</a></li>
                         </ul>
                     </div>

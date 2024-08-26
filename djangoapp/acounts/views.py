@@ -1,10 +1,8 @@
 from django.shortcuts import render
 import json
 from django.apps import apps
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.contrib.auth import login as loginDjango
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -13,11 +11,14 @@ from django.contrib.auth import logout
 from django.conf import settings
 from django.db.models import Q
 from project.conexao_postgresql import *
+from project.middlewares import CustomCSSMiddleware
 import io 
 from datetime import datetime
 import numpy as np
 from django.contrib.auth.hashers import check_password, make_password
 import re
+from .models import PresentationSettings, Profile, empresa
+from .forms import PresentationSettingsForm
 
 #Anonymous required 
 def anonymous_required(function=None, redirect_url='/'):
@@ -58,11 +59,31 @@ def login(request):
     else:
         return render(request, 'login.html', {'login': 'login'})
 
-#painel com as config visuais da tela de cliente
-@login_required(login_url="/login/")
+@login_required(login_url="/accounts/login/")
 def config_user_page(request):
-    context = {}
     if request.method == 'POST':
-        pass
-            
+        profile = Profile.objects.get(user=request.user)
+        idempres = empresa.objects.get(id=profile.idempresa.id)
+        
+        dictform = request.POST.copy()
+        dictform['idempresa'] = idempres
+        
+        form = PresentationSettingsForm(dictform, request.FILES, instance=PresentationSettings.objects.first())
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configurações salvas com sucesso!')
+            return redirect('userpagepanel')
+        else:
+            messages.error(request, 'Erro ao salvar configurações. Verifique os campos e tente novamente.')
+            # Adiciona os erros de validação aos messages
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Erro no campo '{field}': {error}")
+    else:
+        instance = PresentationSettings.objects.first() or PresentationSettings()
+        form = PresentationSettingsForm(instance=instance)
+
+    context = {
+        'form': form
+    }
     return render(request, 'config/user_panel.html', context)

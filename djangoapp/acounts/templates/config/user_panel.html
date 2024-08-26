@@ -1,0 +1,167 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h1 class="text-center mb-4">Configurações da tela de pesquisa</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                <label for="background_type">Tipo de Fundo:</label>
+                <select class="form-control" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
+                    <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>Fundo da página em cor sólida</option>
+                    <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>Fundo da página utilizando uma imagem</option>
+                </select>
+            </div>
+    
+            <div id="color_field" class="form-group mb-3" style="display: {% if variaveis_globais.background_type == 'color' %}block{% else %}none{% endif %};">
+                <label for="background_color">Cor de Fundo:</label>
+                <input type="color" class="form-control form-control-color w-100" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}" onchange="updateColorField('background_color')">
+            </div>
+            
+            <div id="background_image_group" class="form-group mb-3" style="display: {% if variaveis_globais.background_type == 'url' %}block{% else %}none{% endif %};">
+                <label for="background_image">Imagem de Fundo:</label>
+                
+                <div class="mb-3">
+                    <label for="background_image">
+                        <div id="background_container" style="width: 200px; height: 200px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
+                            {% if variaveis_globais.background_url %}
+                                <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                            {% endif %}
+                        </div>
+                    </label>
+                </div>
+                
+                <input type="file" class="form-control-file" id="background_image" name="background_url" style="display: none;" onchange="previewBackgroundImage(event)">
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="filter_color">Cor do Filtro sobre o fundo da página:</label>
+                <input type="color" class="form-control form-control-color w-100" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="initial_text">Texto Inicial apresentado em cima das caixas de pesquisa:</label>
+                <textarea class="form-control" id="initial_text" name="initial_text" rows="4">{{ variaveis_globais.initial_text }}</textarea>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="logo_type">Tipo de Logo utilizada na barra superior:</label>
+                <select class="form-control" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
+                    <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>Logo no formato de texto</option>
+                    <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>Logo no formato de imagem</option>
+                </select>
+            </div>
+
+            <div id="logo_text_group" class="form-group mb-3" style="display: {% if variaveis_globais.logo_type == 'text' %}block{% else %}none{% endif %};">
+                <label for="logo_text">Texto do Logo:</label>
+                <input type="text" class="form-control" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
+            </div>
+    
+            <div id="logo_image_group" class="form-group mb-3" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
+                <label for="logo_image_url">Imagem do Logo:</label>
+                
+                <div class="mb-3">
+                    <label for="logo_image">
+                        <div id="logo_container" style="width: 200px; height: 200px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
+                            {% if variaveis_globais.logo_image %}
+                                <img src="/media/{{ variaveis_globais.logo_image }}" alt="Imagem do Logo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                            {% endif %}
+                        </div>
+                    </label>
+                </div>
+                
+                <input type="file" class="form-control-file" id="logo_image" name="logo_image" style="display: none;" onchange="previewImage(event)">
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <button type="submit" class="btn btn-secondary">Voltar ao padrão</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+            {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleBackgroundFields() {
+        const backgroundType = document.getElementById('background_type').value;
+        const colorField = document.getElementById('color_field');
+        const urlField = document.getElementById('background_image_group');
+
+        if (backgroundType === 'color') {
+            colorField.style.display = 'block';
+            urlField.style.display = 'none';
+        } else if (backgroundType === 'url') {
+            colorField.style.display = 'none';
+            urlField.style.display = 'block';
+        }
+    }
+
+    function toggleLogoFields() {
+        const logoType = document.getElementById('logo_type').value;
+        const logoTextGroup = document.getElementById('logo_text_group');
+        const logoImageGroup = document.getElementById('logo_image_group');
+
+        if (logoType === 'text') {
+            logoTextGroup.style.display = 'block';
+            logoImageGroup.style.display = 'none';
+        } else if (logoType === 'image') {
+            logoTextGroup.style.display = 'none';
+            logoImageGroup.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleBackgroundFields();
+        toggleLogoFields();
+    });
+
+    function previewImage(event) {
+        var input = event.target;
+        var container = document.getElementById('logo_container');
+        
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                container.innerHTML = '<img src="' + e.target.result + '" alt="Imagem do Logo Atual" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">';
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewBackgroundImage(event) {
+        const container = document.getElementById('background_container');
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                container.innerHTML = ''; // Clear previous content
+                container.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            container.innerHTML = '<span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>';
+        }
+    }
+</script>
+{% endblock %}

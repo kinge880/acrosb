@@ -1,16 +1,28 @@
 
 :root {
-    --logo: url('{{ logo }}');
     --navbar-color: {{ navbarcolor }};
-    --background: {{ background }};
-    --background-url: {{ backgroundurl }};
-    --background-cor: {{ backgroundcor }};
+    --filter_color: {{ filter_color }};
+    --background_url: {{ background_url }};
+    --background_color: {{ background_color }};
+}
+
+header.masthead {
+    position: relative;
+    {% if background_type == 'url' %}
+        background: url(/media/{{ background_url }}) no-repeat center center;
+    {% else %}
+        background-color: var(--background_color) ;
+    {% endif %}
+    background-size: cover;
+    padding-top: 8rem;
+    padding-bottom: 8rem;
+    height: 100vh;
 }
 
 header.masthead:before {
     content: "";
-    {% if backgroundfiltro %}
-        background-color: var(--background) ;
+    {% if filter_color %}
+        background-color: var(--filter_color) ;
     {% endif %}
     position: absolute;
     height: 100%;
@@ -18,20 +30,6 @@ header.masthead:before {
     top: 0;
     left: 0;
     opacity: 0.5;
-}
-
-header.masthead {
-    position: relative;
-    {% if backgroundcor %}
-        background-color: #343a40;
-    {% endif %}
-    {% if backgroundurl %}
-        background: url({{ backgroundurl }}) no-repeat center center;
-    {% endif %}
-    background-size: cover;
-    padding-top: 8rem;
-    padding-bottom: 8rem;
-    height: 100vh;
 }
 
 header.masthead h1, header.masthead .h1 {
