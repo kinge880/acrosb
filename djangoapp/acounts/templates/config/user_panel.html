@@ -3,12 +3,12 @@
 {% block content %}
 <div class="row">
     <div class="col-md-8 offset-md-2">
-        <h1 class="text-center mb-4">Configurações da tela de pesquisa</h1>
+        <h1 class="text-center mb-4 mt-3">Configurações da tela de pesquisa</h1>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group mb-3">
                 <label for="background_type">Tipo de Fundo:</label>
-                <select class="form-control" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
+                <select class="form-select" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
                     <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>Fundo da página em cor sólida</option>
                     <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>Fundo da página utilizando uma imagem</option>
                 </select>
@@ -49,7 +49,7 @@
 
             <div class="form-group mb-3">
                 <label for="logo_type">Tipo de Logo utilizada na barra superior:</label>
-                <select class="form-control" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
+                <select class="form-select" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
                     <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>Logo no formato de texto</option>
                     <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>Logo no formato de imagem</option>
                 </select>

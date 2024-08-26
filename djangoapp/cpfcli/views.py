@@ -759,9 +759,14 @@ def gerador(request, idcampanha):
                 SELECT NUMSORTE, MSCUPONAGEM.codcli, PCCLIENT.cliente
                 FROM MSCUPONAGEM
                 JOIN PCCLIENT ON MSCUPONAGEM.codcli = PCCLIENT.CODCLI
-                WHERE MSCUPONAGEM.IDCAMPANHA = {idcampanha}
-                AND MSCUPONAGEM.NUMSORTE > 0
-                AND PCCLIENT.CODCLI > 0
+                WHERE 
+                    MSCUPONAGEM.IDCAMPANHA = {idcampanha}
+                    AND MSCUPONAGEM.NUMSORTE > 0
+                    AND PCCLIENT.CODCLI > 0
+                    AND not exists (
+                        SELECT NUMSORTE FROM MSCUPONAGEMVENCEDORES 
+                        WHERE NUMSORTE = MSCUPONAGEM.NUMSORTE
+                    )
                 ORDER BY DBMS_RANDOM.VALUE
             )
             WHERE ROWNUM = 1
