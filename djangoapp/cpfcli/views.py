@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, HttpResponse
+from django.core.exceptions import PermissionDenied
+from functools import wraps
 from django.contrib import messages
 from project.oracle import *
 from datetime import datetime
@@ -6,8 +8,18 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.timezone import now
 import pandas as pd
 from reusable.views import *
+from django.db import transaction
 from io import BytesIO
 from django.views.decorators.http import require_http_methods
+from .models import BlackList
+
+def staff_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_staff:
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 def upload_planilha(file):
     if file:
@@ -133,6 +145,7 @@ def base(request):
     return render(request, 'pesquisacpf.html', context)
 
 @login_required(login_url="/accounts/login/")
+@staff_required
 def campanhas(request):
     context = {}
     conexao = conexao_oracle()
@@ -173,7 +186,7 @@ def campanhas(request):
             'Valor do multiplicador',
             'Utiliza fornecedor'
         ],  
-        ['usaprod', 'select', True, 'col-4', 
+        ['usaprod', 'select', True, 'col-4',
             (
                 
                 ('N','1 - Não utilizar intensificador por produto'),
@@ -352,6 +365,7 @@ def campanhas(request):
     return render(request, 'campanhas/campanha.html', context)
 
 @login_required(login_url="/accounts/login/")
+@staff_required
 def produtos(request):
     context = {}
     conexao = conexao_oracle()
@@ -371,7 +385,11 @@ def produtos(request):
     def getTable():
         conexao.rollback()
         cursor.execute(f'''
-            SELECT MSCUPONAGEMPROD.IDCAMPANHA, MSCUPONAGEMPROD.CODPROD, MSCUPONAGEMPROD.DTMOV, PCPRODUT.DESCRICAO
+            SELECT 
+                MSCUPONAGEMPROD.IDCAMPANHA, 
+                MSCUPONAGEMPROD.CODPROD, 
+                MSCUPONAGEMPROD.DTMOV, 
+                PCPRODUT.DESCRICAO
             FROM MSCUPONAGEMPROD 
             INNER JOIN PCPRODUT ON (MSCUPONAGEMPROD.CODPROD = PCPRODUT.CODPROD)
         ''')
@@ -491,6 +509,7 @@ def produtos(request):
     return render(request, 'produtos/produtos.html', context)
 
 @login_required(login_url="/accounts/login/")
+@staff_required
 def fornecedores(request):
     context = {}
     conexao = conexao_oracle()
@@ -508,7 +527,6 @@ def fornecedores(request):
     context['permiteplanilha'] = 'permiteplanilha'
     
     def getTable():
-        print('tabelou')
         conexao.rollback()
         cursor.execute(f'''
             SELECT MSCUPONAGEMFORNEC.IDCAMPANHA, MSCUPONAGEMFORNEC.CODFORNEC, MSCUPONAGEMFORNEC.DTMOV, PCFORNEC.FORNECEDOR
@@ -592,7 +610,7 @@ def fornecedores(request):
                 if exist_campanha is None:
                     getTable()
                     messages.error(request, f"Não existe campanha cadastrada com código {idcampanha}, verifique a planilha")
-                    return render(request, 'produtos/produtos.html', context)
+                    return render(request, 'fornecedores/fornecedores.html', context)
                     
                 cursor.execute(f'''
                     SELECT CODFORNEC
@@ -604,7 +622,7 @@ def fornecedores(request):
                 if exist_prod is None:
                     getTable()
                     messages.error(request, f"Não existe fornecedor cadastrado no winthor com codfornec {codfornec}, verifique a planilha")
-                    return render(request, 'produtos/produtos.html', context)
+                    return render(request, 'fornecedores/fornecedores.html', context)
                 
                 cursor.execute(f'''
                     SELECT 
@@ -623,7 +641,7 @@ def fornecedores(request):
                 else:   
                     getTable()
                     messages.error(request, f"Fornecedor {codfornec} já cadastrado na campanha {idcampanha}, verifique a planilha")  
-                    return render(request, 'produtos/produtos.html', context)   
+                    return render(request, 'fornecedores/fornecedores.html', context)   
             
             messages.success(request, f"Todos os fornecedores foram inseridos com sucesso!")    
         conexao.commit()
@@ -631,6 +649,147 @@ def fornecedores(request):
     return render(request, 'fornecedores/fornecedores.html', context)
 
 @login_required(login_url="/accounts/login/")
+@staff_required
+def blacklist(request):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['tituloInsere'] = 'Adicionar cliente proibido'
+    context['tituloPlanilha'] = 'Adicionar planilha de clientes'
+    context['tipolink'] = 'F'
+    
+    campos = [
+        ['idcampanha', 'number', True, 'col-md-6 col-12', (), 'Código da campanha cadastrada', 'Código da campanha cadastrada'],       # Código
+        ['codcli', 'number', True, 'col-12 col-md-6', (), 'Código do cliente no winthor 302', 'Código do cliente no winthor 302'],    # Descrição
+    ]
+    context['campos'] = campos
+    context['habilitaexportacao'] = 'Sim'
+    context['permiteplanilha'] = 'permiteplanilha'
+    
+    def getTable():
+        context['listclis'] = BlackList.objects.all().values(
+            'IDCAMPANHA', 'CODCLI', 'NOMECLI', 'EMAIL', 'CPFCNPJ', 'DTMOV'
+        )
+    
+    def exist_client(cursor, codcli):
+        cursor.execute(f'''
+            SELECT 
+                CODCLI, 
+                COALESCE(CLIENTE, 'Sem nome cadastrado'), 
+                COALESCE(EMAIL, 'Sem email cadastrado'), 
+                COALESCE(CGCENT, 'Sem cpf ou cnpj cadastrado')
+            FROM PCCLIENT
+            WHERE CODCLI = {codcli}
+        ''')
+        return cursor.fetchone()
+
+    if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
+        codcli = request.POST.get('codcli')
+        
+        if 'delete' in request.POST:
+            BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli).delete()
+            messages.success(request, f"Cliente {codcli} na campanha {idcampanha} deletado com sucesso")
+        
+        elif 'insert' in request.POST:
+            exist_cli = exist_client(cursor, codcli)
+            exist_test = exist_campanha(cursor, idcampanha)
+            
+            if exist_test is None:
+                getTable()
+                messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                return render(request, 'sorteio/listanegra.html', context)
+            
+            if exist_cli is None:
+                getTable()
+                messages.error(request, f"Não existe cliente cadastrado com codcli {codcli}")
+                return render(request, 'sorteio/listanegra.html', context)
+            
+            if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli).exists():
+                BlackList.objects.create(
+                    IDCAMPANHA=idcampanha, 
+                    CODCLI = exist_cli[0], 
+                    DTMOV=now(),
+                    EMAIL = exist_cli[2],
+                    CPFCNPJ = exist_cli[3],
+                    NOMECLI = exist_cli[1]
+                )
+                messages.success(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} inserido com sucesso na blacklist da campanha {idcampanha}")
+            else:
+                messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na blacklist da campanha {idcampanha}") 
+            
+        elif 'insertp' in request.POST:
+            file = request.FILES.get("planilhas")
+            if file:
+                df = upload_planilha(file)
+                if not isinstance(df, pd.DataFrame):
+                    getTable()
+                    messages.error(request, df)
+                    return render(request, 'sorteio/listanegra.html', context)
+            else:
+                getTable()
+                messages.error(request, "Nenhuma planilha enviada")
+                return render(request, 'sorteio/listanegra.html', context)
+            
+            if not 'idcampanha' in df.columns or not 'codcli' in df.columns:
+                getTable()
+                messages.error(request, "Planilha enviada no formato errado")
+                return render(request, 'sorteio/listanegra.html', context)
+
+            try:
+                with transaction.atomic():
+                    for index, row in df.iterrows():
+                        idcampanha = row['idcampanha']
+                        codcli = row['codcli']
+
+                        exist_cli = exist_client(cursor, codcli)
+                        exist_test = exist_campanha(cursor, idcampanha)
+                        
+                        if exist_cli is None:
+                            transaction.rollback() 
+                            getTable()
+                            messages.error(request, f"Não existe cliente cadastrado com codcli {codcli}")
+                            return render(request, 'sorteio/listanegra.html', context)
+            
+                        if exist_test is None:
+                            transaction.rollback() 
+                            getTable()
+                            messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                            return render(request, 'sorteio/listanegra.html', context)
+            
+                        if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli).exists():
+                            BlackList.objects.create(
+                                IDCAMPANHA=idcampanha, 
+                                CODCLI = exist_cli[0], 
+                                DTMOV = now(),
+                                EMAIL = exist_cli[2],
+                                CPFCNPJ = exist_cli[3],
+                                NOMECLI = exist_cli[1]
+                            )
+                        else:
+                            transaction.rollback() 
+                            getTable()
+                            messages.error(request, f"Cliente {codcli} já cadastrado na campanha {idcampanha}, verifique a planilha")
+                            return render(request, 'sorteio/listanegra.html', context)
+
+                    messages.success(request, "Todos os clientes foram inseridos com sucesso!")
+
+            except Exception as e:
+                transaction.rollback()  # Garante que qualquer erro fará o rollback da transação
+                getTable()
+                messages.error(request, f"Ocorreu um erro ao processar a planilha: {str(e)}")
+                return render(request, 'sorteio/listanegra.html', context)
+
+        else:
+            getTable()
+            messages.error(request, "Ação não reconhecida")
+            return render(request, 'sorteio/listanegra.html', context)
+
+    getTable()
+    return render(request, 'sorteio/listanegra.html', context)
+
+@login_required(login_url="/accounts/login/")
+@staff_required
 def campanhasid(request, idcampanha):
     context = {}
     conexao = conexao_oracle()
@@ -681,14 +840,27 @@ def campanhasid(request, idcampanha):
                 PCCLIENT.CLIENTE
         ''')
         context['listaclients'] = cursor.fetchall()
+        conexao.close()
     
     if request.method == 'POST':
-        pass   
+        idcampanha = request.POST.get('idcampanha')
+        codcli = request.POST.get('codcli')
+        nomecli = request.POST.get('nomecli')
+        if 'delete' in request.POST:
+            cursor.execute(f'''
+                DELETE FROM MSCUPONAGEM 
+                WHERE 
+                    IDCAMPANHA = {idcampanha} AND 
+                    CODCLI = {codcli}
+            ''')
+            conexao.commit()
+            messages.success(request,f'Cliente {codcli} - {nomecli} deletado com sucesso da campanha {idcampanha}')
 
     getTable()
     return render(request, 'campanhas/campanhaNumeros.html', context)
 
 @login_required(login_url="/accounts/login/")
+@staff_required
 def campanhasidclient(request, idcampanha, idclient):
     context = {}
     conexao = conexao_oracle()
@@ -755,6 +927,7 @@ def campanhasidclient(request, idcampanha, idclient):
     return render(request, 'campanhas/campanhaNumerosClient.html', context)
 
 @login_required(login_url="/accounts/login/")
+@staff_required
 def gerador(request, idcampanha):
     context = {}
     conexao = conexao_oracle()
@@ -829,8 +1002,8 @@ def gerador(request, idcampanha):
     getTable()
     return render(request, 'sorteio/gerador.html', context)
 
-
 @login_required(login_url="/accounts/login/")
+@staff_required
 def sorteio(request):
     context = {}
     conexao = conexao_oracle()
@@ -916,8 +1089,8 @@ def sorteio(request):
     getTable()
     return render(request, 'sorteio/campanhas.html', context)
 
-
 @login_required(login_url="/accounts/login/")
+@staff_required
 def sorteioganhadores(request, idcampanha):
     context = {}
     conexao = conexao_oracle()

@@ -38,8 +38,13 @@
             </div>
 
             <div class="form-group mb-3">
-                <label for="filter_color">Cor do Filtro sobre o fundo da página:</label>
-                <input type="color" class="form-control form-control-color w-100" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
+                <label for="use_color">Usar cor de filtro:</label>
+                <input type="checkbox" id="use_color" name="use_color" onchange="toggleColorInput()">
+                
+                <div id="color_container" class="d-flex mt-2">
+                    <label for="filter_color">Cor do Filtro sobre o fundo da página:</label>
+                    <input type="color" class="form-control form-control-color w-75" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
+                </div>
             </div>
 
             <div class="form-group mb-3">

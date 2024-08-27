@@ -7,6 +7,7 @@ from django.conf import settings
 urlpatterns = [
     path('', views.base, name='paginicial'),
     path('produtos/', views.produtos, name='produtos'),
+    path('blacklist/', views.blacklist, name='blacklist'),
     path('fornecs/', views.fornecedores, name='fornecedores'),
     path('campanhas/', views.campanhas, name='campanha'),
     path('campanhas/<int:idcampanha>/', views.campanhasid, name='campanhasid'),

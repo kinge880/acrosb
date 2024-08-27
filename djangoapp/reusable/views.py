@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from django.template import Context
+from django.contrib import messages
 from django.template.loader import render_to_string
 from django.conf import settings
 from project.middlewares import CustomCSSMiddleware
@@ -13,3 +13,12 @@ def dynamic_css(request):
 def dynamic_html(request):
     css_vars = getattr(request, 'custom_css_vars', {})
     return css_vars
+
+def exist_campanha(cursor, idcampanha):
+    cursor.execute(f'''
+        SELECT IDCAMPANHA 
+        FROM MSCUPONAGEMCAMPANHA 
+        WHERE IDCAMPANHA = {idcampanha}
+    ''')
+    return cursor.fetchone()
+    
