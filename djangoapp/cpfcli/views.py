@@ -186,6 +186,15 @@ def campanhas(request):
         ['multiplicador', 'number', True, 'col-4', (), 'valor', 'Valor do intensificador'], 
         ['fornecvalor', 'number', True, 'col-4', (), 'Digite a quantidade', 'Quantidade de fornecedores'], 
         ['prodvalor', 'number', True, 'col-4', (), 'Digite a quantidade', 'Quantidade de produtos'], 
+        ['acumulativo', 'select', True, 'col-4', 
+            (
+                
+                ('N','1 - Não acumular saldo entre vendas'),
+                ('S','2 - Acumular saldo entre vendas'),
+            ), 
+            'Acumulativo', 
+            'Acumula vendas' 
+        ],
     ]
     context['campos'] = campos
     
@@ -208,7 +217,8 @@ def campanhas(request):
                 ENVIAEMAIL,
                 TIPOINTENSIFICADOR,
                 FORNECVALOR,
-                PRODVALOR
+                PRODVALOR,
+                acumulativo
             FROM MSCUPONAGEMCAMPANHA
             WHERE DTEXCLUSAO IS NULL
         ''')
@@ -764,7 +774,7 @@ def gerador(request, idcampanha):
                     AND MSCUPONAGEM.NUMSORTE > 0
                     AND PCCLIENT.CODCLI > 0
                     AND not exists (
-                        SELECT NUMSORTE FROM MSCUPONAGEMVENCEDORES 
+                        SELECT CODCLI FROM MSCUPONAGEMVENCEDORES 
                         WHERE NUMSORTE = MSCUPONAGEM.NUMSORTE
                     )
                 ORDER BY DBMS_RANDOM.VALUE

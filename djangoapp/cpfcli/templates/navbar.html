@@ -19,10 +19,18 @@
             <div class="navbar-nav ms-auto py-0">
                 {% if request.user.username %} 
                     {% if request.user.is_staff or request.user.is_superuser %}
-                        <a href="/produtos" class="nav-link">Produtos</a>
-                        <a href="/fornecs" class="nav-link">Fornecedores</a>
-                        <a href="/campanhas" class="nav-link">Campanhas</a>
-                        <a href="/sorteio" class="nav-link">Sorteio</a> 
+                        <a class="nav-link" href="/relatorios/menu">Relatórios</a>
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                Gerenciamento da Campanha
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="/campanhas">Cadastrar campanhas</a></li>
+                                <li><a class="dropdown-item" href="/sorteio">Gerar sorteio</a></li>
+                                <li><a class="dropdown-item" href="/produtos">Cadastrar produtos</a></li>
+                                <li><a class="dropdown-item" href="/fornecs">Cadastrar fornecedores</a></li>
+                            </ul>
+                        </div>
                         {% if request.user.is_superuser %}
                             <a href="/admin/" class="nav-link">Painel administrativo</a>
                         {% endif %}

@@ -12,12 +12,16 @@ from DateFormat import dateFormat
 
 #envio de email
 # Configurações do servidor SMTP
-smtp_server = "smtp.gmail.com"
+""" smtp_server = "smtp.gmail.com"
 smtp_port = 587
 smtp_username = "deeptrackemails@gmail.com"
-smtp_password = "egqpqsoxbacwulkl"
+smtp_password = "egqpqsoxbacwulkl" """
 
-# Função que envia o e-mail
+smtp_server = "smtp.zeptomail.com"
+smtp_port = 587
+smtp_username = "contato@idbatacadistas.com.br"
+smtp_password = "Ts0rpH5hH6Mv"
+
 def enviaremail(qtnumeros, nome, email, qtcupons_total, numcupom):
 
     if email:
@@ -27,7 +31,7 @@ def enviaremail(qtnumeros, nome, email, qtcupons_total, numcupom):
         msg['From'] = smtp_username
         msg['To'] = email
         msg['Subject'] = f'Parabéns {nome} você está concorrendo a um prêmio!'
-        
+
         # Corpo do e-mail
         corpo_email = f"""
         Olá {nome},
@@ -37,13 +41,13 @@ def enviaremail(qtnumeros, nome, email, qtcupons_total, numcupom):
         """
         print('adicionando mensagem ao email')
         msg.attach(MIMEText(corpo_email, 'plain'))
-        
+
         print('conectando ao SMTP')
-        # Iniciar conexão com o servidor SMTP
+        # Iniciar conexão com o servidor SMTP usando STARTTLS
         server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
+        server.starttls()  # Iniciar a criptografia
         server.login(smtp_username, smtp_password)
-        
+
         print('enviando')
         # Enviar e-mail
         server.sendmail(smtp_username, email, msg.as_string())
@@ -59,8 +63,9 @@ def processacupom():
     cursor.execute(f'''
         SELECT
             IDCAMPANHA, DESCRICAO, USAFORNEC, USAPROD, VALOR,
-             MULTIPLICADOR, to_char(DTINIT, 'yyyy-mm-dd'), 
-             to_char(DTFIM, 'yyyy-mm-dd'), ENVIAEMAIL, TIPOINTENSIFICADOR, FORNECVALOR, PRODVALOR
+            MULTIPLICADOR, to_char(DTINIT, 'yyyy-mm-dd'), 
+            to_char(DTFIM, 'yyyy-mm-dd'), ENVIAEMAIL, TIPOINTENSIFICADOR, FORNECVALOR, PRODVALOR,
+            ACUMULATIVO
         FROM MSCUPONAGEMCAMPANHA
         WHERE 
             ATIVO = 'S'
@@ -82,6 +87,7 @@ def processacupom():
     tipo_intensificador = campanha[9]
     valor_fornecedor = campanha[10]
     valor_prod = campanha[11]
+    acumulavenda = campanha[12]
     testa_envio_email = True
     listprodsWhere = ',NULL'
     produtoFornecWhere = ',NULL'
@@ -156,18 +162,53 @@ def processacupom():
     for ped in pedidos:
         print(f'processando pedido {ped} posição {cont} de {len(pedidos)}')
         import math
-
-        qtcupons = int(math.floor(ped[1] / valor))
-
+        
+        if acumulavenda == 'S':
+            #busca saldo do cliente
+            cursor.execute(f'''
+                SELECT SALDO 
+                FROM MSCUPONAGEMSALDO 
+                WHERE 
+                    CODCLI = {ped[3]} AND 
+                    IDCAMPANHA = {idcampanha}
+            ''')
+            saldo_cli = cursor.fetchone()
+            saldo_atual = 0
+            
+            if saldo_cli:
+                saldo_atual = saldo_cli[0]
+                
+            # Calcula cupons
+            qtcupons = int(math.floor((ped[1] + saldo_atual) / valor))
+            # Calcula a sobra
+            sobra = (ped[1] + saldo_atual) % valor
+            
+            if sobra and saldo_cli:
+                cursor.execute(f'''
+                    UPDATE MSCUPONAGEMSALDO 
+                    SET 
+                        SALDO = {sobra}, 
+                        DTMOV = SYSDATE
+                    WHERE 
+                        CODCLI = {ped[3]} AND 
+                        IDCAMPANHA = {idcampanha}
+                ''')
+            elif sobra:
+                cursor.execute(f'''
+                    INSERT INTO MSCUPONAGEMSALDO
+                    (CODCLI, IDCAMPANHA, SALDO, DTMOV)
+                    VALUES({ped[3]}, {idcampanha}, sobra, SYSDATE)
+                ''')
+        else:
+            qtcupons = int(math.floor(ped[1] / valor))
+            
         if ped[6] is not None or ped[7] is not None:
             bonificadoWhere = 'S'
             
             if tipo_intensificador == 'M':
                 qtcupons = qtcupons * multiplicador_cupom
             elif tipo_intensificador == 'S':
-                if ped[6] and ped[6] > valor_fornecedor:
-                    qtcupons = qtcupons + multiplicador_cupom
-                if ped[6] and ped[6] > valor_fornecedor:
+                if (ped[6] and ped[6] > valor_fornecedor) or (ped[7] and ped[7] > valor_prod):
                     qtcupons = qtcupons + multiplicador_cupom
             else:
                 bonificadoWhere = 'N'

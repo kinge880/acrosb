@@ -11,14 +11,14 @@ class empresa(models.Model):
     ativo = models.CharField(max_length=100, choices=[('S', 'Sim'), ('N', 'Não')], default='S')
     
     def __str__(self):
-        return 'empresas cadastradas'
+        return str(self.empresa)
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     idempresa = models.ForeignKey(empresa, on_delete=models.CASCADE)
 
     def __str__(self) :
-        return self.idempresa
+        return str(self.idempresa) + ' - ' + str(self.user)
     
 class PresentationSettings(models.Model):
     idempresa = models.ForeignKey(empresa, db_column='idempresa', on_delete=models.CASCADE)

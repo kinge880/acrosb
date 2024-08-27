@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'cpfcli',
     'acounts',
     'reusable',
+    'relatorios'
 ]
 
 MIDDLEWARE = [

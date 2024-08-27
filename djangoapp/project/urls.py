@@ -8,6 +8,7 @@ urlpatterns = [
     path('accounts/', include("acounts.urls")),
     path('admin/', admin.site.urls),
     path('reusables/', include("reusable.urls")),
+    path('relatorios/', include("relatorios.urls")),
 ]  
 
 if settings.DEBUG:
