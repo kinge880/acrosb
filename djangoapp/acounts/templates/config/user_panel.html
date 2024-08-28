@@ -4,46 +4,46 @@
 <div class="row">
     <div class="col-md-8 offset-md-2">
         <h1 class="text-center mb-4 mt-3">Configurações da tela de pesquisa</h1>
+        {% include 'partials/message.html' %}
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group mb-3">
                 <label for="background_type">Tipo de Fundo:</label>
                 <select class="form-select" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
-                    <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>Fundo da página em cor sólida</option>
-                    <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>Fundo da página utilizando uma imagem</option>
+                    <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo da página em cor sólida</option>
+                    <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo da página utilizando uma imagem</option>
+                    <option value="colorf" {% if variaveis_globais.background_type == 'colorf' %}selected{% endif %}>3 - Fundo da página em cor sólida com filtro</option>
+                    <option value="urlf" {% if variaveis_globais.background_type == 'urlf' %}selected{% endif %}>4 - Fundo da página utilizando uma imagem com filtro</option>
                 </select>
             </div>
-    
-            <div id="color_field" class="form-group mb-3" style="display: {% if variaveis_globais.background_type == 'color' %}block{% else %}none{% endif %};">
-                <label for="background_color">Cor de Fundo:</label>
-                <input type="color" class="form-control form-control-color w-100" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}" onchange="updateColorField('background_color')">
-            </div>
             
-            <div id="background_image_group" class="form-group mb-3" style="display: {% if variaveis_globais.background_type == 'url' %}block{% else %}none{% endif %};">
-                <label for="background_image">Imagem de Fundo:</label>
-                
-                <div class="mb-3">
-                    <label for="background_image">
-                        <div id="background_container" style="width: 200px; height: 200px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
-                            {% if variaveis_globais.background_url %}
-                                <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
-                            {% else %}
-                                <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
-                            {% endif %}
-                        </div>
-                    </label>
+            <div class="d-flex justify-content-between flex-nowrap">
+                <div id="color_field" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type == 'color' %}block{% else %}none{% endif %};">
+                    <label for="background_color">Cor de Fundo:</label>
+                    <input type="color" class="form-control form-control-color w-100" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}" onchange="updateColorField('background_color')">
                 </div>
                 
-                <input type="file" class="form-control-file" id="background_image" name="background_url" style="display: none;" onchange="previewBackgroundImage(event)">
-            </div>
+                <div id="background_image_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type == 'url' %}block{% else %}none{% endif %};">
+                    <label for="background_image">Imagem de Fundo:</label>
+                    
+                    <div class="mb-3">
+                        <label for="background_image">
+                            <div id="background_container" style="width: 200px; height: 200px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
+                                {% if variaveis_globais.background_url %}
+                                    <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                                {% endif %}
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <input type="file" class="form-control-file" id="background_image" name="background_url" style="display: none;" onchange="previewBackgroundImage(event)">
+                </div>
 
-            <div class="form-group mb-3">
-                <label for="use_color">Usar cor de filtro:</label>
-                <input type="checkbox" id="use_color" name="use_color" onchange="toggleColorInput()">
-                
-                <div id="color_container" class="d-flex mt-2">
+                <div id="filter_gropu"  class="form-group mb-3 col-6">
                     <label for="filter_color">Cor do Filtro sobre o fundo da página:</label>
-                    <input type="color" class="form-control form-control-color w-75" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
+                    <input type="color" class="form-control form-control-color w-100" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
                 </div>
             </div>
 
@@ -55,8 +55,8 @@
             <div class="form-group mb-3">
                 <label for="logo_type">Tipo de Logo utilizada na barra superior:</label>
                 <select class="form-select" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
-                    <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>Logo no formato de texto</option>
-                    <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>Logo no formato de imagem</option>
+                    <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo no formato de texto</option>
+                    <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo no formato de imagem</option>
                 </select>
             </div>
 
@@ -87,15 +87,7 @@
                 {% comment %} <button type="submit" class="btn btn-secondary">Voltar ao padrão</button> {% endcomment %}
                 <button type="submit" class="btn btn-primary">Salvar</button>
             </div>
-            {% if messages %}
-            <div class="alert-container">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
+            
         </form>
     </div>
 </div>
@@ -105,13 +97,24 @@
         const backgroundType = document.getElementById('background_type').value;
         const colorField = document.getElementById('color_field');
         const urlField = document.getElementById('background_image_group');
+        const filterField = document.getElementById('filter_gropu');
 
         if (backgroundType === 'color') {
             colorField.style.display = 'block';
             urlField.style.display = 'none';
+            filterField.style.display = 'none';
         } else if (backgroundType === 'url') {
             colorField.style.display = 'none';
             urlField.style.display = 'block';
+            filterField.style.display = 'none';
+        } else if (backgroundType === 'urlf') {
+            colorField.style.display = 'none';
+            urlField.style.display = 'block';
+            filterField.style.display = 'block';
+        } else if (backgroundType === 'colorf') {
+            colorField.style.display = 'block';
+            urlField.style.display = 'none';
+            filterField.style.display = 'block';
         }
     }
 

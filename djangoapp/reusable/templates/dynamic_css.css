@@ -8,7 +8,7 @@
 
 header.masthead {
     position: relative;
-    {% if background_type == 'url' %}
+    {% if background_type == 'url' or background_type == 'urlf'  %}
         background: url(/media/{{ background_url }}) no-repeat center center;
     {% else %}
         background-color: var(--background_color) ;
@@ -21,7 +21,7 @@ header.masthead {
 
 header.masthead:before {
     content: "";
-    {% if filter_color %}
+    {% if background_type == 'urlf' or background_type == 'colorf' %}
         background-color: var(--filter_color) ;
     {% endif %}
     position: absolute;

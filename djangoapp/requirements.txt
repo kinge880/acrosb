@@ -9,3 +9,6 @@ cx-Oracle==8.3.0
 xlsxwriter==3.2.0
 openpyxl==3.1.5
 gunicorn==23.0.0
+django-cleanup==8.1.0
+django-tenants==3.7.0
+django-baton==4.1.0

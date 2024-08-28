@@ -1,8 +1,9 @@
 
 from pathlib import Path
 import os, inspect
-
+from baton.ai import AIModels
 from django.contrib.messages import constants as message_constants
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,9 +40,12 @@ CSRF_TRUSTED_ORIGINS = [
     'http://192.168.253.111:1337',
 ]
 
+
+
 # Application definition
 
 INSTALLED_APPS = [
+    'baton',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,7 +55,9 @@ INSTALLED_APPS = [
     'cpfcli',
     'acounts',
     'reusable',
-    'relatorios'
+    'relatorios',
+    'baton.autodiscover',
+    'django_cleanup.apps.CleanupConfig'
 ]
 
 MIDDLEWARE = [
@@ -181,4 +187,39 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+}
+
+
+BATON = {
+    'SITE_HEADER': 'Painel administrativo',
+    'SITE_TITLE': 'SysP',
+    'INDEX_TITLE': 'Painel administrativo',
+    'SUPPORT_HREF': 'https://github.com/otto-torino/django-baton/issues',
+    'COPYRIGHT': 'Copyright © 2024 <a href="/">SysPremia</a>', # noqa
+    'POWERED_BY': '<a href="/">InnovaPlus</a>',
+    'CONFIRM_UNSAVED_CHANGES': True,
+    'SHOW_MULTIPART_UPLOADING': True,
+    'ENABLE_IMAGES_PREVIEW': True,
+    'CHANGELIST_FILTERS_IN_MODAL': True,
+    'CHANGELIST_FILTERS_ALWAYS_OPEN': False,
+    'CHANGELIST_FILTERS_FORM': True,
+    'CHANGEFORM_FIXED_SUBMIT_ROW': True,
+    'MENU_ALWAYS_COLLAPSED': False,
+    'MENU_TITLE': 'Menu',
+    'MESSAGES_TOASTS': False,
+    'GRAVATAR_DEFAULT_IMG': 'retro',
+    'GRAVATAR_ENABLED': True,
+    'LOGIN_SPLASH': '/static/core/img/login-splash.png',
+    'FORCE_THEME': None,
+    'BATON_CLIENT_ID': '1545454554sdsdsdsds',
+    'BATON_CLIENT_SECRET': 'e45e4w541s41ds545e4w',
+    'AI': {
+        "IMAGES_MODEL": AIModels.BATON_DALL_E_3,
+        "SUMMARIZATIONS_MODEL": AIModels.BATON_GPT_4O_MINI,
+        "TRANSLATIONS_MODEL": AIModels.BATON_GPT_4O,
+        'ENABLE_TRANSLATIONS': True,
+        'ENABLE_CORRECTIONS': True,
+        'CORRECTION_SELECTORS': ["textarea", "input[type=text]:not(.vDateField):not([name=username]):not([name*=subject_location])"],
+        "CORRECTIONS_MODEL": AIModels.BATON_GPT_3_5_TURBO,
+    }
 }
