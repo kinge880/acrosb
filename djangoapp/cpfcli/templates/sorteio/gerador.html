@@ -3,7 +3,7 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-<style>
+w<style>
     .number {
         font-size: 5rem;
         font-weight: bold;
@@ -26,52 +26,59 @@
     }
 </style>
 <div class="container mt-5 vh-75 ">
-    <h1 class="text-center mb-2">Resultado do {{numsorteio.0}} Sorteio</h1>
+    {% if not numsorte %}
+        <h1 class="text-center mb-2">Resultado do {{numsorteio.0}} Sorteio</h1>
 
-    <!-- Número Sorteado -->
-    <div id="fundosorteio" class="text-center mb-4">
-        <div id="number" class="number">
-            <!-- O número será inserido aqui pelo JavaScript -->
-        </div>
-    </div> 
+        <!-- Número Sorteado -->
+        <div id="fundosorteio" class="text-center mb-4">
+            <div id="number" class="number">
+                <!-- O número será inserido aqui pelo JavaScript -->
+            </div>
+        </div> 
 
-    <!-- Cards com informações do sorteio -->
-    <div class="row">
-        <!-- Card 1: Data e Hora do Sorteio -->
-        <p class="h5 w-100 text-center">Informações do sorteio</p>
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Data e Hora</h5>
-                    <p class="card-text">{{ numsorteado.1 }}</p> <!-- Data e Hora do Sorteio -->
+        <!-- Cards com informações do sorteio -->
+        <div class="row">
+            <!-- Card 1: Data e Hora do Sorteio -->
+            <p class="h5 w-100 text-center">Informações do sorteio</p>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Data e Hora</h5>
+                        <p class="card-text">{{ numsorteado.1 }}</p> <!-- Data e Hora do Sorteio -->
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Card 2: Nome do Ganhador -->
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Ganhador</h5>
-                    <p class="card-text">{{ numsorteado.2 }}</p> <!-- Nome do Ganhador -->
+            <!-- Card 2: Nome do Ganhador -->
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Ganhador</h5>
+                        <p class="card-text">{{ numsorteado.2 }}</p> <!-- Nome do Ganhador -->
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Card 3: Quantidade de Números -->
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Números sorteados entre</h5>
-                    <p class="card-text">{{ contnumsorteado.1 }} e {{ contnumsorteado.0 }}</p> <!-- Quantidade de Números -->
+            <!-- Card 3: Quantidade de Números -->
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Números sorteados entre</h5>
+                        <p class="card-text">{{ contnumsorteado.1 }} e {{ contnumsorteado.0 }}</p> <!-- Quantidade de Números -->
+                    </div>
                 </div>
             </div>
+            <div class="d-flex justify-content-between">
+                <a class="btn btn-success btn-sm col-12 col-md-6 mt-3" href="">Sortear novamente<a>
+                <a class="btn btn-primary btn-sm col-12 col-md-6 mt-3" href="/sorteio/">Retornar a lista de campanhas<a>
+            </div>
         </div>
-        <div class="d-flex justify-content-between">
-            <a class="btn btn-success btn-sm col-12 col-md-6 mt-3" href="">Sortear novamente<a>
-            <a class="btn btn-primary btn-sm col-12 col-md-6 mt-3" href="/sorteio/">Retornar a lista de campanhas<a>
+    {% else %}
+        <div class="row">
+            <!-- Card 1: Data e Hora do Sorteio -->
+            <p class="h5 w-100 text-center">Não existe nenhum cliente no sorteio que ainda não tenha sido sorteado</p>
         </div>
-    </div>
+    {% endif %}
 </div>
 
 <script>

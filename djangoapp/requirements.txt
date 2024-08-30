@@ -12,3 +12,4 @@ gunicorn==23.0.0
 django-cleanup==8.1.0
 django-tenants==3.7.0
 django-baton==4.1.0
+django-admin-charts==1.4.0

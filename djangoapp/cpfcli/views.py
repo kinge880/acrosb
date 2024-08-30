@@ -12,6 +12,7 @@ from django.db import transaction
 from io import BytesIO
 from django.views.decorators.http import require_http_methods
 from .models import BlackList
+from .forms import ClienteForm
 
 def staff_required(view_func):
     @wraps(view_func)
@@ -43,6 +44,8 @@ def baixar_modelo(request, tipo):
         df = pd.DataFrame(columns=['idcampanha', 'codprod'])
     elif tipo == 'F':
         df = pd.DataFrame(columns=['idcampanha', 'codfornec'])
+    elif tipo == 'C':
+        df = pd.DataFrame(columns=['idcampanha', 'codcli'])
     else:
         return 'error'
 
@@ -83,11 +86,10 @@ def validacpf(cpf):
     return True
 
 # Create your views here.
-@login_required(login_url="/accounts/login/")
 def base(request):
     context = {}
     if request.method == 'POST':
-        context['postmethod'] = 'sim'
+        context['postmethod'] = True
         currenttime = datetime.now()
         context['currenttime'] = currenttime
         context['parametroValor'] = '100'
@@ -124,6 +126,20 @@ def base(request):
         
         if cpf_exist is None:
             messages.error(request, "O CPF e email informados não foram encontrados")
+            context['postmethod'] = False
+            return render(request, 'pesquisacpf.html', context)
+        
+        cursor.execute(f'''
+            SELECT
+                IDCAMPANHA
+            FROM MSCUPONAGEMCAMPANHA
+            WHERE 
+                ATIVO = 'S'
+        ''')
+        campanha_ativa = cursor.fetchone()
+        
+        if campanha_ativa is None:
+            messages.warning(request, "Atualmente não existe nenhuma campanha promocional ativa no sistema")
             context['postmethod'] = False
             return render(request, 'pesquisacpf.html', context)
         
@@ -656,7 +672,7 @@ def blacklist(request):
     cursor = conexao.cursor()
     context['tituloInsere'] = 'Adicionar cliente proibido'
     context['tituloPlanilha'] = 'Adicionar planilha de clientes'
-    context['tipolink'] = 'F'
+    context['tipolink'] = 'C'
     
     campos = [
         ['idcampanha', 'number', True, 'col-md-6 col-12', (), 'Código da campanha cadastrada', 'Código da campanha cadastrada'],       # Código
@@ -832,7 +848,8 @@ def campanhasid(request, idcampanha):
             WHERE 
                 MSCUPONAGEM.IDCAMPANHA = {idcampanha} AND 
                 MSCUPONAGEM.NUMSORTE > 0 AND 
-                PCCLIENT.CODCLI > 0
+                PCCLIENT.CODCLI > 0 AND 
+                ATIVO = 'S'
             GROUP BY 
                 PCCLIENT.CODCLI, 
                 MSCUPONAGEM.IDCAMPANHA, 
@@ -848,7 +865,7 @@ def campanhasid(request, idcampanha):
         nomecli = request.POST.get('nomecli')
         if 'delete' in request.POST:
             cursor.execute(f'''
-                DELETE FROM MSCUPONAGEM 
+                UPDATE MSCUPONAGEM SET ATIVO = 'N', DTMOV = SYSDATE 
                 WHERE 
                     IDCAMPANHA = {idcampanha} AND 
                     CODCLI = {codcli}
@@ -926,6 +943,16 @@ def campanhasidclient(request, idcampanha, idclient):
     getTable()
     return render(request, 'campanhas/campanhaNumerosClient.html', context)
 
+def cadastro_cliente(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('success_page')  # Substitua com a URL para uma página de sucesso ou outra ação desejada
+    else:
+        form = ClienteForm()
+    return render(request, 'clientes/cadastro.html', {'form': form})
+
 @login_required(login_url="/accounts/login/")
 @staff_required
 def gerador(request, idcampanha):
@@ -946,6 +973,7 @@ def gerador(request, idcampanha):
                     MSCUPONAGEM.IDCAMPANHA = {idcampanha}
                     AND MSCUPONAGEM.NUMSORTE > 0
                     AND PCCLIENT.CODCLI > 0
+                    AND MSCUPONAGEM.ATIVO = 'S'
                     AND not exists (
                         SELECT CODCLI FROM MSCUPONAGEMVENCEDORES 
                         WHERE NUMSORTE = MSCUPONAGEM.NUMSORTE
@@ -968,36 +996,37 @@ def gerador(request, idcampanha):
         ''')
         context['contnumsorteado'] = cursor.fetchone()
         
-        #insere o vencedor
-        cursor.execute(f'''
-            INSERT INTO MSCUPONAGEMVENCEDORES
-            (IDCAMPANHA, CODCLI, DTSORTEIO, NUMSORTEIO, NUMSORTE)
-            VALUES(
-                {idcampanha}, 
-                {numsorte[3]}, 
-                SYSDATE, 
-                (
-                    select count(numsorte)
-                    from MSCUPONAGEMVENCEDORES 
-                    where 
-                        idcampanha = {idcampanha}
-                ) + 1, 
-                {numsorte[0]}
-            )
-        ''')
-        
-        conexao.commit()
-        
-        #obtem o numero do sorteio atual
-        cursor.execute(f'''
-            SELECT NUMSORTEIO
-            FROM MSCUPONAGEMVENCEDORES
-            WHERE 
-                IDCAMPANHA = {idcampanha} AND
-                NUMSORTE = {numsorte[0]} AND
-                CODCLI = {numsorte[3]}
-        ''')
-        context['numsorteio'] = cursor.fetchone()
+        if numsorte:
+            #insere o vencedor
+            cursor.execute(f'''
+                INSERT INTO MSCUPONAGEMVENCEDORES
+                (IDCAMPANHA, CODCLI, DTSORTEIO, NUMSORTEIO, NUMSORTE)
+                VALUES(
+                    {idcampanha}, 
+                    {numsorte[3]}, 
+                    SYSDATE, 
+                    (
+                        select count(numsorte)
+                        from MSCUPONAGEMVENCEDORES 
+                        where 
+                            idcampanha = {idcampanha}
+                    ) + 1, 
+                    {numsorte[0]}
+                )
+            ''')
+            
+            conexao.commit()
+            
+            #obtem o numero do sorteio atual
+            cursor.execute(f'''
+                SELECT NUMSORTEIO
+                FROM MSCUPONAGEMVENCEDORES
+                WHERE 
+                    IDCAMPANHA = {idcampanha} AND
+                    NUMSORTE = {numsorte[0]} AND
+                    CODCLI = {numsorte[3]}
+            ''')
+            context['numsorteio'] = cursor.fetchone()
 
     getTable()
     return render(request, 'sorteio/gerador.html', context)

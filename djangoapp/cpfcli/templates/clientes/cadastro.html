@@ -1,0 +1,207 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block title %}Cadastro de Cliente{% endblock %}
+
+{% block content %}
+    <div class="container vh-75 d-flex flex-column justify-content-center align-items-center">
+        {% comment %} {% include 'partials/message.html' %} {% endcomment %}
+        <h2 class="card-title text-center mt-5 mb-3">Cadastro meu mercale</h2>
+        <p class="card-title text-center mb-4 h6">Preencha suas informações</p>
+        <form method="post" action="{% url 'cadastro_cliente' %}" class="d-flex justify-content-between flex-wrap col-12 col-md-6 col-sm-8">
+            {% csrf_token %}
+            
+            <!-- Nome -->
+            <div class="mb-3 col-12">
+                {{ form.nome.label_tag }}
+                {{ form.nome }}
+                {% if form.nome.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.nome.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tipo de Pessoa -->
+            <div class="mb-3 col-12 col-md-4">
+                {{ form.tipo_pessoa.label_tag }}
+                {{ form.tipo_pessoa }}
+                {% if form.tipo_pessoa.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.tipo_pessoa.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- CPF/CNPJ -->
+            <div class="mb-3 col-12 col-md-8">
+                {{ form.cpf.label_tag }}
+                {{ form.cpf }}
+                {% if form.cpf.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.cpf.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Telefone -->
+            <div class="mb-3 col-12">
+                {{ form.telefone.label_tag }}
+                {{ form.telefone }}
+                {% if form.telefone.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.telefone.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- E-mail -->
+            <div class="mb-3 col-12">
+                {{ form.email.label_tag }}
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- CEP -->
+            <div class="mb-3 col-12 col-md-4">
+                {{ form.cep.label_tag }}
+                {{ form.cep }}
+                {% if form.cep.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.cep.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Cidade -->
+            <div class="mb-3 col-12 col-md-4" >
+                {{ form.cidade.label_tag }}
+                {{ form.cidade }}
+                {% if form.cidade.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.cidade.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Estado -->
+            <div class="mb-3 col-12 col-md-4">
+                {{ form.estado.label_tag }}
+                {{ form.estado }}
+                {% if form.estado.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.estado.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Data de Nascimento -->
+            <div class="mb-3 col-12 col-md-6">
+                {{ form.data_nascimento.label_tag }}
+                {{ form.data_nascimento }}
+                {% if form.data_nascimento.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.data_nascimento.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Gênero -->
+            <div class="mb-3 col-12 col-md-6">
+                {{ form.genero.label_tag }}
+                {{ form.genero }}
+                {% if form.genero.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.genero.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Senha -->
+            <div class="mb-3 col-12 col-md-6">
+                {{ form.senha.label_tag }}
+                {{ form.senha }}
+                {% if form.senha.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.senha.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Confirmar Senha -->
+            <div class="mb-3 col-12 col-md-6">
+                {{ form.confirmar_senha.label_tag }}
+                {{ form.confirmar_senha }}
+                {% if form.confirmar_senha.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.confirmar_senha.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="text-center col-12">
+                <button type="submit" class="btn btn-primary w-100 mb-5">Cadastrar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Adicionar Cleave.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const cpfInput = document.querySelector('input[name="cpf"]');
+            const tipoPessoaSelect = document.querySelector('select[name="tipo_pessoa"]');
+            
+            // Initialize Cleave.js for CPF/CNPJ
+            let cleave = new Cleave(cpfInput, {
+                blocks: [3, 3, 3, 2],
+                delimiters: ['.', '.', '-'],
+                numericOnly: true
+            });
+
+            tipoPessoaSelect.addEventListener('change', function () {
+                cleave.destroy();
+                if (this.value === 'F') {
+                    cleave = new Cleave(cpfInput, {
+                        blocks: [3, 3, 3, 2],
+                        delimiters: ['.', '.', '-'],
+                        numericOnly: true
+                    });
+                } else if (this.value === 'J') {
+                    cleave = new Cleave(cpfInput, {
+                        blocks: [2, 3, 3, 4],
+                        delimiters: ['.', '.', '/', '-'],
+                        numericOnly: true
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}

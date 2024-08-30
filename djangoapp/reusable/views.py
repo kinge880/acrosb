@@ -3,6 +3,10 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.conf import settings
 from project.middlewares import CustomCSSMiddleware
+from .models import AccessLog
+from django.db.models import Count
+from django.http import JsonResponse
+from django.shortcuts import render
 
 # Create your views here.
 def dynamic_css(request):
@@ -21,4 +25,3 @@ def exist_campanha(cursor, idcampanha):
         WHERE IDCAMPANHA = {idcampanha}
     ''')
     return cursor.fetchone()
-    

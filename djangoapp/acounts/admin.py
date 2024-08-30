@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from .models import *  # Ensure this matches the class name
+from django.contrib.auth.admin import UserAdmin
 
 class EmpresaAdmin(admin.ModelAdmin):
     # Campos a serem exibidos na lista de objetos
@@ -55,34 +56,9 @@ class ProfileInline(admin.StackedInline):
     extra = 0
     fields = ('idempresa',)  # Adicione outros campos se necessário
 
-class UserAdmin(admin.ModelAdmin):
+class Userad(UserAdmin):
     inlines = [ProfileInline]
-    
-    # Campos a serem exibidos na lista de objetos
-    list_display = ('username', 'email', 'first_name', 'last_name')
-    
-    # Campos que podem ser pesquisados
-    search_fields = ('username', 'email', 'first_name', 'last_name')
-    
-    # Ordenação padrão dos registros
-    ordering = ('username',)
-    
-    # Campos do formulário de edição
-    fieldsets = (
-        (None, {
-            'fields': ('username', 'email', 'password')
-        }),
-        ('Informações pessoais', {
-            'fields': ('first_name', 'last_name')
-        }),
-        ('Permissões', {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
-        }),
-    )
-    
-    # Exclui campos não editáveis diretamente
-    readonly_fields = ('password',)
 
 # Substitui o UserAdmin padrão para incluir o ProfileInline
 admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+admin.site.register(User, Userad)

@@ -29,14 +29,33 @@ def get_image_upload_path(instance, filename):
 
 class PresentationSettings(models.Model):
     idempresa = models.ForeignKey('empresa', db_column='idempresa', on_delete=models.CASCADE)
-    background_type = models.CharField(max_length=10, choices=[('color', 'Cor'), ('url', 'Imagem'), ('urlf', 'Imagem com filtro'), ('colorf', 'Cor com filtro')], blank=True, null=True)
+    background_type = models.CharField(max_length=10, choices=[
+        ('color', 'Cor'),
+        ('url', 'Imagem'),
+        ('urlf', 'Imagem com filtro'),
+        ('colorf', 'Cor com filtro')
+    ], blank=True, null=True)
     background_color = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #FFFFFF
     background_url = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
+    background_type_mobile = models.CharField(max_length=10, choices=[
+        ('color', 'Cor'),
+        ('url', 'Imagem'),
+        ('urlf', 'Imagem com filtro'),
+        ('colorf', 'Cor com filtro')
+    ], blank=True, null=True)
+    background_url_mobile = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
+    background_color_mobile = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #FFFFFF
     filter_color = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #000000
+    filter_color_mobile = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #000000
     initial_text = models.TextField(blank=True, null=True)
-    logo_type = models.CharField(max_length=10, choices=[('text', 'Texto'), ('image', 'Imagem')], default='text')
+    logo_type = models.CharField(max_length=10, choices=[
+        ('text', 'Texto'),
+        ('image', 'Imagem')
+    ], default='text')
     logo_text = models.CharField(max_length=255, blank=True, null=True)
     logo_image = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
+    
+    client_title = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return 'Configurações de Apresentação'

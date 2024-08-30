@@ -19,7 +19,8 @@
             <div class="navbar-nav ms-auto py-0">
                 {% if request.user.username %} 
                     {% if request.user.is_staff or request.user.is_superuser %}
-                        <a class="nav-link" href="/relatorios/menu">Relatórios</a>
+                        <a class="nav-link" href="/clientes/cadastro/">Cadastro de cliente</a>
+                        {% comment %} <a class="nav-link" href="/relatorios/menu">Relatórios</a> {% endcomment %}
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                 Gerenciamento da Campanha

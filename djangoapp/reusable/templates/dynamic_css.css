@@ -1,17 +1,19 @@
-
 :root {
     --navbar-color: {{ navbarcolor }};
     --filter_color: {{ filter_color }};
+    --filter_color_mobile: {{ filter_color_mobile }};
     --background_url: {{ background_url }};
+    --background_url_mobile: {{ background_url_mobile }};
     --background_color: {{ background_color }};
+    --background_color_mobile: {{ background_color_mobile }};
 }
 
 header.masthead {
     position: relative;
-    {% if background_type == 'url' or background_type == 'urlf'  %}
+    {% if background_type == 'url' or background_type == 'urlf' %}
         background: url(/media/{{ background_url }}) no-repeat center center;
     {% else %}
-        background-color: var(--background_color) ;
+        background-color: var(--background_color);
     {% endif %}
     background-size: cover;
     padding-top: 8rem;
@@ -22,7 +24,7 @@ header.masthead {
 header.masthead:before {
     content: "";
     {% if background_type == 'urlf' or background_type == 'colorf' %}
-        background-color: var(--filter_color) ;
+        background-color: var(--filter_color);
     {% endif %}
     position: absolute;
     height: 100%;
@@ -34,26 +36,58 @@ header.masthead:before {
 
 header.masthead h1, header.masthead .h1 {
     font-size: 2rem;
-    }
+}
+
+{% if background_url_mobile or background_color_mobile %}
     @media (min-width: 768px) {
         header.masthead {
+            height: 100vh;
             padding-top: 12rem;
             padding-bottom: 12rem;
         }
-    header.masthead h1, header.masthead .h1 {
-        font-size: 3rem;
+        header.masthead h1, header.masthead .h1 {
+            font-size: 3rem;
+        }
     }
-}
 
+    /* Ajustes para dispositivos menores */
+    @media (max-width: 768px) {
+        header.masthead {
+            height: 100vh;
+            padding-top: 4rem;
+            padding-bottom: 4rem;
+            background-position: center center;
+            {% if background_type_mobile == 'url' or background_type_mobile == 'urlf' %}
+                background: url(/media/{{ background_url_mobile }}) no-repeat center center;
+            {% else %}
+                background-color: var(--background_color_mobile);
+            {% endif %}
+        }
+        header.masthead:before {
+            content: "";
+            {% if background_type_mobile == 'urlf' or background_type_mobile == 'colorf' %}
+                background-color: var(--filter_color_mobile);
+            {% endif %}
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0.5;
+        }
+    }
 
-{% if background %}
-.navbar {
-    background-color: var(--navbar-color);
-}
-{% endif %}
-
-{% if background %}
-.logo {
-    background-image: var(--logo);
-}
+    @media (max-width: 480px) {
+        header.masthead {
+            height: 100vh;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-size: contain;
+            {% if background_type_mobile == 'url' or background_type_mobile == 'urlf' %}
+                background: url(/media/{{ background_url_mobile }}) no-repeat center center;
+            {% else %}
+                background-color: var(--background_color_mobile);
+            {% endif %}
+        }
+    }
 {% endif %}

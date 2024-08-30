@@ -1,7 +1,6 @@
 
 from pathlib import Path
 import os, inspect
-from baton.ai import AIModels
 from django.contrib.messages import constants as message_constants
 
 
@@ -38,6 +37,7 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     'http://172.16.20.150:1337',
     'http://192.168.253.111:1337',
+    'http://187.87.33.18:1337'
 ]
 
 
@@ -46,6 +46,8 @@ CSRF_TRUSTED_ORIGINS = [
 
 INSTALLED_APPS = [
     'baton',
+    'admin_tools_stats',  # this must be BEFORE 'admin_tools' and 'django.contrib.admin'
+    'django_nvd3',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -70,6 +72,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django.middleware.common.CommonMiddleware",
     'project.middlewares.CustomCSSMiddleware',
+    'project.middlewares.AccessLogMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -201,7 +204,7 @@ BATON = {
     'SHOW_MULTIPART_UPLOADING': True,
     'ENABLE_IMAGES_PREVIEW': True,
     'CHANGELIST_FILTERS_IN_MODAL': True,
-    'CHANGELIST_FILTERS_ALWAYS_OPEN': False,
+    'CHANGELIST_FILTERS_ALWAYS_OPEN': True,
     'CHANGELIST_FILTERS_FORM': True,
     'CHANGEFORM_FIXED_SUBMIT_ROW': True,
     'MENU_ALWAYS_COLLAPSED': False,
@@ -213,13 +216,4 @@ BATON = {
     'FORCE_THEME': None,
     'BATON_CLIENT_ID': '1545454554sdsdsdsds',
     'BATON_CLIENT_SECRET': 'e45e4w541s41ds545e4w',
-    'AI': {
-        "IMAGES_MODEL": AIModels.BATON_DALL_E_3,
-        "SUMMARIZATIONS_MODEL": AIModels.BATON_GPT_4O_MINI,
-        "TRANSLATIONS_MODEL": AIModels.BATON_GPT_4O,
-        'ENABLE_TRANSLATIONS': True,
-        'ENABLE_CORRECTIONS': True,
-        'CORRECTION_SELECTORS': ["textarea", "input[type=text]:not(.vDateField):not([name=username]):not([name*=subject_location])"],
-        "CORRECTIONS_MODEL": AIModels.BATON_GPT_3_5_TURBO,
-    }
 }
