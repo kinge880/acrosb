@@ -10,6 +10,7 @@ class empresa(models.Model):
     empresa = models.TextField(max_length=255, blank=True, null=True)
     dtcadastro = models.DateTimeField(blank=True, null=True)
     ativo = models.CharField(max_length=100, choices=[('S', 'Sim'), ('N', 'Não')], default='S')
+    modulo_cliente = models.BooleanField(default='False')
     
     def __str__(self):
         return str(self.empresa)
@@ -56,7 +57,26 @@ class PresentationSettings(models.Model):
     logo_image = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
     
     client_title = models.CharField(max_length=255, blank=True, null=True)
-
+    client_subtitle = models.CharField(max_length=255, blank=True, null=True)
+    client_background_type = models.CharField(max_length=10, choices=[
+        ('color', 'Cor'),
+        ('url', 'Imagem'),
+        ('urlf', 'Imagem com filtro'),
+        ('colorf', 'Cor com filtro')
+    ], blank=True, null=True)
+    client_background_color = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #FFFFFF
+    client_background_url = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
+    client_background_type_mobile = models.CharField(max_length=10, choices=[
+        ('color', 'Cor'),
+        ('url', 'Imagem'),
+        ('urlf', 'Imagem com filtro'),
+        ('colorf', 'Cor com filtro')
+    ], blank=True, null=True)
+    client_background_url_mobile = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
+    client_background_color_mobile = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #FFFFFF
+    client_filter_color = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #000000
+    client_filter_color_mobile = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #000000
+    
     def __str__(self):
         return 'Configurações de Apresentação'
     

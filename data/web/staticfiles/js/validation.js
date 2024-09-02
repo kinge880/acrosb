@@ -10,15 +10,27 @@ $(document).ready(function(){
         Array.prototype.slice.call(forms)
         .forEach(function (form) {
             form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-            else{
-                $('#spinner').addClass('show');
-            }
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    
+                    // Find the first invalid field
+                    var firstInvalidField = form.querySelector(':invalid');
+                    
+                    if (firstInvalidField) {
+                        // Scroll the first invalid field into view
+                        firstInvalidField.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                        // Optionally, you can add a border or highlight to make the error more noticeable
+                        firstInvalidField.focus();
+                    }
+                } else {
+                    $('#spinner').addClass('show');
+                }
 
-            form.classList.add('was-validated')
+                form.classList.add('was-validated')
             }, false)
         })
     })()

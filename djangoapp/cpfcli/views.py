@@ -170,12 +170,12 @@ def campanhas(request):
     context['tituloEdit'] = 'Editar campanha'
     context['habilitaexportacaoplanilha'] = 'habilitaexportacaoplanilha'
     campos = [
-        ['codigo', 'hidden', True, 'col-6', (), ' ', 'Codigo interno'],       # Código
+        ['codigo', 'hidden', True, 'col-12', (), ' ', 'Codigo interno'],       # Código
         ['descricao', 'text', True, 'col-12', (), 'Nome completo da campanha', 'Descrição da campanha'],    # Descrição
-        ['dtinicial', 'date', True, 'col-3', (), 'Data inicial da campanha', 'Data inicial',],   # Data Inicial
-        ['dtfinal', 'date', True, 'col-3', (), 'Data final da campanha', 'Data final'],     # Data Final
-        ['valor', 'number', True, 'col-3', (), 'R$', 'Valor por número'],      # Valor
-        ['usaemail', 'select', True, 'col-3', 
+        ['dtinicial', 'date', True, 'col-12 col-md-3', (), 'Data inicial da campanha', 'Data inicial',],   # Data Inicial
+        ['dtfinal', 'date', True, 'col-12 col-md-3', (), 'Data final da campanha', 'Data final'],     # Data Final
+        ['valor', 'number', True, 'col-12 col-md-3', (), 'R$', 'Valor por número'],      # Valor
+        ['usaemail', 'select', True, 'col-12 col-md-3', 
             (
                 ('N','1 - Não enviar email'),
                 ('S','2 - Enviar email ao cliente informando os números da sorte obtidos'),
@@ -183,7 +183,7 @@ def campanhas(request):
             'Deve enviar email?', 
             'Envia email'
         ], 
-        ['tipointensificador', 'select', True, 'col-4', 
+        ['tipointensificador', 'select', True, 'col-12 col-md-4', 
             (
                 ('N','1 - Não utilizar intensificador'),
                 ('M','2 - Multiplicação'), 
@@ -192,7 +192,7 @@ def campanhas(request):
             'Valor do multiplicador', 
             'Tipo de intensificador'
         ],  
-        [   'usafornec', 'select', True, 'col-4',
+        [   'usafornec', 'select', True, 'col-12 col-md-4',
             (
                 
                 ('N','1 - Não utilizar intensificador por fornecedor'),
@@ -202,7 +202,7 @@ def campanhas(request):
             'Valor do multiplicador',
             'Utiliza fornecedor'
         ],  
-        ['usaprod', 'select', True, 'col-4',
+        ['usaprod', 'select', True, 'col-12 col-md-4',
             (
                 
                 ('N','1 - Não utilizar intensificador por produto'),
@@ -212,10 +212,10 @@ def campanhas(request):
             'Valor do multiplicador', 
             'Utiliza produto' 
         ],
-        ['multiplicador', 'number', True, 'col-4', (), 'valor', 'Valor do intensificador'], 
-        ['fornecvalor', 'number', True, 'col-4', (), 'Digite a quantidade', 'Quantidade de fornecedores'], 
-        ['prodvalor', 'number', True, 'col-4', (), 'Digite a quantidade', 'Quantidade de produtos'], 
-        ['acumulativo', 'select', True, 'col-4', 
+        ['multiplicador', 'number', True, 'col-12 col-md-4', (), 'valor', 'Valor do intensificador'], 
+        ['fornecvalor', 'number', True, 'col-12 col-md-4', (), 'Digite a quantidade', 'Quantidade de fornecedores'], 
+        ['prodvalor', 'number', True, 'col-12 col-md-44', (), 'Digite a quantidade', 'Quantidade de produtos'], 
+        ['acumulativo', 'select', True, 'col-12 col-md-4', 
             (
                 
                 ('N','1 - Não acumular saldo entre vendas'),

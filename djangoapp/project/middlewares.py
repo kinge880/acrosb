@@ -34,6 +34,7 @@ class CustomCSSMiddleware(MiddlewareMixin):
                 'logo_text': settings.logo_text or '',
                 'logo_image': settings.logo_image or '',
                 'client_title' : settings.client_title or '',
+                'client_subtitle' : settings.client_subtitle or '',
             }
         else:
             settings = PresentationSettings.objects.filter(idempresa=1).first()  # Obtém o primeiro objeto ou None
@@ -56,6 +57,7 @@ class CustomCSSMiddleware(MiddlewareMixin):
                 'logo_text': settings.logo_text or '',
                 'logo_image': settings.logo_image or '',
                 'client_title' : settings.client_title or '',
+                'client_subtitle' : settings.client_subtitle or '',
             }
             
 def is_valid_ip(ip):

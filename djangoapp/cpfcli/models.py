@@ -24,12 +24,15 @@ class Cliente(models.Model):
     ]
     
     nome = models.CharField(max_length=100)
-    cpf = models.CharField(max_length=18, unique=True)
-    telefone = models.CharField(max_length=15)
+    cnpf_cnpj = models.CharField(max_length=18, unique=True)
+    telefone = models.CharField(max_length=11)
     email = models.EmailField()
     endereco = models.CharField(max_length=255)
     cidade = models.CharField(max_length=100)
     estado = models.CharField(max_length=2)
+    bairro = models.CharField(max_length=150)
+    rua = models.CharField(max_length=150)
+    numero = models.CharField(max_length=8)
     cep = models.CharField(max_length=10)
     tipo_pessoa = models.CharField(max_length=1, choices=TIPO_PESSOA_CHOICES)
     data_nascimento = models.DateField()
