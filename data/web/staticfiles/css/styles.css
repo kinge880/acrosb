@@ -10887,3 +10887,29 @@ footer.footer {
   padding-top: 4rem;
   padding-bottom: 4rem;
 }
+
+.mobile-logo {
+  display: none;
+}
+
+/* Mostrar logo móvel apenas em dispositivos móveis */
+@media (max-width: 767px) {
+  .desktop-logo {
+      display: none;
+  }
+  
+  .mobile-logo {
+      display: block;
+  }
+}
+
+/* Mostrar logo de desktop apenas em dispositivos maiores */
+@media (min-width: 768px) {
+  .mobile-logo {
+      display: none;
+  }
+  
+  .desktop-logo {
+      display: block;
+  }
+}

@@ -33,6 +33,9 @@ class CustomCSSMiddleware(MiddlewareMixin):
                 'logo_type': settings.logo_type or '',
                 'logo_text': settings.logo_text or '',
                 'logo_image': settings.logo_image or '',
+                'logo_type_mobile': settings.logo_type_mobile or '',
+                'logo_text_mobile': settings.logo_text_mobile or '',
+                'logo_image_mobile': settings.logo_image_mobile or '',
                 'client_title' : settings.client_title or '',
                 'client_subtitle' : settings.client_subtitle or '',
             }
@@ -56,6 +59,9 @@ class CustomCSSMiddleware(MiddlewareMixin):
                 'logo_type': settings.logo_type or '',
                 'logo_text': settings.logo_text or '',
                 'logo_image': settings.logo_image or '',
+                'logo_type_mobile': settings.logo_type_mobile or '',
+                'logo_text_mobile': settings.logo_text_mobile or '',
+                'logo_image_mobile': settings.logo_image_mobile or '',
                 'client_title' : settings.client_title or '',
                 'client_subtitle' : settings.client_subtitle or '',
             }

@@ -20,5 +20,8 @@ class PresentationSettingsForm(forms.ModelForm):
                     'initial_text', 
                     'logo_type', 
                     'logo_text', 
-                    'logo_image'
+                    'logo_image',
+                    'logo_type_mobile', 
+                    'logo_text_mobile', 
+                    'logo_image_mobile'
                 ]

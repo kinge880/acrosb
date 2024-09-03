@@ -3,6 +3,33 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <style>
+            .mobile-logo {
+                display: none;
+            }
+            
+            /* Mostrar logo móvel apenas em dispositivos móveis */
+            @media (max-width: 767px) {
+            .desktop-logo {
+                display: none;
+            }
+            
+            .mobile-logo {
+                display: block;
+            }
+            }
+            
+            /* Mostrar logo de desktop apenas em dispositivos maiores */
+            @media (min-width: 768px) {
+            .mobile-logo {
+                display: none;
+            }
+            
+            .desktop-logo {
+                display: block;
+            }
+            }
+        </style>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />

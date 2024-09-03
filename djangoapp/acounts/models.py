@@ -55,6 +55,12 @@ class PresentationSettings(models.Model):
     ], default='text')
     logo_text = models.CharField(max_length=255, blank=True, null=True)
     logo_image = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
+    logo_type_mobile = models.CharField(max_length=10, choices=[
+        ('text', 'Texto'),
+        ('image', 'Imagem')
+    ], default='text')
+    logo_text_mobile = models.CharField(max_length=255, blank=True, null=True)
+    logo_image_mobile = models.ImageField(upload_to=get_image_upload_path, blank=True, null=True)
     
     client_title = models.CharField(max_length=255, blank=True, null=True)
     client_subtitle = models.CharField(max_length=255, blank=True, null=True)

@@ -7,9 +7,19 @@
     <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 {% if request.path != '/' %} sticky-top on-top shadow-sm {% else %} navbarstickyhome {% endif %}">
         <a href="/" class="navbar-brand p-0">
             {% if variaveis_globais.logo_type and  variaveis_globais.logo_type == 'image' %}
-                <img src="/media/{{variaveis_globais.logo_image}}" class="img-fluid" alt="Responsive image">
+                <div class="desktop-logo">
+                    <img src="/media/{{ variaveis_globais.logo_image }}" class="img-fluid" alt="Logo para Desktop">
+                </div>
+                <div class="mobile-logo" >
+                    <img src="/media/{{ variaveis_globais.logo_image_mobile }}" class="img-fluid" alt="Logo para Mobile">
+                </div>
             {% else %}
-                <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>{{variaveis_globais.logo_text}}</h1>
+                <div class="desktop-logo">
+                    <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>{{ variaveis_globais.logo_text }}</h1>
+                </div>
+                <div class="mobile-logo">
+                    <h1 class="m-0"><i class="fa fa-map-marker-alt me-3"></i>{{ variaveis_globais.logo_text_mobile }}</h1>
+                </div>
             {% endif %}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -19,7 +29,7 @@
             <div class="navbar-nav ms-auto py-0">
                 {% if request.user.username %} 
                     {% if request.user.is_staff or request.user.is_superuser %}
-                        <a class="nav-link" href="/clientes/cadastro/">Cadastro de cliente</a>
+                        <a class="nav-link disabled" href="/clientes/cadastro/">Cadastro de cliente</a>
                         {% comment %} <a class="nav-link" href="/relatorios/menu">Relatórios</a> {% endcomment %}
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">

@@ -926,8 +926,9 @@ def campanhasidclient(request, idcampanha, idclient):
                 MSCUPONAGEM.IDCAMPANHA, 
                 PCCLIENT.CODCLI, 
                 PCCLIENT.CLIENTE,
+                PCPEDC.NUMPED,
                 MSCUPONAGEM.VALOR,
-                MSCUPONAGEM.NUMSORTE,
+                COUNT(MSCUPONAGEM.NUMSORTE),
                 TO_CHAR(PCPEDC."DATA", 'dd/mm/yyyy')
                 
             FROM MSCUPONAGEM 
@@ -937,6 +938,13 @@ def campanhasidclient(request, idcampanha, idclient):
                 MSCUPONAGEM.IDCAMPANHA = {idcampanha} AND 
                 MSCUPONAGEM.NUMSORTE > 0 AND 
                 PCCLIENT.CODCLI = {idclient}
+            GROUP BY 
+                MSCUPONAGEM.IDCAMPANHA, 
+                PCCLIENT.CODCLI, 
+                PCCLIENT.CLIENTE,
+                PCPEDC.NUMPED,
+                MSCUPONAGEM.VALOR,
+                TO_CHAR(PCPEDC."DATA", 'dd/mm/yyyy')
         ''')
         context['listanumeros'] = cursor.fetchall()
 

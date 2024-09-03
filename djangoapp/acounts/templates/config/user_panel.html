@@ -2,17 +2,16 @@
 {% load static %}
 {% block title %}{{title}}{% endblock %}
 {% block content %}
-<div class="container-fluid vh-75 d-flex flex-start flex-wrap">
-    <div class="container-fluid">
+<div class="container vh-75 d-flex flex-start flex-wrap">
+    <div class="container">
         <h1 class="text-center mb-4 mt-3">Configurações da tela de pesquisa</h1>
         {% include 'partials/message.html' %}
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <div class="border p-3 d-flex justify-content-between flex-wrap">
-                <h4 class="col-12 text-center mt-1">Configuração de fundo Desktop</h4>
+            <div class=" p-3 row flex-wrap">
                 <!-- Configurações para Desktop -->
-                <div class="form-group mb-3 col-12">
+                <div class="form-group mb-3 col-6">
                     <label for="background_type">Tipo de Fundo (Desktop):</label>
                     <select class="form-select" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
                         <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo da página em cor sólida</option>
@@ -22,44 +21,7 @@
                     </select>
                 </div>
 
-                <div class="d-flex justify-content-between flex-wrap col-12">
-                    <div id="color_field" class="form-group mb-3 col-12 col-md-6" style="display: {% if variaveis_globais.background_type in 'color,colorf' %}block{% else %}none{% endif %};">
-                        <label for="background_color">Cor de Fundo:</label>
-                        <input type="color" class="form-control form-control-color w-100" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
-                    </div>
-
-                    <div id="background_image_group" class="form-group mb-3 col-12 col-md-6" style="display: {% if variaveis_globais.background_type in 'url,urlf' %}block{% else %}none{% endif %};">
-                        <label for="background_image">Imagem de Fundo:</label>
-                        
-                        <div class="mb-3">
-                            <label for="background_image">
-                                <div id="background_container" style="width: 200px; height: 200px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;"
-                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                    data-bs-custom-class="custom-tooltip"
-                                    data-bs-title="A imagem deve seguir no tamanho 1920 x 1080">
-                                    {% if variaveis_globais.background_url %}
-                                        <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
-                                    {% else %}
-                                        <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
-                                    {% endif %}
-                                </div>
-                            </label>
-                        </div>
-                        
-                        <input type="file" class="form-control-file" id="background_image" name="background_url" style="display: none;" onchange="previewBackgroundImage(event)">
-                    </div>
-
-                    <div id="filter_group" class="form-group mb-3 col-12 col-md-6" style="display: {% if variaveis_globais.background_type in 'urlf,colorf' %}block{% else %}none{% endif %};">
-                        <label for="filter_color">Cor do Filtro sobre o fundo da página:</label>
-                        <input type="color" class="form-control form-control-color w-100" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
-                    </div>
-                </div>
-            </div>
-
-            <div class="border p-3 d-flex justify-content-between flex-wrap">
-                <h4 class="col-12 text-center mt-1">Configuração de fundo Mobile</h4>
-                <!-- Configurações para Mobile -->
-                <div class="form-group mb-3 col-12">
+                <div class="form-group mb-3 col-6">
                     <label for="background_type_mobile">Tipo de Fundo (Mobile):</label>
                     <select class="form-select" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
                         <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo da página em cor sólida</option>
@@ -69,80 +31,132 @@
                     </select>
                 </div>
 
-                <div class="d-flex justify-content-between flex-wrap col-12">
-                    <div id="color_field_mobile" class="form-group mb-3 col-12 col-md-6" style="display: {% if variaveis_globais.background_type_mobile in 'color,colorf' %}block{% else %}none{% endif %};">
-                        <label for="background_color_mobile">Cor de Fundo (Mobile):</label>
+                <div class="d-flex justify-content-between flex-wrap col-6">
+                    <div id="color_field" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type in 'color,colorf' %}block{% else %}none{% endif %};">
+                        <label for="background_color">Cor de Fundo (Desktop)</label>
+                        <input type="color" class="form-control form-control-color w-100" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
+                    </div>
+
+                    <div id="background_image_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type in 'url,urlf' %}block{% else %}none{% endif %};">
+                        <label for="background_image">Imagem de Fundo (Desktop)</label>
+                        
+                        <div class="mb-3">
+                            <div id="background_container" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;"
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-custom-class="custom-tooltip"
+                                data-bs-title="A imagem deve seguir no tamanho 1920 x 1080">
+                                {% if variaveis_globais.background_url %}
+                                    <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <input type="file" class="form-control-file" id="background_image" name="background_url" style="display: none;" onchange="previewBackgroundImage(event)">
+                    </div>
+
+                    <div id="filter_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type in 'urlf,colorf' %}block{% else %}none{% endif %};">
+                        <label for="filter_color">Cor do Filtro (Desktop)</label>
+                        <input type="color" class="form-control form-control-color w-100" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between flex-wrap col-6">
+                    <div id="color_field_mobile" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type_mobile in 'color,colorf' %}block{% else %}none{% endif %};">
+                        <label for="background_color_mobile">Cor de Fundo (Mobile)</label>
                         <input type="color" class="form-control form-control-color w-100" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
                     </div>
 
-                    <div id="background_image_group_mobile" class="form-group mb-3 col-12 col-md-6" style="display: {% if variaveis_globais.background_type_mobile in 'url,urlf' %}block{% else %}none{% endif %};">
-                        <label for="background_image_mobile">Imagem de Fundo (Mobile):</label>
+                    <div id="background_image_group_mobile" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type_mobile in 'url,urlf' %}block{% else %}none{% endif %};">
+                        <label for="background_image_mobile">Imagem de Fundo (Mobile)</label>
                         
                         <div class="mb-3">
-                            <label for="background_image_mobile">
-                                <div id="background_container_mobile" style="width: 200px; height: 200px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;"
-                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                    data-bs-custom-class="custom-tooltip"
-                                    data-bs-title="A imagem deve seguir em tamanho mobile">
-                                    {% if variaveis_globais.background_url_mobile %}
-                                        <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
-                                    {% else %}
-                                        <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
-                                    {% endif %}
-                                </div>
-                            </label>
+                            <div id="background_container_mobile" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;"
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-custom-class="custom-tooltip"
+                                data-bs-title="A imagem deve seguir em tamanho mobile">
+                                {% if variaveis_globais.background_url_mobile %}
+                                    <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                                {% endif %}
+                            </div>
                         </div>
                         
                         <input type="file" class="form-control-file" id="background_image_mobile" name="background_url_mobile" style="display: none;" onchange="previewBackgroundImageMobile(event)">
                     </div>
 
-                    <div id="filter_group_mobile" class="form-group mb-3 col-12 col-md-6" style="display: {% if variaveis_globais.background_type_mobile in 'urlf,colorf' %}block{% else %}none{% endif %};">
-                        <label for="filter_color_mobile">Cor do Filtro sobre o fundo da página (Mobile):</label>
+                    <div id="filter_group_mobile" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type_mobile in 'urlf,colorf' %}block{% else %}none{% endif %};">
+                        <label for="filter_color_mobile">Cor do Filtro (Mobile)</label>
                         <input type="color" class="form-control form-control-color w-100" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}" placeholder="#000000">
                     </div>
                 </div>
-            </div>
 
-
-            <div class="border p-3 col-12">
-                <h4 class="col-12 text-center mt-1">Configuração do texto de apresentação</h4>
-                <div class="form-group mb-3">
+                <div class="form-group mb-3 col-12">
                     <label for="initial_text">Texto Inicial apresentado em cima das caixas de pesquisa:</label>
-                    <textarea class="form-control" id="initial_text" name="initial_text" rows="4">{{ variaveis_globais.initial_text }}</textarea>
+                    <textarea class="form-control" id="initial_text" name="initial_text" rows="1">{{ variaveis_globais.initial_text }}</textarea>
                 </div>
             </div>
 
-            <div class="border p-3 col-12">
-                <h4 class="col-12 text-center mt-1">Configuração da logo</h4>
-                <div class="form-group mb-3">
-                    <label for="logo_type">Tipo de Logo utilizada na barra superior:</label>
-                    <select class="form-select" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
-                        <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo no formato de texto</option>
-                        <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo no formato de imagem</option>
-                    </select>
-                </div>
 
-                <div id="logo_text_group" class="form-group mb-3" style="display: {% if variaveis_globais.logo_type == 'text' %}block{% else %}none{% endif %};">
-                    <label for="logo_text">Texto do Logo:</label>
-                    <input type="text" class="form-control" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
-                </div>
-        
-                <div id="logo_image_group" class="form-group mb-3" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
-                    <label for="logo_image_url">Imagem do Logo:</label>
+            <div class="p-3 row flex-wrap">
+                
+                <!-- Configuração da Logo para Desktop -->
+                <div class="row flex-wrap col-12">
+                    <div class="form-group mb-3 col-6">
+                        <label for="logo_type">Tipo de Logo utilizada na barra superior:</label>
+                        <select class="form-select" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
+                            <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo no formato de texto</option>
+                            <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo no formato de imagem</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3 col-6">
+                        <label for="logo_type_mobile">Tipo de Logo utilizada na barra superior (Mobile):</label>
+                        <select class="form-select" id="logo_type_mobile" name="logo_type_mobile" onchange="toggleMobileLogoFields()">
+                            <option value="text" {% if variaveis_globais.logo_type_mobile == 'text' %}selected{% endif %}>1 - Logo no formato de texto</option>
+                            <option value="image" {% if variaveis_globais.logo_type_mobile == 'image' %}selected{% endif %}>2 - Logo no formato de imagem</option>
+                        </select>
+                    </div>
                     
-                    <div class="mb-3">
-                        <label for="logo_image">
-                            <div id="logo_container" style="width: 200px; height: 200px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
+                    <div id="logo_text_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type == 'text' %}block{% else %}none{% endif %};">
+                        <label for="logo_text">Texto do Logo:</label>
+                        <input type="text" class="form-control" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
+                    </div>
+            
+                    <div id="logo_image_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
+                        <label for="logo_image_url">Imagem do Logo:</label>
+                        <div class="mb-3">
+                            <div id="logo_container" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
                                 {% if variaveis_globais.logo_image %}
                                     <img src="/media/{{ variaveis_globais.logo_image }}" alt="Imagem do Logo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
                                 {% else %}
                                     <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
                                 {% endif %}
                             </div>
-                        </label>
+                        </div>
+                        <input type="file" class="form-control-file" id="logo_image" name="logo_image" style="display: none;" onchange="previewImage(event)">
                     </div>
-                    
-                    <input type="file" class="form-control-file" id="logo_image" name="logo_image" style="display: none;" onchange="previewImage(event)">
+
+                    <div id="logo_text_mobile_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type_mobile == 'text' %}block{% else %}none{% endif %};">
+                        <label for="logo_text_mobile">Texto do Logo (Mobile):</label>
+                        <input type="text" class="form-control" id="logo_text_mobile" name="logo_text_mobile" value="{{ variaveis_globais.logo_text_mobile }}">
+                    </div>
+            
+                    <div id="logo_image_mobile_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type_mobile == 'image' %}block{% else %}none{% endif %};">
+                        <label for="logo_image_mobile_url">Imagem do Logo (Mobile):</label>
+                        <div class="mb-3">
+                            <div id="logo_container_mobile" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
+                                {% if variaveis_globais.logo_image_mobile %}
+                                    <img src="/media/{{ variaveis_globais.logo_image_mobile }}" alt="Imagem do Logo Atual (Mobile)" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <input type="file" class="form-control-file" id="logo_image_mobile" name="logo_image_mobile" style="display: none;" onchange="previewMobileImage(event)">
+                    </div>
                 </div>
             </div>
 
@@ -205,6 +219,20 @@
         }
     }
 
+    function toggleMobileLogoFields() {
+        const logoTypeMobile = document.getElementById('logo_type_mobile').value;
+        const logoTextMobileGroup = document.getElementById('logo_text_mobile_group');
+        const logoImageMobileGroup = document.getElementById('logo_image_mobile_group');
+    
+        if (logoTypeMobile === 'text') {
+            logoTextMobileGroup.style.display = 'block';
+            logoImageMobileGroup.style.display = 'none';
+        } else if (logoTypeMobile === 'image') {
+            logoTextMobileGroup.style.display = 'none';
+            logoImageMobileGroup.style.display = 'block';
+        }
+    }
+
     function toggleLogoFields() {
         const logoType = document.getElementById('logo_type').value;
         const logoTextGroup = document.getElementById('logo_text_group');
@@ -223,6 +251,7 @@
         toggleBackgroundFields();
         toggleBackgroundFieldsMobile();
         toggleLogoFields();
+        toggleMobileLogoFields();
     });
 
     function previewImage(event) {
@@ -234,6 +263,21 @@
             
             reader.onload = function(e) {
                 container.innerHTML = '<img src="' + e.target.result + '" alt="Imagem do Logo Atual" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">';
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewMobileImage(event) {
+        var input = event.target;
+        var container = document.getElementById('logo_container_mobile');
+        
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                container.innerHTML = '<img src="' + e.target.result + '" alt="Imagem do Logo Atual (Mobile)" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">';
             }
             
             reader.readAsDataURL(input.files[0]);
