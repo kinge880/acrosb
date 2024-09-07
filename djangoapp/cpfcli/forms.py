@@ -1,6 +1,8 @@
 from django import forms
 import re
-from .models import Cliente
+from .models import *
+from reusable.views import *
+from django.forms import inlineformset_factory
 
 class ClienteForm(forms.ModelForm):
     confirmar_senha = forms.CharField(
@@ -129,3 +131,171 @@ class ClienteForm(forms.ModelForm):
 
         if senha != confirmar_senha:
             self.add_error('confirmar_senha', 'Senhas não conferem.')
+
+class MscuponagemCampanhaForm(forms.ModelForm):
+    filial = forms.MultipleChoiceField(
+        choices=obter_choices_filiais(),
+        required=True,
+        label='Lista de filiais',
+        widget=forms.SelectMultiple(attrs={'class': ' select2', 'classdiv': 'col-12  mb-3', 'autocomplete': 'off', 'select2Label': 'select'})
+    )
+    class Meta:
+        model = MscuponagemCampanha
+        fields = [
+            'idcampanha',  'descricao', 'filial', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
+            'restringe_fornec', 'restringe_marca', 'restringe_prod',
+            'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor'
+        ]
+        widgets = {
+            'idcampanha': forms.HiddenInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
+            'descricao': forms.TextInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
+            'dtinit': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
+            'dtfim': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
+            'enviaemail': forms.Select(choices=[
+                ('N', '1 - Não enviar email'),
+                ('S', '2 - Enviar email ao cliente informando os números da sorte obtidos')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+            'acumulativo': forms.Select(choices=[
+                ('N', '1 - Não acumular saldo entre vendas'),
+                ('S', '2 - Somente acumular saldo entre vendas com o valor total superior ao número da sorte'),
+                ('T', '3 - Acumular saldo entre todas as vendas')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
+            'valor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+            'restringe_fornec': forms.Select(choices=[
+                ('N', '1 - Não utilizar restrição por fornecedor'),
+                ('C', '2 - Restrição por fornecedor cadastrado'),
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+            'restringe_marca': forms.Select(choices=[
+                ('N', '1 - Não utilizar restrição por marca'),
+                ('C', '2 - Restrição por marca cadastrada'),
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+            'restringe_prod': forms.Select(choices=[
+                ('N', '1 - Não utilizar restrição por produto'),
+                ('C', '2 - Restrição por produto cadastrado'),
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+            'tipointensificador': forms.Select(choices=[
+                ('N', '1 - Não utilizar intensificador'),
+                ('M', '2 - Multiplicação'),
+                ('S', '3 - Soma')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
+            'multiplicador': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+            'usamarca': forms.Select(choices=[
+                ('N', '1 - Não utilizar intensificador por marca'),
+                ('C', '2 - Intensificador por marca cadastrada'),
+                ('M', '3 - Intensificador por marca multipla')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
+            'marcavalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+            'usafornec': forms.Select(choices=[
+                ('N', '1 - Não utilizar intensificador por fornecedor'),
+                ('C', '2 - Intensificador por fornecedor cadastrado'),
+                ('M', '3 - Intensificador por fornecedor multiplo')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
+            'fornecvalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+            'usaprod': forms.Select(choices=[
+                ('N', '1 - Não utilizar intensificador por produto'),
+                ('C', '2 - Utilizar intensificador por produto cadastrado'),
+                ('M', '3 - Utilizar intensificador por produto multiplo')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
+            'prodvalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+        }
+        
+        labels = {
+            'idcampanha': 'Código interno',
+            'descricao': 'Descrição da campanha',
+            'dtinit': 'Data inicial',
+            'dtfim': 'Data final',
+            'enviaemail': 'Envia email',
+            'valor': 'Valor por número',
+            'acumulativo': 'Acumulação de saldo entre vendas',
+            'restringe_fornec': 'Restrição por fornecedor', 
+            'restringe_marca': 'Restrição por marca', 
+            'restringe_prod': 'Restrição por produto',
+            'tipointensificador': 'Tipo de intensificador utilizado',
+            'usafornec': 'Utiliza intensificador por fornecedor',
+            'usamarca': 'Utiliza intensificador por marca',
+            'usaprod': 'Utiliza intensificador por produto',
+            'multiplicador': 'Valor do intensificador',
+            'fornecvalor': 'Valor do fornecedor',
+            'marcavalor': 'Valor da marca',
+            'prodvalor': 'Valor de produtos',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def save(self, commit=True):
+        # Primeiro, salve o registro da campanha como antes
+        campanha = super().save(commit)
+
+        # Obtenha as filiais selecionadas
+        codfiliais = self.cleaned_data.get('filial')
+
+        if codfiliais:
+            # Crie registros de CuponagemCampanhaFilial para cada filial selecionada
+            CuponagemCampanhaFilial.objects.bulk_create(
+                CuponagemCampanhaFilial(idcampanha=campanha, codfilial=codfilial)
+                for codfilial in codfiliais
+            )
+
+        return campanha
+    
+class MarcasForm(forms.ModelForm):
+    class Meta:
+        model = Marcas
+        fields = [
+            'idcampanha', 'codmarca', 'nomemarca'
+        ]
+        widgets = {
+            'idcampanha': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'codmarca': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'nomemarca': forms.HiddenInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 d-none',
+                'classdiv': 'd-none'
+            })
+        }
+        
+        labels = {
+            'idcampanha': 'Código da Campanha',
+            'codmarca': 'Código da Marca'
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customize widgets or other fields if needed
+        
+
+class BlackListForm(forms.ModelForm):
+    class Meta:
+        model = BlackList
+        fields = [
+            'IDCAMPANHA', 'CODCLI'
+        ]
+        widgets = {
+            'IDCAMPANHA': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'CODCLI': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            })
+        }
+        
+        labels = {
+            'IDCAMPANHA': 'Código da Campanha',
+            'CODCLI': 'Código do Cliente',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Personalize widgets ou outros campos se necessário

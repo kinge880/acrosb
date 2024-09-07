@@ -8,6 +8,20 @@
                 display: none;
             }
             
+            .select2-selection__choice {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: .35em .65em;
+                margin-right: 0px !important;
+                margin-bottom: 0px !important;
+                font-size: 1rem;
+                color: #212529;
+                cursor: auto;
+                border: 1px solid #ced4da;
+                border-radius: .25rem;
+            }
+            
             /* Mostrar logo móvel apenas em dispositivos móveis */
             @media (max-width: 767px) {
             .desktop-logo {
@@ -17,7 +31,7 @@
             .mobile-logo {
                 display: block;
             }
-            }
+        }
             
             /* Mostrar logo de desktop apenas em dispositivos maiores */
             @media (min-width: 768px) {
@@ -28,8 +42,9 @@
             .desktop-logo {
                 display: block;
             }
-            }
+        }
         </style>
+        
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
@@ -95,6 +110,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script type="text/javascript" src="{% static 'js/select2pt-BR.js' %}"></script>
         <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
         <script>

@@ -8,11 +8,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.timezone import now
 import pandas as pd
 from reusable.views import *
+from .forms import *
 from django.db import transaction
 from io import BytesIO
 from django.views.decorators.http import require_http_methods
-from .models import BlackList
-from .forms import ClienteForm
+from .models import *
+from django.apps import apps
+from django.contrib.contenttypes.models import ContentType
 
 def staff_required(view_func):
     @wraps(view_func)
@@ -46,6 +48,8 @@ def baixar_modelo(request, tipo):
         df = pd.DataFrame(columns=['idcampanha', 'codfornec'])
     elif tipo == 'C':
         df = pd.DataFrame(columns=['idcampanha', 'codcli'])
+    elif tipo == 'M':
+        df = pd.DataFrame(columns=['idcampanha', 'codmarca'])
     else:
         return 'error'
 
@@ -85,7 +89,6 @@ def validacpf(cpf):
 
     return True
 
-# Create your views here.
 def base(request):
     context = {}
     if request.method == 'POST':
@@ -162,6 +165,87 @@ def base(request):
 
 @login_required(login_url="/accounts/login/")
 @staff_required
+def get_data_delete(request):
+    id = request.GET.get('id')
+    model_name = request.GET.get('model_name')
+    app_name = request.GET.get('app_name')
+    
+    try:
+        # Obtém a classe do model dinamicamente
+        model = apps.get_model(app_label=app_name, model_name=model_name)
+        
+        # Filtra o registro pelo ID
+        response = model.objects.filter(id=id).first()
+
+        if not response:
+            return JsonResponse({'error': 'Registro não encontrado'}, status=404)
+
+        # Constrói o dicionário de resposta dinamicamente
+        response_data = {field.name: getattr(response, field.name) for field in response._meta.fields}
+        
+        return JsonResponse(response_data)
+    except LookupError:
+        return JsonResponse({'error': 'Model não encontrada'}, status=400)
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def get_data_edit(request):
+    id = request.GET.get('id')
+    tipo = request.GET.get('tipo')
+    
+    if tipo == 'campanha':
+        conexao = conexao_oracle()
+        cursor = conexao.cursor()
+        cursor.execute(f'''
+            SELECT 
+                IDCAMPANHA, DESCRICAO, DTINIT, DTFIM, VALOR, MULTIPLICADOR, 
+                USAFORNEC, USAPROD, ENVIAEMAIL, TIPOINTENSIFICADOR, 
+                FORNECVALOR, PRODVALOR, ACUMULATIVO, MARCAVALOR, USAMARCA, 
+                RESTRINGE_FORNEC, RESTRINGE_MARCA, RESTRINGE_PROD 
+            FROM MSCUPONAGEMCAMPANHA 
+            WHERE IDCAMPANHA = {id}
+        ''')
+        data = cursor.fetchone()
+        
+        cursor.execute(f'''
+            SELECT CODFILIAL
+            FROM MSCUPONAGEMCAMPANHAFILIAL 
+            WHERE IDCAMPANHA = {id}
+        ''')
+        filiais = cursor.fetchall()
+        listfilial = []
+        
+        if len(filiais) > 0:
+            for item in filiais:
+                listfilial.extend(item)
+            
+        response_data = {
+            'idcampanha': data[0],
+            'descricao': data[1],
+            'dtinit': data[2],
+            'dtfim': data[3],
+            'valor': data[4],
+            'multiplicador': data[5],
+            'usafornec': data[6],
+            'usaprod': data[7],
+            'enviaemail': data[8],
+            'tipointensificador': data[9],
+            'fornecvalor': data[10],
+            'prodvalor': data[11],
+            'acumulativo': data[12],
+            'marcavalor': data[13],
+            'usamarca': data[14],
+            'restringe_fornec': data[15],
+            'restringe_marca': data[16],
+            'restringe_prod': data[17],
+            'filial': listfilial
+        }
+        conexao.close()
+        
+    return JsonResponse(response_data)
+
+@login_required(login_url="/accounts/login/")
+@staff_required
 def campanhas(request):
     context = {}
     conexao = conexao_oracle()
@@ -169,64 +253,10 @@ def campanhas(request):
     context['tituloInsere'] = 'Criar nova campanha'
     context['tituloEdit'] = 'Editar campanha'
     context['habilitaexportacaoplanilha'] = 'habilitaexportacaoplanilha'
-    campos = [
-        ['codigo', 'hidden', True, 'col-12', (), ' ', 'Codigo interno'],       # Código
-        ['descricao', 'text', True, 'col-12', (), 'Nome completo da campanha', 'Descrição da campanha'],    # Descrição
-        ['dtinicial', 'date', True, 'col-12 col-md-3', (), 'Data inicial da campanha', 'Data inicial',],   # Data Inicial
-        ['dtfinal', 'date', True, 'col-12 col-md-3', (), 'Data final da campanha', 'Data final'],     # Data Final
-        ['valor', 'number', True, 'col-12 col-md-3', (), 'R$', 'Valor por número'],      # Valor
-        ['usaemail', 'select', True, 'col-12 col-md-3', 
-            (
-                ('N','1 - Não enviar email'),
-                ('S','2 - Enviar email ao cliente informando os números da sorte obtidos'),
-            ), 
-            'Deve enviar email?', 
-            'Envia email'
-        ], 
-        ['tipointensificador', 'select', True, 'col-12 col-md-4', 
-            (
-                ('N','1 - Não utilizar intensificador'),
-                ('M','2 - Multiplicação'), 
-                ('S','3 - Soma'),
-            ), 
-            'Valor do multiplicador', 
-            'Tipo de intensificador'
-        ],  
-        [   'usafornec', 'select', True, 'col-12 col-md-4',
-            (
-                
-                ('N','1 - Não utilizar intensificador por fornecedor'),
-                ('C','2 - Intensificador por fornecedor cadastrado'),
-                ('M','3 - Intensificador por fornecedor multiplo'),
-            ),
-            'Valor do multiplicador',
-            'Utiliza fornecedor'
-        ],  
-        ['usaprod', 'select', True, 'col-12 col-md-4',
-            (
-                
-                ('N','1 - Não utilizar intensificador por produto'),
-                ('C','2 - Utilizar intensificador por produto cadastrado'), 
-                ('M','3 - Utilizar intensificador por produto multiplo'),
-            ), 
-            'Valor do multiplicador', 
-            'Utiliza produto' 
-        ],
-        ['multiplicador', 'number', True, 'col-12 col-md-4', (), 'valor', 'Valor do intensificador'], 
-        ['fornecvalor', 'number', True, 'col-12 col-md-4', (), 'Digite a quantidade', 'Quantidade de fornecedores'], 
-        ['prodvalor', 'number', True, 'col-12 col-md-44', (), 'Digite a quantidade', 'Quantidade de produtos'], 
-        ['acumulativo', 'select', True, 'col-12 col-md-4', 
-            (
-                
-                ('N','1 - Não acumular saldo entre vendas'),
-                ('S','2 - Acumular saldo entre vendas'),
-            ), 
-            'Acumulativo', 
-            'Acumula vendas' 
-        ],
-    ]
-    context['campos'] = campos
-    
+    context['form'] = MscuponagemCampanhaForm()
+    context['primarykey'] = 'idcampanha'
+    context['tipoEditKey'] = 'campanha'
+
     def getTable():
         cursor.execute(f'''
             SELECT 
@@ -247,7 +277,12 @@ def campanhas(request):
                 TIPOINTENSIFICADOR,
                 FORNECVALOR,
                 PRODVALOR,
-                acumulativo
+                ACUMULATIVO,
+                MARCAVALOR,
+                USAMARCA,
+                RESTRINGE_FORNEC,
+                RESTRINGE_MARCA,
+                RESTRINGE_PROD
             FROM MSCUPONAGEMCAMPANHA
             WHERE DTEXCLUSAO IS NULL
         ''')
@@ -255,18 +290,24 @@ def campanhas(request):
     
     if request.method == 'POST':
         idcampanha = request.POST.get('idcampanha')
-        codigo = request.POST.get('codigo')
+        codigo = request.POST.get('idcampanha')
         descricao = request.POST.get('descricao')
-        dtinicial = request.POST.get('dtinicial')
-        dtfinal = request.POST.get('dtfinal')
+        dtinicial = request.POST.get('dtinit')
+        dtfinal = request.POST.get('dtfim')
         valor = request.POST.get('valor')
         multiplicador = request.POST.get('multiplicador')
         usafornec = request.POST.get('usafornec')
         usaprod = request.POST.get('usaprod')
-        usaemail = request.POST.get('usaemail')
+        usaemail = request.POST.get('enviaemail')
         tipointensificador = request.POST.get('tipointensificador')
         fornecvalor = request.POST.get('fornecvalor')
         prodvalor = request.POST.get('prodvalor')
+        marcavalor = request.POST.get('marcavalor')
+        usamarca = request.POST.get('usamarca')
+        restringe_fornec = request.POST.get('restringe_fornec')
+        restringe_marca = request.POST.get('restringe_marca')
+        restringe_prod = request.POST.get('restringe_prod')
+        filial = request.POST.getlist('filial')
         
         if 'link' in request.POST:
             return redirect(f'/campanhas/{idcampanha}/')
@@ -333,30 +374,82 @@ def campanhas(request):
                     ENVIAEMAIL,
                     TIPOINTENSIFICADOR,
                     FORNECVALOR,
-                    PRODVALOR
+                    PRODVALOR,
+                    MARCAVALOR,
+                    USAMARCA,
+                    RESTRINGE_FORNEC,
+                    RESTRINGE_MARCA,
+                    RESTRINGE_PROD
                 )
                 VALUES(
                     (
-                        SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA), 
-                        '{descricao}', 
-                        SYSDATE, 
-                        to_date('{dtinicial}', 'yyyy-mm-dd'),
-                        to_date('{dtfinal}', 'yyyy-mm-dd'), 
-                        {multiplicador}, 
-                        {valor},
-                        '{usafornec}', 
-                        '{usaprod}', 
-                        '{ativoWhere}',
-                        '{usaemail}',
-                        '{tipointensificador}',
-                        '{fornecvalor}',
-                        '{prodvalor}'
-                        
-                    )
+                        SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA
+                    ), 
+                    '{descricao}', 
+                    SYSDATE, 
+                    to_date('{dtinicial}', 'yyyy-mm-dd'),
+                    to_date('{dtfinal}', 'yyyy-mm-dd'), 
+                    {multiplicador}, 
+                    {valor},
+                    '{usafornec}', 
+                    '{usaprod}', 
+                    '{ativoWhere}',
+                    '{usaemail}',
+                    '{tipointensificador}',
+                    {fornecvalor},
+                    {prodvalor},
+                    {marcavalor},
+                    '{usamarca}',
+                    '{restringe_fornec}',
+                    '{restringe_marca}',
+                    '{restringe_prod}'
+                )
             ''')
-            messages.success(request, f"Campanha inserida com sucesso")    
+            
+            for item in filial:
+                cursor.execute(f'''
+                    INSERT INTO MSCUPONAGEMCAMPANHAFILIAL
+                    (
+                        IDCAMPANHA, 
+                        CODFILIAL,
+                        ID
+                    )
+                    VALUES(
+                        (
+                            SELECT COALESCE(MAX(IDCAMPANHA), 0) FROM MSCUPONAGEMCAMPANHA
+                        ), 
+                        {item},
+                        (
+                            SELECT COALESCE(MAX(ID), 0) + 1 FROM MSCUPONAGEMCAMPANHAFILIAL
+                        )
+                    )
+                ''')
+            messages.success(request, f"Campanha inserida com sucesso")  
+            
         
         elif 'edit' in request.POST:
+            print(f'''
+                UPDATE MSCUPONAGEMCAMPANHA
+                SET  
+                    DESCRICAO='{descricao}', 
+                    DTULTALT=SYSDATE, 
+                    DTINIT=to_date('{dtinicial}', 'yyyy-mm-dd'), 
+                    DTFIM=to_date('{dtfinal}', 'yyyy-mm-dd'), 
+                    MULTIPLICADOR={multiplicador}, 
+                    VALOR={valor}, 
+                    USAFORNEC='{usafornec}', 
+                    USAPROD='{usaprod}',
+                    ENVIAEMAIL='{usaemail}',
+                    TIPOINTENSIFICADOR='{tipointensificador}',
+                    FORNECVALOR={fornecvalor},
+                    PRODVALOR={prodvalor},
+                    MARCAVALOR={marcavalor},
+                    USAMARCA='{usamarca}',
+                    RESTRINGE_FORNEC='{restringe_fornec}',
+                    RESTRINGE_MARCA='{restringe_marca}',
+                    RESTRINGE_PROD='{restringe_prod}'
+                WHERE IDCAMPANHA = {codigo} 
+            ''')
             cursor.execute(f'''
                 UPDATE MSCUPONAGEMCAMPANHA
                 SET  
@@ -368,12 +461,39 @@ def campanhas(request):
                     VALOR={valor}, 
                     USAFORNEC='{usafornec}', 
                     USAPROD='{usaprod}',
-                    ENVIAEMAIL = '{usaemail}',
-                    TIPOINTENSIFICADOR = '{tipointensificador}',
-                    FORNECVALOR = '{fornecvalor}',
-                    PRODVALOR = '{prodvalor}'
+                    ENVIAEMAIL='{usaemail}',
+                    TIPOINTENSIFICADOR='{tipointensificador}',
+                    FORNECVALOR={fornecvalor},
+                    PRODVALOR={prodvalor},
+                    MARCAVALOR={marcavalor},
+                    USAMARCA='{usamarca}',
+                    RESTRINGE_FORNEC='{restringe_fornec}',
+                    RESTRINGE_MARCA='{restringe_marca}',
+                    RESTRINGE_PROD='{restringe_prod}'
                 WHERE IDCAMPANHA = {codigo} 
             ''')
+            
+            cursor.execute(f'''
+                DELETE FROM MSCUPONAGEMCAMPANHAFILIAL
+                WHERE IDCAMPANHA = {codigo}
+            ''')
+            for item in filial:
+                cursor.execute(f'''
+                    INSERT INTO MSCUPONAGEMCAMPANHAFILIAL
+                    (
+                        IDCAMPANHA, 
+                        CODFILIAL,
+                        ID
+                    )
+                    VALUES
+                    (
+                        {codigo}, 
+                        {item},
+                        (
+                            SELECT COALESCE(MAX(ID), 0) + 1 FROM MSCUPONAGEMCAMPANHAFILIAL
+                        ) 
+                    )
+                ''')
             messages.success(request, f"Campanha {codigo} editada com sucesso")
     
     conexao.commit()
@@ -670,42 +790,32 @@ def blacklist(request):
     context = {}
     conexao = conexao_oracle()
     cursor = conexao.cursor()
-    context['tituloInsere'] = 'Adicionar cliente proibido'
-    context['tituloPlanilha'] = 'Adicionar planilha de clientes'
+    context['tituloInsere'] = 'Adicionar cliente a BlackList'
+    context['tituloPlanilha'] = 'Adicionar planilha de clientes a BlackList'
+    context['tituloDelete'] = 'Remover cliente da BlackList'
     context['tipolink'] = 'C'
+    context['appname'] = 'cpfcli'
+    context['modelname'] = 'BlackList'
+    context['nomecolum'] = 'NOMECLI'
+    context['primarykey'] = 'id'
     
-    campos = [
-        ['idcampanha', 'number', True, 'col-md-6 col-12', (), 'Código da campanha cadastrada', 'Código da campanha cadastrada'],       # Código
-        ['codcli', 'number', True, 'col-12 col-md-6', (), 'Código do cliente no winthor 302', 'Código do cliente no winthor 302'],    # Descrição
-    ]
-    context['campos'] = campos
+    context['form'] = BlackListForm()
     context['habilitaexportacao'] = 'Sim'
     context['permiteplanilha'] = 'permiteplanilha'
     
     def getTable():
         context['listclis'] = BlackList.objects.all().values(
-            'IDCAMPANHA', 'CODCLI', 'NOMECLI', 'EMAIL', 'CPFCNPJ', 'DTMOV'
+            'id', 'IDCAMPANHA', 'CODCLI', 'NOMECLI', 'EMAIL', 'CPFCNPJ', 'DTMOV'
         )
-    
-    def exist_client(cursor, codcli):
-        cursor.execute(f'''
-            SELECT 
-                CODCLI, 
-                COALESCE(CLIENTE, 'Sem nome cadastrado'), 
-                COALESCE(EMAIL, 'Sem email cadastrado'), 
-                COALESCE(CGCENT, 'Sem cpf ou cnpj cadastrado')
-            FROM PCCLIENT
-            WHERE CODCLI = {codcli}
-        ''')
-        return cursor.fetchone()
 
     if request.method == 'POST':
-        idcampanha = request.POST.get('idcampanha')
-        codcli = request.POST.get('codcli')
+        idcampanha = request.POST.get('IDCAMPANHA')
+        codcli = request.POST.get('CODCLI')
+        id = request.POST.get(f"{context['primarykey']}")
         
         if 'delete' in request.POST:
-            BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli).delete()
-            messages.success(request, f"Cliente {codcli} na campanha {idcampanha} deletado com sucesso")
+            BlackList.objects.filter(id =id).delete()
+            messages.success(request, f"Cliente removido com sucesso da BlackList")
         
         elif 'insert' in request.POST:
             exist_cli = exist_client(cursor, codcli)
@@ -725,7 +835,6 @@ def blacklist(request):
                 BlackList.objects.create(
                     IDCAMPANHA=idcampanha, 
                     CODCLI = exist_cli[0], 
-                    DTMOV=now(),
                     EMAIL = exist_cli[2],
                     CPFCNPJ = exist_cli[3],
                     NOMECLI = exist_cli[1]
@@ -777,7 +886,6 @@ def blacklist(request):
                             BlackList.objects.create(
                                 IDCAMPANHA=idcampanha, 
                                 CODCLI = exist_cli[0], 
-                                DTMOV = now(),
                                 EMAIL = exist_cli[2],
                                 CPFCNPJ = exist_cli[3],
                                 NOMECLI = exist_cli[1]
@@ -803,6 +911,124 @@ def blacklist(request):
 
     getTable()
     return render(request, 'sorteio/listanegra.html', context)
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def marcas(request):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['tituloInsere'] = 'Adicionar marca'
+    context['tituloDelete'] = 'Deletar marca'
+    context['tituloPlanilha'] = 'Adicionar planilha de marcas'
+    context['tipolink'] = 'M'
+    context['appname'] = 'cpfcli'
+    context['modelname'] = 'Marcas'
+    context['nomecolum'] = 'nomemarca'
+    context['primarykey'] = 'id'
+    
+    context['form'] = MarcasForm()
+    context['habilitaexportacao'] = 'Sim'
+    context['permiteplanilha'] = 'permiteplanilha'
+    
+    def getTable():
+        context['dados'] = Marcas.objects.all().values(
+            'id', 'idcampanha', 'codmarca', 'nomemarca', 'dtmov'
+        )
+
+    if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
+        codmarca = request.POST.get('codmarca')
+        id = request.POST.get(f"{context['primarykey']}")
+        
+        if 'delete' in request.POST:
+            Marcas.objects.filter(id =id).delete()
+            messages.success(request, f"Marca deletada com sucesso")
+        
+        elif 'insert' in request.POST:
+            exist_test = exist_campanha(cursor, idcampanha)
+            exist = exist_marca(cursor, codmarca)
+            if exist_test is None:
+                getTable()
+                messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                return render(request, 'cadastros/marcas.html', context)
+            if exist is None:
+                getTable()
+                messages.error(request, f"A marca {codmarca} não existe")
+                return render(request, 'cadastros/marcas.html', context)
+            
+            if not Marcas.objects.filter(idcampanha=idcampanha, codmarca=codmarca).exists():
+                Marcas.objects.create(
+                    idcampanha=idcampanha, 
+                    codmarca=codmarca,
+                    nomemarca = exist[1]
+                )
+                messages.success(request, f"Marca {exist[0]} - {exist[1]} inserida com sucesso na campanha {exist_test[0]} - {exist_test[1]}")
+            else:
+                messages.error(request, f"Marca {exist[0]} - {exist[1]} já cadastrada na campanha {exist_test[0]} - {exist_test[1]}") 
+            
+        elif 'insertp' in request.POST:
+            file = request.FILES.get("planilhas")
+            if file:
+                df = upload_planilha(file)
+                if not isinstance(df, pd.DataFrame):
+                    getTable()
+                    messages.error(request, df)
+                    return render(request, 'cadastros/marcas.html', context)
+            else:
+                getTable()
+                messages.error(request, "Nenhuma planilha enviada")
+                return render(request, 'cadastros/marcas.html', context)
+            
+            if not 'idcampanha' in df.columns or not 'codmarca' in df.columns:
+                getTable()
+                messages.error(request, "Planilha enviada no formato errado")
+                return render(request, 'cadastros/marcas.html', context)
+
+            try:
+                with transaction.atomic():
+                    for index, row in df.iterrows():
+                        idcampanha = row['idcampanha']
+                        codmarca = row['codmarca']
+                        
+                        exist_test = exist_campanha(cursor, idcampanha)
+                        exist = exist_marca(cursor, codmarca)
+                        if exist_test is None:
+                            transaction.rollback() 
+                            getTable()
+                            messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                            return render(request, 'cadastros/marcas.html', context)
+                        if exist is None:
+                            getTable()
+                            messages.error(request, f"A marca {codmarca} não existe")
+                            return render(request, 'cadastros/marcas.html', context)
+            
+                        if not Marcas.objects.filter(idcampanha=idcampanha, codmarca=codmarca).exists():
+                            Marcas.objects.create(
+                                idcampanha=idcampanha, 
+                                codmarca=codmarca,
+                                nomemarca = exist[1]
+                            )
+                        else:
+                            transaction.rollback() 
+                            getTable()
+                            messages.error(request, f"Marca com código {codmarca} já cadastrada na campanha {idcampanha}, verifique a planilha")
+                            return render(request, 'cadastros/marcas.html', context)
+
+                    messages.success(request, "Todas as marcas foram inseridas com sucesso!")
+
+            except Exception as e:
+                transaction.rollback()  # Garante que qualquer erro fará o rollback da transação
+                getTable()
+                messages.error(request, f"Ocorreu um erro ao processar a planilha: {str(e)}")
+                return render(request, 'cadastros/marcas.html', context)
+        else:
+            getTable()
+            messages.error(request, "Ação não reconhecida")
+            return render(request, 'cadastros/marcas.html', context)
+
+    getTable()
+    return render(request, 'cadastros/marcas.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -950,6 +1176,90 @@ def campanhasidclient(request, idcampanha, idclient):
 
     getTable()
     return render(request, 'campanhas/campanhaNumerosClient.html', context)
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def campanhasidclientnumped(request, idcampanha, idclient, numped):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['title'] = f'Lista de produtos no pedido {numped} do cliente {idclient}'
+    context['numped'] = numped
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE idcampanha = {idcampanha}
+    ''')
+    exist_active = cursor.fetchone()
+    
+    if exist_active is None:
+        messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
+        return redirect('campanha')
+    
+    cursor.execute(f'''
+        SELECT 
+            IDCAMPANHA, DESCRICAO
+        FROM MSCUPONAGEMCAMPANHA
+        WHERE 
+            IDCAMPANHA = {idcampanha} AND 
+            DTEXCLUSAO IS NOT NULL
+    ''')
+    exist_delete = cursor.fetchone()
+    if exist_delete:
+        messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
+    
+    cursor.execute(f'''
+        SELECT IDCAMPANHA, CODCLI
+        FROM MSCUPONAGEM
+        WHERE 
+            IDCAMPANHA = {idcampanha} AND 
+            CODCLI = {idclient}
+    ''')
+    exist_client = cursor.fetchone()
+    
+    if exist_client is None:
+        messages.error(request, f'Não existe nenhum cupom registrado para o cliente {idclient} na campanha {idcampanha}')
+        return redirect(f'/campanhas/{idcampanha}/')
+    
+    cursor.execute(f'''
+        SELECT IDCAMPANHA, CODCLI
+        FROM MSCUPONAGEM
+        WHERE 
+            IDCAMPANHA = {idcampanha} AND 
+            CODCLI = {idclient} AND 
+            NUMPED = {numped}
+    ''')
+    exist_client = cursor.fetchone()
+    
+    if exist_client is None:
+        messages.error(request, f'Não existe nenhuma venda registrada para o cliente {idclient} na campanha {idcampanha} com o numped ')
+        return redirect(f'/campanhas/{idcampanha}/{idclient}/')
+    
+    context['campanha'] = f'{exist_active[1]}'
+    context['cliente'] = f'{idclient}'
+    
+    def getTable():
+        cursor.execute(f'''                
+            SELECT 
+                PCMOV.CODPROD, 
+                PCPRODUT.CODAUXILIAR,
+                PCMOV.CODFILIAL, 
+                PCPRODUT.DESCRICAO, 
+                PCMOV.PUNIT,
+                PCMOV.QT,
+                PCPRODUT.CODFORNEC,
+                PCFORNEC.FORNECEDOR
+            FROM PCMOV 
+                INNER JOIN PCPRODUT ON (PCPRODUT.CODPROD = PCMOV.CODPROD)
+                INNER JOIN PCFORNEC ON (pcprodut.codfornec = PCFORNEC.codfornec)
+            WHERE NUMPED = {numped}
+        ''')
+        context['dados'] = cursor.fetchall()
+
+    getTable()
+    return render(request, 'campanhas/campanhaItems.html', context)
 
 def cadastro_cliente(request):
     if request.method == 'POST':
@@ -1185,3 +1495,4 @@ def sorteioganhadores(request, idcampanha):
 
     getTable()
     return render(request, 'sorteio/ganhadores.html', context)
+

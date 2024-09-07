@@ -1,0 +1,68 @@
+{% load static %}
+{% block content %}
+
+<!-- Modal de deletar -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content needs-validation" method="POST">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Deletar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
+                    <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
+                    <div class="text-center w-100 mt-5 mb-4">
+                        <i class="fa-solid fa-circle-xmark fa-6x " style="color: Tomato;"></i>
+                    </div>
+                    <div class="text-center w-100 mb-3">
+                        <h4 class="modal-title">Você tem certeza?</h4>
+                    </div>
+                    <div class="form-group">
+                        <p class="text-center">Deseja realmente deletar? A ação não pode ser desfeita</p>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-center flex-nowrap">
+                    <button type="button" class="btn btn-secondary col-6" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="delete" id="modalSubmitButton" class="btn btn-danger col-6">Deletar</button>
+                    <button type="submit" name="delete2"  class="btn btn-danger col-6 d-none">Deletar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function loadDataDelete(id) {
+        $.ajax({
+            url: '/get_data_delete/', // Endpoint que retorna os dados da campanha
+            method: 'GET',
+            data: { 
+                    id: id ,
+                    app_name: '{{appname}}',
+                    model_name: '{{modelname}}'
+                },
+            success: function(data) {
+                console.log(data)
+                // Seleciona o modal específico pelo ID
+                var modal = $('#deleteModal');
+                var form = modal.find('form');
+                form[0].reset();
+                form.removeClass('was-validated');
+                
+                // Atribui o valor de codmarca ao input hidden
+                modal.find('#id_{{primarykey}}').val(data.id);
+
+                // Ajusta o modal para edição
+                modal.find('#modalTitle').html('{{tituloDelete}} ' + data.{{nomecolum}});
+                modal.find('#modalSubmitButton').attr('name', 'delete').text('Deletar');
+                
+                // Exibe o modal
+                modal.modal('show');
+            }
+        });
+    }
+</script>
+
+
+{% endblock %}

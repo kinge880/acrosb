@@ -1,7 +1,7 @@
 {% load static %}
 {% block content %}
 <!-- Modal de inserção -->
-<div class="modal fade" id="insertModal" data-bs-keyboard="false" aria-labelledby="editModalLabel" aria-hidden="true">
+<div class="modal fade" id="insertEditModal" data-bs-keyboard="false" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form novalidate class="modal-content needs-validation" method="POST">
             {% csrf_token %}

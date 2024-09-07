@@ -1,0 +1,148 @@
+{% load static %}
+{% block content %}
+<!-- Modal de inserção e edição -->
+<div class="modal fade" id="insertEditModal" data-bs-keyboard="false" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form novalidate class="modal-content needs-validation" method="POST">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">{{ tituloInsere }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body modal-body1 row flex-wrap" id="bodyinsere">
+                <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
+                {% for field in form %}
+                    <div class="input-group-cosmic-cascade-tetra-49m7 {{ field.field.widget.attrs.classdiv }}">
+                        {% if field.field.widget.attrs.select2Label %}
+                            <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% endif %}
+                        {{ field }}
+                        {% if not field.field.widget.attrs.select2Label %}
+                            <label class="user-label-cosmic-cascade-tetra-49m7 {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in field.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer d-flex justify-content-between flex-nowrap">
+                <button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" name="insert" id="modalSubmitButton" class="btn btn-primary btn-sm col-5">Salvar</button>
+                <button type="submit" name="insert" class="btn btn-primary btn-sm col-5 d-none">Salvar2</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de inserção -->
+<div class="modal fade" id="insertModalPlanilha" data-bs-keyboard="false" aria-labelledby="insertModalPlanilhaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="insertModalPlanilhaLabel">{{tituloPlanilha}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap" id="bodyinsere">
+                <div class="mb-3 mt-3 col-12">
+                    <input type="file" class="form-control" id="planilhas" name="planilhas" placeholder="Selecione uma planilha no modelo abaixo" required>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between flex-nowrap">
+                <button type="button" class="btn btn-secondary btn-sm col-4" data-bs-dismiss="modal">Cancelar</button>
+                <a href="/baixar-modelo/{{tipolink}}/" class="btn btn-info btn-sm col-3">Baixar modelo</a>
+                <button type="submit" name="insertp" class="btn btn-primary btn-sm col-4">Salvar</button>
+                <button type="submit" name="insertp2" class="btn btn-primary d-none">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var insertEditModal = document.getElementById('insertEditModal');
+        
+        insertEditModal.addEventListener('show.bs.modal', function () {
+            fetch("{% url 'get_csrf_token' %}")  // Substitua 'get_csrf_token' pela URL da view criada
+                .then(response => response.json())
+                .then(data => {
+                    // Atualiza o campo CSRF token
+                    document.querySelector('input[name="csrfmiddlewaretoken"]').value = data.csrfToken;
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    });
+    
+    function loadEditData(id) {
+        $.ajax({
+            url: '/get_data_edit/', // Endpoint que retorna os dados da campanha
+            method: 'GET',
+            data: { 
+                    id: id,
+                    tipo: '{{tipoEditKey}}'
+                },
+            success: function(data) {
+                // Seleciona o modal específico pelo ID
+                var modal = $('#insertEditModal');
+                var form = modal.find('form');
+                form[0].reset();
+                modal.find(".select2").val('').trigger('change');
+                form.removeClass('was-validated');
+    
+                // Itera sobre todos os campos do formulário dentro do modal
+                modal.find('input, select, textarea').each(function() {
+                    var input = $(this);
+                    var fieldName = input.attr('name'); // Obtém o nome do campo
+    
+                    if (fieldName && data[fieldName] !== undefined) {
+                        var value = data[fieldName];
+                        
+                        // Verifica se o campo é do tipo date ou datetime-local
+                        if (input.is('input[type="date"]')) {
+                            // Verifica se o valor é uma data válida
+                            if (value) {
+                                var date = new Date(value);
+                                value = date.toISOString().split('T')[0];
+                                input.val(value);
+                            }
+                        } else if (input.is('input[type="datetime-local"]')) {
+                            // Verifica se o valor é uma data válida
+                            if (value) {
+                                var date = new Date(value);
+                                value = date.toISOString().slice(0, 16);
+                                input.val(value);
+                            }
+                        } else if (input.is('select')) {
+                            var optionExists = input.find('option[value="' + value + '"]').length > 0;
+                            if (optionExists) {
+                                if (input.hasClass('select2')){
+                                    input.val(value).trigger('change');
+                                } else{
+                                    input.val(value);
+                                }
+                            } else {
+                                console.warn('Valor não encontrado nas opções do select: ' + fieldName + ' = ' + value);
+                            }
+                        } else {
+                            input.val(value);
+                        }
+                    }
+                });
+        
+                // Ajusta o modal para edição
+                modal.find('#modalTitle').html('{{tituloEdit}} ' + data.descricao);
+                modal.find('#modalSubmitButton').attr('name', 'edit').text('Editar');
+                
+                // Exibe o modal
+                modal.modal('show');
+            }
+        });
+    }
+</script>
+
+{% endblock %}

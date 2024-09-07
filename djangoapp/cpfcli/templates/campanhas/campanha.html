@@ -48,7 +48,7 @@
                                                 </a>
                                             </li>
                                             <li>
-                                                <button type="button" class="dropdown-item btn btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{campanha.0}}">
+                                                <button type="button" class="dropdown-item btn btn-sm" onclick="loadEditData({{ campanha.0 }})">
                                                     <i class="fas fa-edit"></i> Editar campanha
                                                 </button>
                                             </li>
@@ -136,96 +136,7 @@
                                     {% endif %}
                                 </td>
                             </tr>
-
-                            <!-- Modal de Edição -->
-                            <div class="modal fade" id="editModal{{campanha.0}}" tabindex="-1" aria-labelledby="editModal{{campanha.0}}ds" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <form novalidate class="modal-content needs-validation" method="POST">
-                                        {% csrf_token %}
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="editModal{{campanha.0}}ds">Editar {{campanha.1}}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
-                                                <input type="hidden" value="{{campanha.0}}" name="codigo" id="codigo"/>
-                                                <div class="col-12 mb-3">
-                                                    <label for="descricao" class="form-label">Descrição</label>
-                                                    <input required type="text" class="form-control" name="descricao" id="descricao" value="{{campanha.1}}" placeholder="Digite a descrição">
-                                                </div>
-                                                <div class="col-md-3 col-12 mb-3">
-                                                    <label for="dtInicial" class="form-label">Data Inicial</label>
-                                                    <input required type="date" class="form-control" name="dtinicial" id="dtinicial" value="{{campanha.11}}">
-                                                </div>
-                                                <div class="col-md-3 col-12 mb-3">
-                                                    <label for="dtFinal" class="form-label">Data Final</label>
-                                                    <input required type="date" class="form-control" name="dtfinal" id="dtfinal" value="{{campanha.12}}">
-                                                </div>
-                                                <div class="col-md-3 col-12 mb-3">
-                                                    <label for="valor" class="form-label">Valor</label>
-                                                    <input required type="number" class="form-control" name="valor" id="valor" value="{{campanha.4}}" placeholder="Digite o valor">
-                                                </div>
-                                                <div class="col-md-3 col-12 mb-3">
-                                                    <label for="usaemail" class="form-label">Envia email</label>
-                                                    <select required class="form-select" name="usaemail" id="usaemail">
-                                                        <option {% if campanha.13 == 'S' %} selected {% endif %} value="S">Enviar email ao cliente informando os cupons obtidos</option>
-                                                        <option {% if campanha.13 == 'N' %} selected {% endif %} value="N">Não enviar email</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4 col-12 mb-3">
-                                                    <label for="tipointensificador" class="form-label">Tipo de intensificador</label>
-                                                    <select required class="form-select" name="tipointensificador" id="tipointensificador">
-                                                        <option {% if campanha.14 == 'N' %} selected {% endif %} value="N">1 - Não utilizar intensificador</option>
-                                                        <option {% if campanha.14 == 'M' %} selected {% endif %} value="M">2 - Multiplicação</option>
-                                                        <option {% if campanha.14 == 'S' %} selected {% endif %} value="S">3 - Soma</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4 col-12 mb-3">
-                                                    <label for="usafornec" class="form-label">Utiliza fornecedor</label>
-                                                    <select required class="form-select" name="usafornec" id="usafornec">
-                                                        <option {% if campanha.6 == 'N' %} selected {% endif %} value="N">1 - Não utilizar intensificador por fornecedor</option>
-                                                        <option {% if campanha.6 == 'C' %} selected {% endif %} value="C">2 - Intensificador por fornecedor cadastrado</option>
-                                                        <option {% if campanha.6 == 'M' %} selected {% endif %} value="M">3 - Intensificador por fornecedor multiplo</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4 col-12 mb-3">
-                                                    <label for="usaprod" class="form-label">Utiliza produto</label>
-                                                    <select required class="form-select" name="usaprod" id="usaprod">
-                                                        <option {% if campanha.7 == 'N' %} selected {% endif %} value="N">1 - Não utilizar intensificador por produto</option>
-                                                        <option {% if campanha.7 == 'C' %} selected {% endif %} value="C">2 - Utilizar intensificador por produto cadastrado</option>
-                                                        <option {% if campanha.7 == 'M' %} selected {% endif %} value="M">3 - Utilizar intensificador por produto multiplo</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4 col-12 mb-3">
-                                                    <label for="multiplicador" class="form-label">Valor do intensificador</label>
-                                                    <input required type="number" class="form-control" name="multiplicador" id="multiplicador" value="{{campanha.5}}" placeholder="valor">
-                                                </div>
-                                                <div class="col-md-4 col-12 mb-3">
-                                                    <label for="fornecvalor" class="form-label">Quantidade de fornecedores</label>
-                                                    <input required type="number" class="form-control" name="fornecvalor" id="fornecvalor" value="{{campanha.15}}" placeholder="Digite a quantidade">
-                                                </div>
-                                                <div class="col-md-4 col-12 mb-3">
-                                                    <label for="prodvalor" class="form-label">Quantidade de produtos</label>
-                                                    <input required type="number" class="form-control" name="prodvalor" id="prodvalor" value="{{campanha.16}}" placeholder="Digite a quantidade">
-                                                </div>
-                                                <div class="col-md-4 col-12 mb-3">
-                                                    <label for="acumulativo" class="form-label">Acumula vendas</label>
-                                                    <select required class="form-select" name="acumulativo" id="acumulativo">
-                                                        <option {% if campanha.17 == 'N' %} selected {% endif %} value="N">1 - Não acumular saldo entre vendas</option>
-                                                        <option {% if campanha.17 == 'S' %} selected {% endif %} value="S">2 - Acumular saldo entre vendas</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer d-flex justify-content-between flex-nowrap">
-                                                <button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" name="edit" class="btn btn-primary btn-sm col-5">Editar</button>
-                                                <button type="submit" name="edit2" class="btn btn-primary d-none">Salvar</button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
+                            
                             <!-- Modal de ativar -->
                             <div class="modal fade" id="activeModal{{campanha.0}}" tabindex="-1" aria-labelledby="activeModal{{campanha.0}}ds" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -325,9 +236,10 @@
                     </tbody>
                 </table>
 
-                {% include 'partials/components/insertmodal.html' %} 
+                {% include 'partials/components/insertmodalForm.html' %}
             </div>
         </div>
     </div> 
-
+    
+    
 {% endblock %}

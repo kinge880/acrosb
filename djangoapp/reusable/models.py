@@ -13,3 +13,9 @@ class AccessLog(models.Model):
 
     def __str__(self):
         return f"{self.timestamp} - {self.ip_address} - {self.path} - {self.action_type}"
+    
+class Agent(models.Model):
+    name = models.CharField(max_length=100)
+    agent_ip = models.CharField(max_length=100)
+    coupons_generated = models.PositiveIntegerField(default=0)
+    last_heartbeat = models.DateTimeField(auto_now=True)

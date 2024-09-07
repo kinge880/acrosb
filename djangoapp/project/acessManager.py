@@ -1,64 +1,44 @@
 
+
 from .conexao_postgresql import *
 from django.shortcuts import redirect
 from django.contrib import messages
+from functools import wraps
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.apps import apps
 
-def test_regiao(request, id, valorperm):
+def get_permissions(model, app_name):
+    content_type = ContentType.objects.get_for_model(model)
+
+    # Obtendo todas as permissões relacionadas ao ContentType
+    all_permission = Permission.objects.filter(content_type=content_type)
     
-    def _method_wrapper(view_method):
+    permissao_view = [item.codename for item in all_permission if 'view' in item.codename]
+    if permissao_view and len(permissao_view) > 0:
+        permissao_view = permissao_view[0]
+    else:
+        permissao_view = 'NA'
 
-        def _arguments_wrapper(request, *args, **kwargs) :
-            conexao = conectar_banco()
-            cursor = conexao.cursor()
-            
-            cursor.execute(f'''
-                SELECT idpermissao, valor, iduser
-                FROM permissaoitem 
-                WHERE 
-                    idpermissao = {id} AND
-                    valor = {valorperm} and 
-                    iduser = {request.user.id}
-            ''')
-            permissao = cursor.fetchone()
-            
-            if permissao:
-                return view_method(request, *args, **kwargs)
-            else:
-                cursor.execute(f'''
-                    SELECT nomeregional
-                    FROM public.regional
-                    WHERE 
-                        idregional = {valorperm}
-                ''')
-                regiao = cursor.fetchone()
-                
-                if regiao:
-                    messages.error(f'Você não tem permissão para acessar a região {valorperm} - {regiao[0]}')
-                else:
-                    messages.error(f'Você tentou acessar dados de uma região com código {valorperm}, porém essa região não existe no sistema, escolha uma região válida')
-                return redirect('/menu/')
+    permissao_add = [item.codename for item in all_permission if 'add' in item.codename]
+    if permissao_add and len(permissao_add) > 0:
+        permissao_add = permissao_add[0]
+    else:
+        permissao_add = 'NA'
 
-        return _arguments_wrapper
+    permissao_change= [item.codename for item in all_permission if 'change' in item.codename]
+    if permissao_change and len(permissao_change) > 0:
+        permissao_change = permissao_change[0]
+    else:
+        permissao_change = 'NA'
 
-    return _method_wrapper
-
-def obterRegiao(request):
-    conexao = conectar_banco()
-    cursor = conexao.cursor()
-
-    cursor.execute(f'''
-        SELECT valor
-        FROM permissaoitem 
-        INNER JOIN regional ON (permissaoitem.valor = regional.idregional)
-        WHERE 
-            idpermissao = 1 AND
-            iduser = {request.user.id}
-    ''')
+    permissao_delete = [item.codename for item in all_permission if 'delete' in item.codename]
+    if permissao_delete and len(permissao_delete) > 0:
+        permissao_delete = permissao_delete[0]
+    else:
+        permissao_delete = 'NA'
     
-    permission = cursor.fetchall()
-    result = []
-    for perm  in permission:
-        result.extend(perm)
-    conexao.close()
-    
-    return result
+    return {'view': str(app_name)+'.'+str(permissao_view), 
+            'add': str(app_name)+'.'+str(permissao_add), 
+            'change': str(app_name)+'.'+str(permissao_change), 
+            'delete': str(app_name)+'.'+str(permissao_delete)}

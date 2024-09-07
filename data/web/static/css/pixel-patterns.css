@@ -21,6 +21,11 @@
     transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Ajuste para quando dentro de um .d-flex */
+.row .user-label-cosmic-cascade-tetra-49m7 {
+    left: 25px;
+}
+
 .user-label-date-cosmic-cascade-tetra-49m7 {
     color: #ffffff00;
 }

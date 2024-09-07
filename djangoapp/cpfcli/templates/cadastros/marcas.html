@@ -11,23 +11,19 @@
                     <thead>
                         <tr>
                             <th class="text-start">CÓDIGO CAMPANHA</th>
-                            <th class="text-start">CODCLI</th>
-                            <th class="text-start">NOME</th>
-                            <th class="text-start">EMAIL</th>
-                            <th class="text-start">CPF_CNPJ</th>
+                            <th class="text-start">CODMARCA</th>
+                            <th class="text-start">MARCA</th>
                             <th class="text-start">DATA CADASTRO</th>
                             <th class="text-start">AÇÕES</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for dado in listclis %}
+                        {% for dado in dados %}
                             <tr>
-                                <td class="text-start">{{dado.IDCAMPANHA}}</td>
-                                <td class="text-start">{{dado.CODCLI}}</td>
-                                <td class="text-start">{{dado.NOMECLI}}</td>
-                                <td class="text-start">{{dado.EMAIL}}</td>
-                                <td class="text-start">{{dado.CPFCNPJ}}</td>
-                                <td class="text-start">{{dado.DTMOV}}</td>
+                                <td class="text-start">{{dado.idcampanha}}</td>
+                                <td class="text-start">{{dado.codmarca}}</td>
+                                <td class="text-start">{{dado.nomemarca}}</td>
+                                <td class="text-start">{{dado.dtmov}}</td>
                                 <td class="text-start col-2">
                                     <button 
                                         type="button" 
@@ -47,5 +43,4 @@
         </div>
     </div> 
 
-    
 {% endblock %}

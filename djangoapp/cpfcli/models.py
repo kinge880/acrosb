@@ -1,16 +1,39 @@
 from django.db import models
+from django.utils import timezone
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.core.validators import MinValueValidator
 
 class BlackList(models.Model):
-    IDCAMPANHA = models.IntegerField(blank=True, null=True)
-    NOMECLI = models.CharField(blank=True, null=True)
-    CODCLI = models.IntegerField(blank=True, null=True)
-    EMAIL = models.CharField(blank=True, null=True)
-    CPFCNPJ = models.CharField(blank=True, null=True)
-    DTMOV = models.DateTimeField(blank=True, null=True)
-                
+    IDCAMPANHA = models.IntegerField(default=0)
+    NOMECLI = models.CharField(default='Sem nome cadastrado')
+    CODCLI = models.IntegerField(default=0)
+    EMAIL = models.CharField(default='Sem email cadastrado')
+    CPFCNPJ = models.CharField(default='Sem cpf ou cnpj cadastrado')
+    DTMOV = models.DateTimeField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):     
+        self.dtmov = timezone.now()
+        super().save(*args, **kwargs)
+        
     def __str__(self):
         return str(self.IDCAMPANHA) + ' - ' + str(self.CODCLI)
+
+class Marcas(models.Model):
+    idcampanha = models.IntegerField(default=0)
+    nomemarca = models.CharField(default='Sem descrição cadastrada')
+    codmarca = models.IntegerField(default=0)
+    dtmov = models.DateTimeField(null=True, blank=True)
+    intensificador = models.CharField(default='N')
+    restricao = models.CharField(default='N')
     
+    def save(self, *args, **kwargs):     
+        self.dtmov = timezone.now()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.idcampanha) + ' - ' + str(self.nomemarca)
+
 class Cliente(models.Model):
     TIPO_PESSOA_CHOICES = [
         ('F', 'Física'),
@@ -41,3 +64,47 @@ class Cliente(models.Model):
 
     def __str__(self):
         return self.nome
+
+class MscuponagemCampanha(models.Model):
+    idcampanha = models.AutoField(primary_key=True)
+    descricao = models.CharField(max_length=100)
+    dtultalt = models.DateTimeField()
+    dtinit = models.DateField()
+    dtfim = models.DateField()
+    multiplicador = models.IntegerField()
+    valor = models.IntegerField()
+    usafornec = models.CharField(max_length=1, default='N')
+    usamarca = models.CharField(max_length=1, default='N')
+    usaprod = models.CharField(max_length=1, default='N')
+    ativo = models.CharField(max_length=1)
+    dtexclusao = models.DateTimeField(null=True, blank=True)
+    enviaemail = models.CharField(max_length=1, default='S')
+    tipointensificador = models.CharField()
+    fornecvalor = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        error_messages={'min_value': 'O valor do fornecedor não pode ser menor que 1.'}
+    )
+    marcavalor = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        error_messages={'min_value': 'O valor da marca não pode ser menor que 1.'}
+    )
+    prodvalor = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        error_messages={'min_value': 'O valor do produto não pode ser menor que 1.'}
+    )
+    acumulativo = models.CharField()
+    
+    restringe_fornec = models.CharField(max_length=1, default='N')
+    restringe_marca = models.CharField(max_length=1, default='N')
+    restringe_prod = models.CharField(max_length=1, default='N')
+
+    def save(self, *args, **kwargs):     
+        self.dtultalt = timezone.now()
+        super().save(*args, **kwargs)
+        
+class CuponagemCampanhaFilial(models.Model):
+    idcampanha = models.IntegerField(null=True, blank=True,)
+    codfilial = models.CharField(null=True, blank=True, max_length=100)
+    
+    def __str__(self):
+        return f"Campanha: {self.idcampanha} - Filial: {self.codfilial}"

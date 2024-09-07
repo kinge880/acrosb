@@ -68,8 +68,9 @@ def processacupom():
         SELECT
             IDCAMPANHA, DESCRICAO, USAFORNEC, USAPROD, VALOR,
             MULTIPLICADOR, to_char(DTINIT, 'yyyy-mm-dd'), 
-            to_char(DTFIM, 'yyyy-mm-dd'), ENVIAEMAIL, TIPOINTENSIFICADOR, FORNECVALOR, PRODVALOR,
-            ACUMULATIVO
+            to_char(DTFIM, 'yyyy-mm-dd'), ENVIAEMAIL, TIPOINTENSIFICADOR, FORNECVALOR, PRODVALOR, 
+            ACUMULATIVO, USAMARCA, MARCAVALOR, RESTRINGE_FORNEC, RESTRINGE_MARCA, RESTRINGE_PROD,
+            (SELECT COUNT(CODFILIAL) FROM MSCUPONAGEMCAMPANHAFILIAL WHERE IDCAMPANHA = MSCUPONAGEMCAMPANHA.IDCAMPANHA)
         FROM MSCUPONAGEMCAMPANHA
         WHERE 
             ATIVO = 'S'
@@ -92,15 +93,46 @@ def processacupom():
     valor_prod = campanha[11]
     acumulavenda = campanha[12]
     testa_envio_email = False
-    listprodsWhere = ',NULL'
-    produtoFornecWhere = ',NULL'
     listaprods = []
     listfornecs = []
+    marcas_list = []
+    usa_marca = campanha[13]
+    marca_valor = campanha[14]
+    restringe_fornec = campanha[15]
+    restringe_marca = campanha[16]
+    restringe_prod = campanha[17]
+    restringe_prod = campanha[18]
+    filiais = campanha[19]
     
-    #parametros de produto
-    if usa_prod and usa_prod == 'C':
+    listprods_restringe_where = ''
+    marcas_restringe_Where = ''
+    fornec_restringe_Where = ''
+    ignora_vendas_abaixo_do_valor_cupom_where = ''
+    filial_restringe_Where = ''
+    
+    produtos_intensifica_where = ',NULL'
+    produtoFornecWhere = ',NULL'
+    marcas_intensifica_where = ',NULL'
+    
+    #------------------------------------------------RESTRIÇOES DE CAMPANHA --------------------------------
+    if restringe_marca and restringe_marca == 'C':
+        cursor_postgre.execute(f'''
+            select codmarca  
+            from cpfcli_marcas 
+            where idcampanha  = {idcampanha} AND restricao = 'S'
+        ''')
+        marcas = cursor.fetchall()
+
+        if marcas and len(marcas) > 0:
+            for item in marcas:
+                marcas_list.extend(item[0])
+        
+        if len(marcas_list) > 0:
+            marcas_restringe_Where = f'AND (SELECT COUNT(CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODMARCA IN {marcas_list}) > 0'
+    
+    if restringe_prod and restringe_prod == 'C':
         cursor.execute(f'''
-            SELECT codprod FROM MSCUPONAGEMPROD WHERE IDCAMPANHA = {idcampanha}
+            SELECT CODPROD FROM MSCUPONAGEMPROD WHERE IDCAMPANHA = {idcampanha} AND RESTRICAO = 'S'
         ''')
         produtos = cursor.fetchall()
 
@@ -109,15 +141,11 @@ def processacupom():
         listaprods = tuple(listaprods)
 
         if len(listaprods) > 0:
-            listprodsWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1) AS LISTPROD'
+            listprods_restringe_where = f'AND (SELECT COUNT(CODPROD) FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED )  > 0'
     
-    elif usa_prod and usa_prod == 'M':
-        listprodsWhere = f',(SELECT COUNT(DISTINCT CODPROD) FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AS LISTPROD'
-    
-    #parametros de fornecedor  
-    if usa_fornec and usa_fornec == 'C':
+    if restringe_fornec and restringe_fornec == 'C':
         cursor.execute(f'''
-            SELECT codprod FROM MSCUPONAGEMPROD WHERE IDCAMPANHA = {idcampanha}
+            SELECT codfornec FROM MSCUPONAGEMFORNEC WHERE IDCAMPANHA = {idcampanha} AND RESTRICAO = 'S'
         ''')
         fornecedores = cursor.fetchall()
 
@@ -126,17 +154,69 @@ def processacupom():
         listfornecs = tuple(listfornecs)
 
         if len(listfornecs) > 0:
-            produtoFornecWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN {listfornecs} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1) AS LISTFORNEC'
+            fornec_restringe_Where = f'AND (SELECT COUNT(CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODFORNEC IN {listfornecs}) > 0'
+    
+    if acumulavenda and acumulavenda == 'T':
+        ignora_vendas_abaixo_do_valor_cupom_where = f'''AND PCPEDC.VLTOTAL >= {valor}'''
+
+    if filiais > 0:
+        filial_restringe_Where = 'AND PCPEDC.CODFILIAL IN (SELECT CODFILIAL FROM MSCUPONAGEMCAMPANHAFILIAL WHERE IDCAMPANHA = MSCUPONAGEMCAMPANHA.IDCAMPANHA)'
+        
+    #---------------------------------------------------INTENSIFICADORES -----------------------------------
+    if usa_prod and usa_prod == 'C':
+        cursor.execute(f'''
+            SELECT codprod FROM MSCUPONAGEMPROD WHERE IDCAMPANHA = {idcampanha} AND INTENSIFICA = 'S'
+        ''')
+        produtos = cursor.fetchall()
+
+        for item in produtos:
+            listaprods.extend(item)
+        listaprods = tuple(listaprods)
+
+        if len(listaprods) > 0:
+            produtos_intensifica_where = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
     
     elif usa_prod and usa_prod == 'M':
-        produtoFornecWhere = f',(SELECT COUNT(DISTINCT CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED)) AS LISTPROD'
+        produtos_intensifica_where = f',(SELECT COUNT(DISTINCT CODPROD) FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED)'
     
+    #parametros de fornecedor  
+    if usa_fornec and usa_fornec == 'C':
+        cursor.execute(f'''
+            SELECT codfornec FROM MSCUPONAGEMFORNEC WHERE IDCAMPANHA = {idcampanha} AND INTENSIFICA = 'S'
+        ''')
+        fornecedores = cursor.fetchall()
+
+        for item in fornecedores:
+            listfornecs.extend(item)
+        listfornecs = tuple(listfornecs)
+
+        if len(listfornecs) > 0:
+            produtoFornecWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN (select codprod from pcprodut where codfornec in {listfornecs}) AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
+    
+    elif usa_prod and usa_prod == 'M':
+        produtoFornecWhere = f',(SELECT COUNT(DISTINCT CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED))'
+    
+    #parametros da marca
+    if usa_marca and usa_marca == 'C':
+        cursor_postgre.execute(f'''
+            select codmarca from cpfcli_marcas where idcampanha  = {idcampanha} and intensifica = 'S'
+        ''')
+        marcas = cursor.fetchall()
+        marcas_list = []
+
+        if marcas and len(marcas) > 0:
+            for item in marcas:
+                marcas_list.extend(item[0])
+            marcas_intensifica_where = f"AND (SELECT codmarca FROM pcprodut WHERE codprod = pcpedi.codprod) NOT IN {marcas_list}"
+            
+    elif usa_prod and usa_prod == 'M':
+        marcas_intensifica_where = f',SELECT (SELECT COUNT(DISTINCT CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED))'
+        
     print('iniciando pesquisa de pedidos...')
 
+    #parametros da black list
     cursor_postgre.execute(f'''
-        select "CODCLI"  
-        from cpfcli_blacklist 
-        where "IDCAMPANHA"  = {idcampanha} 
+        select "CODCLI" from cpfcli_blacklist where "IDCAMPANHA"  = {idcampanha} 
     ''')
     black_list = cursor.fetchall()
     cpflist = []
@@ -158,7 +238,8 @@ def processacupom():
             (SELECT CLIENTE FROM PCCLIENT WHERE CODCLI = PCPEDC.CODCLI ),
             (SELECT EMAIL FROM PCCLIENT WHERE CODCLI = PCPEDC.CODCLI)
             {produtoFornecWhere}
-            {listprodsWhere}
+            {produtos_intensifica_where}
+            {marcas_intensifica_where}
         FROM PCPEDC 
         WHERE 
             "DATA" BETWEEN to_date('{dt_inicial}', 'yyyy-mm-dd') AND to_date('{dt_final}', 'yyyy-mm-dd') AND
@@ -170,22 +251,30 @@ def processacupom():
                 FROM MSCUPONAGEM
                 WHERE MSCUPONAGEM.NUMPED = PCPEDC.NUMPED
             ) AND 
-            CODCLI > 1 AND 
-            PCPEDC.VLTOTAL >= {valor} 
+            CODCLI > 1 
+            {ignora_vendas_abaixo_do_valor_cupom_where}
             {blacklistWhere}
+            {marcas_restringe_Where}
+            {listprods_restringe_where}
+            {fornec_restringe_Where}
+            {filial_restringe_Where}
     ''')
     pedidos = cursor.fetchall()
 
     print('pedidos pesquisados, calculando numeros da sorte')
     cont = 1
 
+    
+    #----------------------------CALCULA SALDO DA VENDA E QUANTIDADE INICIAL DE CUPONS ----------------------------
     for ped in pedidos:
         multiplicador_cupom = campanha[5]
+        valor_bonus = 0
         histgeracao = ''
-        valorIntensificador = 0
+        saldo_atual = 0
         print(f'processando pedido {ped} posição {cont} de {len(pedidos)}')
         
-        if acumulavenda == 'S':
+        if acumulavenda in ('S', 'T'):
+            print('Calculando se existe saldo...')
             #busca saldo do cliente
             cursor.execute(f'''
                 SELECT SALDO 
@@ -195,7 +284,6 @@ def processacupom():
                     IDCAMPANHA = {idcampanha}
             ''')
             saldo_cli = cursor.fetchone()
-            saldo_atual = 0
             
             if saldo_cli:
                 saldo_atual = saldo_cli[0]
@@ -223,12 +311,15 @@ def processacupom():
                     VALUES({ped[3]}, {idcampanha}, {sobra}, SYSDATE)
                 ''')
                 histgeracao += f'1 - Calculou uma sobra de R$ {sobra}, '
+            print('Saldo calculado...')
         else:
             qtcupons = int(math.floor(ped[1] / valor))
             histgeracao += f'1 - Nenhuma sobra calculada, '
         
-        #verifica se existe um fornecedor na venda que vendeu acima do valor por fornecedor, caso sim aumente o bonus de cupom
+        #----------------------------CALCULA SALDO DA VENDA E QUANTIDADE INICIAL DE CUPONS ----------------------------
+        #intensificação por fornecedor cadastrado
         if usa_fornec == 'C' and ped[6] is not None:
+            print('Calculando se bonifica fornecedor cadastrado...')
             cursor.execute(f'''
                 SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), PCPRODUT.CODFORNEC
                 FROM PCPEDI
@@ -243,19 +334,75 @@ def processacupom():
             for fornecvalue in valorfornecs:
                 if fornecvalue[1] in list(listfornecs):
                     if fornecvalue[0] >= valor_fornecedor:
-                        qtcupons = int(math.floor(fornecvalue[0] / valor_fornecedor))
-                        valorIntensificador += (multiplicador_cupom * qtcupons)
-                        cont += (multiplicador_cupom * qtcupons)
+                        valor_bonus += multiplicador_cupom
+                        cont += multiplicador_cupom
             
             histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor cadastrado em {cont}'
         
+        #intensificação por fornecedor multiplo
         elif usa_fornec == 'M' and ped[6] is not None:
-            if ped[6] and ped[6] > valor_fornecedor:
-                valorIntensificador += multiplicador_cupom
-                histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor multiplo em {multiplicador_cupom}'
+            print('Calculando se bonifica fornecedor Multiplo...')
+            cursor.execute(f'''
+                SELECT COUNT(DISTINCT PCPRODUT.CODFORNEC)
+                FROM PCPEDI
+                    INNER JOIN PCPRODUT ON PCPEDI.CODPROD = PCPRODUT.CODPROD
+                WHERE 
+                    PCPEDI.NUMPED = {ped[0]}
+            ''')
+            qtfornecs = cursor.fetchone()
+
+            cont = 0
             
+            if qtfornecs[0] >= valor_fornecedor:
+                valor_bonus += multiplicador_cupom
+                cont += multiplicador_cupom
+            
+            histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor multiplo em {cont}'
+        
+        if usa_marca == 'C' and ped[8] is not None:
+            print('Calculando se bonifica fornecedor cadastrado...')
+            cursor.execute(f'''
+                SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), PCPRODUT.CODMARCA
+                FROM PCPEDI
+                    INNER JOIN PCPRODUT ON PCPEDI.CODPROD = PCPRODUT.CODPROD
+                WHERE 
+                    PCPEDI.NUMPED = {ped[0]}
+                GROUP BY PCPRODUT.CODMARCA
+            ''')
+            valor_marcas = cursor.featchall()
+
+            cont = 0
+            for valor in valor_marcas:
+                if valor[1] in list(marcas_list):
+                    if valor[0] >= valor_marcas:
+                        valor_bonus += multiplicador_cupom
+                        cont += multiplicador_cupom
+            
+            histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado na marca cadastrada em {cont}'
+        
+        #intensificação por fornecedor multiplo
+        elif usa_marca == 'M' and ped[8] is not None:
+            print('Calculando se bonifica fornecedor Multiplo...')
+            cursor.execute(f'''
+                SELECT COUNT(DISTINCT PCPRODUT.CODMARCA)
+                FROM PCPEDI
+                    INNER JOIN PCPRODUT ON PCPEDI.CODPROD = PCPRODUT.CODPROD
+                WHERE 
+                    PCPEDI.NUMPED = {ped[0]}
+            ''')
+            qtmarcas = cursor.fetchone()
+
+            cont = 0
+            
+            if qtmarcas[0] >= valor_marcas:
+                valor_bonus += multiplicador_cupom
+                cont += multiplicador_cupom
+            
+            histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado na marca multipla em {cont}'
+        
         #verifica se existe um produto na venda que vendeu acima do valor por produto, caso sim aumente o bonus de cupom
         if usa_prod == 'C' and ped[7] is not None:
+            print('Calculando se bonifica produto cadastrado...')
             cursor.execute(f'''
                 SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), CODPROD
                 FROM PCPEDI
@@ -263,38 +410,50 @@ def processacupom():
                 GROUP BY CODPROD
             ''')
             prodfornecs = cursor.featchall()
-            
             cont = 0
             for prodvalue in prodfornecs:
                 if prodvalue[1] in list(listaprods):
                     if prodvalue[0] >= valor_prod:
-                        qtcupons = int(math.floor(prodvalue[0] / valor_prod))
-                        valorIntensificador += (multiplicador_cupom * qtcupons)
-                        cont += (multiplicador_cupom * qtcupons)
+                        valor_bonus += multiplicador_cupom
+                        cont += multiplicador_cupom
+
+            histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor cadastrado em {cont}'
+            
+        #verifica se existe multiplos produtos na venda
+        elif usa_prod == 'M' and ped[7] is not None:
+            print('Calculando se bonifica produto cadastrado...')
+            cursor.execute(f'''
+                SELECT COUNT(CODPROD)
+                FROM PCPEDI
+                WHERE PCPEDI.NUMPED = {ped[0]}
+            ''')
+            qtprods = cursor.fetchone()
+            cont = 0
+            
+            if qtprods[0] >= valor_prod:
+                valor_bonus += multiplicador_cupom
+                cont += multiplicador_cupom
 
             histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor cadastrado em {cont}'
         
-        elif usa_prod == 'M' and ped[7] is not None:
-            if ped[7] and ped[7] > valor_prod:
-                valorIntensificador += multiplicador_cupom
-                histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor multiplo em {multiplicador_cupom}'
-        
-        #aplica o bonus de cupon sobre os cupons originais obtidos na venda
-        if ped[6] is not None or ped[7] is not None:
+        #--------------------------------------APLICANDO BONUS NO CUPOM ORIGINAL GERAL ------------------------------------------
+        if valor_bonus > 0:
+            print('Calculando bonus final...')
             bonificadoWhere = 'S'
             
-            if tipo_intensificador == 'M' and valorIntensificador > 0:
+            if tipo_intensificador == 'M':
                 oldqtd = qtcupons
-                qtcupons = qtcupons * valorIntensificador
+                qtcupons = qtcupons * multiplicador_cupom
                 histgeracao += f'$$$3 - Multiplicou os números da sorte originais {oldqtd} números, por {multiplicador_cupom} intensificadores bonus, resultando em {qtcupons} números'
-            elif tipo_intensificador == 'S' and valorIntensificador > 0:
+            elif tipo_intensificador == 'S':
                 oldqtd = qtcupons
-                qtcupons = qtcupons + valorIntensificador
+                qtcupons = qtcupons + multiplicador_cupom
                 histgeracao += f'$$$4 - Somou os números da sorte originais {oldqtd} números, com {multiplicador_cupom} intensificadores bonus, resultando em {qtcupons} números'
             else:
                 bonificadoWhere = 'N'
         else:
             bonificadoWhere = 'N'
+            histgeracao += f'$$$4 - Não houve qualquer bonificação nos números da sorte'
         
         if qtcupons >= 1:
             for i in range(qtcupons):

@@ -16,7 +16,26 @@
                         titleAttr: '{{tituloInsere}}',
                         className: 'btn btn-sm btn-primary',
                         action: function (e, dt, node, config) {
-                            $('#insertModal').modal('show');
+                            var modal = $('#insertEditModal').modal('show');
+                            var form = modal.find('form');
+                            modal.find('#modalTitle').html('{{tituloInsere}}');
+                            modal.find('#modalSubmitButton').attr('name', 'insert').text('Inserir');
+                            
+                            // Resetar o formulário (inputs, selects, textareas)
+                            form[0].reset(); // Método nativo JavaScript para resetar o formulário
+                            
+                            // Remover a classe 'was-validated' do formulário para limpar a validação
+                            form.removeClass('was-validated');
+                            // Resetar os valores dos inputs e textareas
+                            modal.find('input').val('');
+                            modal.find('textarea').val('');
+                            
+                            modal.find(".select2").val('').trigger('change');
+
+                            // Resetar selects para a primeira opção
+                            modal.find('select').prop('selectedIndex', 0);
+
+                            modal.modal('show');
                         }
                     },
                     {% if permiteplanilha %}
