@@ -4,7 +4,7 @@ import os
 # Conexão com o banco de dados
 def conectar_banco():
     return psycopg2.connect(
-        dbname="acrosbd",
+        dbname="acrosbook",
         user="acrosbookuser",
         password="acrsdosbodkuser23457645f",
         host="localhost",

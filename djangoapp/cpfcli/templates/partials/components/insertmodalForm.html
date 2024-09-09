@@ -118,15 +118,28 @@
                                 input.val(value);
                             }
                         } else if (input.is('select')) {
-                            var optionExists = input.find('option[value="' + value + '"]').length > 0;
-                            if (optionExists) {
-                                if (input.hasClass('select2')){
-                                    input.val(value).trigger('change');
-                                } else{
-                                    input.val(value);
+                            // Se 'value' for uma lista, usa todos os valores, senão transforma em uma lista de um único item
+                            var values = Array.isArray(value) ? value : [value];
+                            var validValues = [];
+                        
+                            // Verifica cada valor no select
+                            for (let i = 0; i < values.length; i++) {
+                                let currentValue = values[i];
+                                var optionExists = input.find('option[value="' + currentValue + '"]').length > 0;
+                        
+                                if (optionExists) {
+                                    validValues.push(currentValue); // Adiciona os valores válidos ao array
+                                } else {
+                                    console.warn('Valor não encontrado nas opções do select: ' + fieldName + ' = ' + currentValue);
                                 }
-                            } else {
-                                console.warn('Valor não encontrado nas opções do select: ' + fieldName + ' = ' + value);
+                            }
+                        
+                            if (validValues.length > 0) {
+                                if (input.hasClass('select2')) {
+                                    input.val(validValues).trigger('change'); // Define todos os valores válidos no select2
+                                } else {
+                                    input.val(validValues); // Define todos os valores válidos no select normal
+                                }
                             }
                         } else {
                             input.val(value);

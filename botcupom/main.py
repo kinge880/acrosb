@@ -14,15 +14,15 @@ import math
 
 #envio de email
 # Configurações do servidor SMTP
-smtp_server = "smtp.gmail.com"
+""" smtp_server = "smtp.gmail.com"
 smtp_port = 587
 smtp_username = "deeptrackemails@gmail.com"
-smtp_password = "egqpqsoxbacwulkl"
+smtp_password = "egqpqsoxbacwulkl" """
 
-""" smtp_server = "smtp.zeptomail.com"
+smtp_server = "smtp.zeptomail.com"
 smtp_port = 587
 smtp_username = "contato@idbatacadistas.com.br"
-smtp_password = "Ts0rpH5hH6Mv" """
+smtp_password = "Ts0rpH5hH6Mv"
 
 def enviaremail(qtnumeros, nome, email, qtcupons_total, numcupom):
 
