@@ -140,7 +140,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
         widget=forms.SelectMultiple(attrs={'class': ' select2', 'classdiv': 'col-12  mb-3', 'autocomplete': 'off', 'select2Label': 'select'})
     )
     class Meta:
-        model = MscuponagemCampanha
+        model = Campanha
         fields = [
             'idcampanha',  'descricao', 'filial', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
             'restringe_fornec', 'restringe_marca', 'restringe_prod',
@@ -232,8 +232,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
 
         if codfiliais:
             # Crie registros de CuponagemCampanhaFilial para cada filial selecionada
-            CuponagemCampanhaFilial.objects.bulk_create(
-                CuponagemCampanhaFilial(idcampanha=campanha, codfilial=codfilial)
+            CampanhaFilial.objects.bulk_create(
+                CampanhaFilial(idcampanha=campanha, codfilial=codfilial)
                 for codfilial in codfiliais
             )
 

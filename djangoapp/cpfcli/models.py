@@ -65,7 +65,7 @@ class Cliente(models.Model):
     def __str__(self):
         return self.nome
 
-class MscuponagemCampanha(models.Model):
+class Campanha(models.Model):
     idcampanha = models.AutoField(primary_key=True)
     descricao = models.CharField(max_length=100)
     dtultalt = models.DateTimeField()
@@ -102,9 +102,23 @@ class MscuponagemCampanha(models.Model):
         self.dtultalt = timezone.now()
         super().save(*args, **kwargs)
         
-class CuponagemCampanhaFilial(models.Model):
+class CampanhaFilial(models.Model):
     idcampanha = models.IntegerField(null=True, blank=True,)
     codfilial = models.CharField(null=True, blank=True, max_length=100)
     
     def __str__(self):
         return f"Campanha: {self.idcampanha} - Filial: {self.codfilial}"
+
+class CampanhaProcessados(models.Model):
+    idcampanha = models.IntegerField(null=True, blank=True)
+    numped = models.IntegerField(null=True, blank=True)
+    dtmov = models.DateTimeField(null=True, blank=True)
+    historico = models.TextField(null=True, blank=True)
+    codcli = models.IntegerField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):     
+        self.dtmov = timezone.now()
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f"Campanha: {self.idcampanha} - pedido: {self.numped}"

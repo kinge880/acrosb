@@ -307,6 +307,7 @@ def campanhas(request):
         restringe_fornec = request.POST.get('restringe_fornec')
         restringe_marca = request.POST.get('restringe_marca')
         restringe_prod = request.POST.get('restringe_prod')
+        acumulativo = request.POST.get('acumulativo')
         filial = request.POST.getlist('filial')
         
         if 'link' in request.POST:
@@ -379,7 +380,8 @@ def campanhas(request):
                     USAMARCA,
                     RESTRINGE_FORNEC,
                     RESTRINGE_MARCA,
-                    RESTRINGE_PROD
+                    RESTRINGE_PROD,
+                    ACUMULATIVO
                 )
                 VALUES(
                     (
@@ -402,7 +404,8 @@ def campanhas(request):
                     '{usamarca}',
                     '{restringe_fornec}',
                     '{restringe_marca}',
-                    '{restringe_prod}'
+                    '{restringe_prod}',
+                    '{acumulativo}'
                 )
             ''')
             
@@ -469,7 +472,8 @@ def campanhas(request):
                     USAMARCA='{usamarca}',
                     RESTRINGE_FORNEC='{restringe_fornec}',
                     RESTRINGE_MARCA='{restringe_marca}',
-                    RESTRINGE_PROD='{restringe_prod}'
+                    RESTRINGE_PROD='{restringe_prod}',
+                    ACUMULATIVO = '{acumulativo}'
                 WHERE IDCAMPANHA = {codigo} 
             ''')
             
