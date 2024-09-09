@@ -21,7 +21,6 @@ services:
         limits:
           cpus: '1'
           memory: 1G
-    restart: unless-stopped
 
   psqlAcross:
     container_name: psqlAcross
@@ -40,7 +39,6 @@ services:
         limits:
           cpus: '1'
           memory: 1G
-    restart: unless-stopped
 
   nginx:
     image: nginx:latest
@@ -56,7 +54,6 @@ services:
       - djangoappacross
     networks:
       - crospy
-    restart: unless-stopped
 
 networks:
   crospy:

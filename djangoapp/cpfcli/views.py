@@ -43,13 +43,13 @@ def upload_planilha(file):
 def baixar_modelo(request, tipo):
     # Cria um DataFrame com as colunas idcampanha e codprod
     if tipo == 'P':
-        df = pd.DataFrame(columns=['idcampanha', 'codprod'])
+        df = pd.DataFrame(columns=['idcampanha', 'codprod', 'tipo'])
     elif tipo == 'F':
-        df = pd.DataFrame(columns=['idcampanha', 'codfornec'])
+        df = pd.DataFrame(columns=['idcampanha', 'codfornec', 'tipo'])
     elif tipo == 'C':
         df = pd.DataFrame(columns=['idcampanha', 'codcli'])
     elif tipo == 'M':
-        df = pd.DataFrame(columns=['idcampanha', 'codmarca'])
+        df = pd.DataFrame(columns=['idcampanha', 'codmarca', 'tipo'])
     else:
         return 'error'
 
@@ -506,7 +506,7 @@ def campanhas(request):
 
 @login_required(login_url="/accounts/login/")
 @staff_required
-def produtos(request):
+def oldprodutos(request):
     context = {}
     conexao = conexao_oracle()
     cursor = conexao.cursor()
@@ -650,7 +650,131 @@ def produtos(request):
 
 @login_required(login_url="/accounts/login/")
 @staff_required
-def fornecedores(request):
+def produtos(request):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['tituloInsere'] = 'Adicionar produto'
+    context['tituloDelete'] = 'Deletar produto'
+    context['tituloPlanilha'] = 'Adicionar planilha de produtos'
+    context['tipolink'] = 'P'
+    context['appname'] = 'cpfcli'
+    context['modelname'] = 'Produtos'
+    context['nomecolum'] = 'nomeprod'
+    context['primarykey'] = 'id'
+    
+    context['form'] = ProdutosForm()  # Usando o Django Forms
+    context['habilitaexportacao'] = 'Sim'
+    context['permiteplanilha'] = 'permiteplanilha'
+    
+    def getTable():
+        context['dados'] = Produtos.objects.all()
+
+    if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
+        codprod = request.POST.get('codprod')
+        tipo = request.POST.get('tipo')
+        id = request.POST.get(f"{context['primarykey']}")
+        
+        if 'delete' in request.POST:
+            Produtos.objects.filter(id=id).delete()
+            messages.success(request, f"Produto deletado com sucesso")
+        
+        elif 'insert' in request.POST:
+            exist_test = exist_campanha(cursor, idcampanha)
+            exist = exist_produto(cursor, codprod)
+            
+            if exist_test is None:
+                getTable()
+                messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                return render(request, 'cadastros/produtos.html', context)
+            
+            if exist is None:
+                getTable()
+                messages.error(request, f"O produto {codprod} não existe")
+                return render(request, 'cadastros/produtos.html', context)
+            
+            if not Produtos.objects.filter(idcampanha=idcampanha, codprod=codprod).exists():
+                Produtos.objects.create(
+                    idcampanha=idcampanha,
+                    codprod=codprod,
+                    tipo = tipo,
+                    nomeprod=exist[1]  # Supondo que `descricao` seja o nome do produto
+                )
+                messages.success(request, f"Produto {exist[1]} inserido com sucesso na campanha {idcampanha}")
+            else:
+                messages.error(request, f"Produto {exist[1]} já cadastrado na campanha {idcampanha}")
+        
+        elif 'insertp' in request.POST:
+            file = request.FILES.get("planilhas")
+            if file:
+                df = upload_planilha(file)
+                if not isinstance(df, pd.DataFrame):
+                    getTable()
+                    messages.error(request, df)
+                    return render(request, 'cadastros/produtos.html', context)
+            else:
+                getTable()
+                messages.error(request, "Nenhuma planilha enviada")
+                return render(request, 'cadastros/produtos.html', context)
+            
+            if not 'idcampanha' in df.columns or not 'codprod' in df.columns or not 'tipo' in df.columns:
+                getTable()
+                messages.error(request, "Planilha enviada no formato errado, baixe e siga o modelo padrão!")
+                return render(request, 'cadastros/produtos.html', context)
+
+            try:
+                with transaction.atomic():
+                    for index, row in df.iterrows():
+                        idcampanha = row['idcampanha']
+                        codprod = row['codprod']
+                        tipo = row['tipo']
+                        
+                        exist_test = exist_campanha(cursor, idcampanha)
+                        exist = exist_produto(cursor, codprod)
+                        
+                        if exist_test is None:
+                            transaction.rollback()
+                            getTable()
+                            messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                            return render(request, 'cadastros/produtos.html', context)
+                        
+                        if exist is None:
+                            getTable()
+                            messages.error(request, f"O produto {codprod} não existe")
+                            return render(request, 'cadastros/produtos.html', context)
+                        
+                        if not Produtos.objects.filter(idcampanha=idcampanha, codprod=codprod).exists():
+                            Produtos.objects.create(
+                                idcampanha=idcampanha,
+                                codprod=codprod,
+                                tipo = tipo,
+                                nomeprod=exist[1]
+                            )
+                        else:
+                            transaction.rollback()
+                            getTable()
+                            messages.error(request, f"Produto com código {codprod} já cadastrado na campanha {idcampanha}, verifique a planilha")
+                            return render(request, 'cadastros/produtos.html', context)
+
+                    messages.success(request, "Todos os produtos foram inseridos com sucesso!")
+
+            except Exception as e:
+                transaction.rollback()  # Garante que qualquer erro fará o rollback da transação
+                getTable()
+                messages.error(request, f"Ocorreu um erro ao processar a planilha: {str(e)}")
+                return render(request, 'cadastros/produtos.html', context)
+        else:
+            getTable()
+            messages.error(request, "Ação não reconhecida")
+            return render(request, 'cadastros/produtos.html', context)
+
+    getTable()
+    return render(request, 'cadastros/produtos.html', context)
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def oldfornecedores(request):
     context = {}
     conexao = conexao_oracle()
     cursor = conexao.cursor()
@@ -787,6 +911,126 @@ def fornecedores(request):
         conexao.commit()
     getTable()
     return render(request, 'fornecedores/fornecedores.html', context)
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def fornecedores(request):
+    context = {}
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    context['tituloInsere'] = 'Adicionar fornecedor'
+    context['tituloDelete'] = 'Deletar fornecedor'
+    context['tituloPlanilha'] = 'Adicionar planilha de fornecedores'
+    context['tipolink'] = 'F'
+    context['appname'] = 'cpfcli'
+    context['modelname'] = 'Fornecedor'
+    context['nomecolum'] = 'nomefornec'
+    context['primarykey'] = 'id'
+    
+    context['form'] = FornecedorForm()  # Usando o Django Forms
+    context['habilitaexportacao'] = 'Sim'
+    context['permiteplanilha'] = 'permiteplanilha'
+    
+    def getTable():
+        context['dados'] = Fornecedor.objects.all()
+
+    if request.method == 'POST':
+        idcampanha = request.POST.get('idcampanha')
+        codfornec = request.POST.get('codfornec')
+        tipo = request.POST.get('tipo')
+        id = request.POST.get(f"{context['primarykey']}")
+        
+        if 'delete' in request.POST:
+            Fornecedor.objects.filter(id=id).delete()
+            messages.success(request, f"Fornecedor deletado com sucesso")
+        
+        elif 'insert' in request.POST:
+            exist_test = exist_campanha(cursor, idcampanha)
+            exist = exist_fornec(cursor, codfornec)
+            if exist_test is None:
+                getTable()
+                messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                return render(request, 'cadastros/fornecedores.html', context)
+            if exist is None:
+                getTable()
+                messages.error(request, f"O fornecedor {codfornec} não existe")
+                return render(request, 'cadastros/fornecedores.html', context)
+            
+            if not Fornecedor.objects.filter(idcampanha=idcampanha, codfornec=codfornec).exists():
+                Fornecedor.objects.create(
+                    idcampanha=idcampanha,
+                    codfornec=codfornec,
+                    tipo=tipo,
+                    nomefornec=exist[1]
+                )
+                messages.success(request, f"Fornecedor {exist[0]} - {exist[1]} inserido com sucesso na campanha {exist_test[0]} - {exist_test[1]}")
+            else:
+                messages.error(request, f"Fornecedor {exist[0]} - {exist[1]} já cadastrado na campanha {exist_test[0]} - {exist_test[1]}")
+        
+        elif 'insertp' in request.POST:
+            file = request.FILES.get("planilhas")
+            if file:
+                df = upload_planilha(file)
+                if not isinstance(df, pd.DataFrame):
+                    getTable()
+                    messages.error(request, df)
+                    return render(request, 'cadastros/fornecedores.html', context)
+            else:
+                getTable()
+                messages.error(request, "Nenhuma planilha enviada")
+                return render(request, 'cadastros/fornecedores.html', context)
+            
+            if not 'idcampanha' in df.columns or not 'codfornec' in df.columns or not 'tipo' in df.columns:
+                getTable()
+                messages.error(request, "Planilha enviada no formato errado, baixe e siga o modelo padrão!")
+                return render(request, 'cadastros/fornecedores.html', context)
+
+            try:
+                with transaction.atomic():
+                    for index, row in df.iterrows():
+                        idcampanha = row['idcampanha']
+                        codfornec = row['codfornec']
+                        tipo = row['tipo']
+                        
+                        exist_test = exist_campanha(cursor, idcampanha)
+                        exist = exist_fornec(cursor, codfornec)
+                        if exist_test is None:
+                            transaction.rollback()
+                            getTable()
+                            messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
+                            return render(request, 'cadastros/fornecedores.html', context)
+                        if exist is None:
+                            getTable()
+                            messages.error(request, f"O fornecedor {codfornec} não existe")
+                            return render(request, 'cadastros/fornecedores.html', context)
+            
+                        if not Fornecedor.objects.filter(idcampanha=idcampanha, codfornec=codfornec).exists():
+                            Fornecedor.objects.create(
+                                idcampanha=idcampanha,
+                                codfornec=codfornec,
+                                tipo=tipo,
+                                nomefornec=exist[1]
+                            )
+                        else:
+                            transaction.rollback()
+                            getTable()
+                            messages.error(request, f"Fornecedor com código {codfornec} já cadastrado na campanha {idcampanha}, verifique a planilha")
+                            return render(request, 'cadastros/fornecedores.html', context)
+
+                    messages.success(request, "Todos os fornecedores foram inseridos com sucesso!")
+
+            except Exception as e:
+                transaction.rollback()  # Garante que qualquer erro fará o rollback da transação
+                getTable()
+                messages.error(request, f"Ocorreu um erro ao processar a planilha: {str(e)}")
+                return render(request, 'cadastros/fornecedores.html', context)
+        else:
+            getTable()
+            messages.error(request, "Ação não reconhecida")
+            return render(request, 'cadastros/fornecedores.html', context)
+
+    getTable()
+    return render(request, 'cadastros/fornecedores.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -936,13 +1180,12 @@ def marcas(request):
     context['permiteplanilha'] = 'permiteplanilha'
     
     def getTable():
-        context['dados'] = Marcas.objects.all().values(
-            'id', 'idcampanha', 'codmarca', 'nomemarca', 'dtmov'
-        )
+        context['dados'] = Marcas.objects.all()
 
     if request.method == 'POST':
         idcampanha = request.POST.get('idcampanha')
         codmarca = request.POST.get('codmarca')
+        tipo = request.POST.get('tipo')
         id = request.POST.get(f"{context['primarykey']}")
         
         if 'delete' in request.POST:
@@ -965,6 +1208,7 @@ def marcas(request):
                 Marcas.objects.create(
                     idcampanha=idcampanha, 
                     codmarca=codmarca,
+                    tipo=tipo,
                     nomemarca = exist[1]
                 )
                 messages.success(request, f"Marca {exist[0]} - {exist[1]} inserida com sucesso na campanha {exist_test[0]} - {exist_test[1]}")
@@ -994,6 +1238,7 @@ def marcas(request):
                     for index, row in df.iterrows():
                         idcampanha = row['idcampanha']
                         codmarca = row['codmarca']
+                        tipo = row['tipo']
                         
                         exist_test = exist_campanha(cursor, idcampanha)
                         exist = exist_marca(cursor, codmarca)
@@ -1011,6 +1256,7 @@ def marcas(request):
                             Marcas.objects.create(
                                 idcampanha=idcampanha, 
                                 codmarca=codmarca,
+                                tipo = tipo,
                                 nomemarca = exist[1]
                             )
                         else:

@@ -35,7 +35,7 @@ def exist_marca(cursor, codmarca):
     cursor.execute(f'''
         SELECT 
             CODMARCA, 
-            MARCA  
+            COALESCE(MARCA, 'Sem descrição cadastrada')
         FROM pcmarca 
         WHERE CODMARCA = {codmarca}
     ''')
@@ -50,6 +50,25 @@ def exist_client(cursor, codcli):
             COALESCE(CGCENT, 'Sem cpf ou cnpj cadastrado')
         FROM PCCLIENT
         WHERE CODCLI = {codcli}
+    ''')
+    return cursor.fetchone()
+
+def exist_fornec(cursor, codfornec):
+    cursor.execute(f'''
+        SELECT 
+            CODFORNEC, 
+            COALESCE(FORNECEDOR, 'Sem descrição cadastrada')
+        FROM PCFORNEC
+        WHERE CODFORNEC = {codfornec}
+    ''')
+    return cursor.fetchone()
+
+def exist_produto(cursor, codprod):
+    cursor.execute(f'''
+        SELECT CODPROD,
+        COALESCE(DESCRICAO, 'Sem descrição cadastrada')
+        FROM PCPRODUT
+        WHERE CODPROD = {codprod}
     ''')
     return cursor.fetchone()
 

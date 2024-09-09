@@ -243,7 +243,7 @@ class MarcasForm(forms.ModelForm):
     class Meta:
         model = Marcas
         fields = [
-            'idcampanha', 'codmarca', 'nomemarca'
+            'idcampanha', 'codmarca', 'tipo'
         ]
         widgets = {
             'idcampanha': forms.NumberInput(attrs={
@@ -256,22 +256,84 @@ class MarcasForm(forms.ModelForm):
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
             }),
-            'nomemarca': forms.HiddenInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 d-none',
-                'classdiv': 'd-none'
-            })
+            'tipo': forms.Select(choices=[
+                ('I', '1 - Marca deve funcionar apenas como intensificador'),
+                ('R', '2 - Marca deve funcionar apenas como restrição'),
+                ('T', '3 - Marca deve funcionar como restrição e intensificador'),
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-12 mb-3', 'autocomplete': 'off'}),
+            
         }
         
         labels = {
             'idcampanha': 'Código da Campanha',
-            'codmarca': 'Código da Marca'
+            'codmarca': 'Código da Marca',
+            'tipo': 'Qual o tipo de função da marca na campanha?'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Customize widgets or other fields if needed
-        
+        #self.fields['idcampanha'].queryset = Campanha.objects.all()
 
+class ProdutosForm(forms.ModelForm):
+    class Meta:
+        model = Produtos
+        fields = [
+            'idcampanha', 'codprod', 'tipo'
+        ]
+        widgets = {
+            'idcampanha': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'codprod': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'tipo': forms.Select(choices=[
+                ('I', '1 - Produto deve funcionar apenas como intensificador'),
+                ('R', '2 - Produto deve funcionar apenas como restrição'),
+                ('T', '3 - Produto deve funcionar como restrição e intensificador'),
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-12 mb-3', 'autocomplete': 'off'}),
+        }
+        
+        labels = {
+            'idcampanha': 'Código da Campanha',
+            'codprod': 'Código do Produto',
+            'tipo': 'Qual o tipo de função do produto na campanha?'
+        }
+
+class FornecedorForm(forms.ModelForm):
+    class Meta:
+        model = Fornecedor
+        fields = [
+            'idcampanha', 'codfornec', 'tipo'
+        ]
+        widgets = {
+            'idcampanha': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'codfornec': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'tipo': forms.Select(choices=[
+                ('I', '1 - Fornecedor deve funcionar apenas como intensificador'),
+                ('R', '2 - Fornecedor deve funcionar apenas como restrição'),
+                ('T', '3 - Fornecedor deve funcionar como restrição e intensificador'),
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-12 mb-3', 'autocomplete': 'off'}),
+        }
+        
+        labels = {
+            'idcampanha': 'Código da Campanha',
+            'codfornec': 'Código do Fornecedor',
+            'tipo': 'Qual o tipo de função do fornecedor na campanha?'
+        }
+        
 class BlackListForm(forms.ModelForm):
     class Meta:
         model = BlackList

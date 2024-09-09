@@ -19,21 +19,6 @@ class BlackList(models.Model):
     def __str__(self):
         return str(self.IDCAMPANHA) + ' - ' + str(self.CODCLI)
 
-class Marcas(models.Model):
-    idcampanha = models.IntegerField(default=0)
-    nomemarca = models.CharField(default='Sem descrição cadastrada')
-    codmarca = models.IntegerField(default=0)
-    dtmov = models.DateTimeField(null=True, blank=True)
-    intensificador = models.CharField(default='N')
-    restricao = models.CharField(default='N')
-    
-    def save(self, *args, **kwargs):     
-        self.dtmov = timezone.now()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return str(self.idcampanha) + ' - ' + str(self.nomemarca)
-
 class Cliente(models.Model):
     TIPO_PESSOA_CHOICES = [
         ('F', 'Física'),
@@ -122,3 +107,47 @@ class CampanhaProcessados(models.Model):
         
     def __str__(self):
         return f"Campanha: {self.idcampanha} - pedido: {self.numped}"
+
+class Marcas(models.Model):
+    idcampanha = models.IntegerField(default=0)
+    #idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')
+    nomemarca = models.CharField(default='Sem descrição cadastrada')
+    codmarca = models.IntegerField(default=0)
+    dtmov = models.DateTimeField(null=True, blank=True)
+    tipo = models.CharField(default='N')
+    
+    def save(self, *args, **kwargs):     
+        self.dtmov = timezone.now()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.idcampanha) + ' - ' + str(self.nomemarca)
+
+class Produtos(models.Model):
+    idcampanha = models.IntegerField(default=0)  # Pode ser ForeignKey se houver um modelo de campanha
+    nomeprod = models.CharField(default='Sem descrição cadastrada')
+    codprod = models.IntegerField(default=0)
+    dtmov = models.DateTimeField(null=True, blank=True)
+    tipo = models.CharField(default='S')
+    
+    def save(self, *args, **kwargs):
+        self.dtmov = timezone.now()
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f'{self.idcampanha} - {self.codprod}'
+    
+
+class Fornecedor(models.Model):
+    idcampanha = models.IntegerField(default=0)  # Pode ser ForeignKey se houver um modelo de campanha
+    nomefornec = models.CharField(default='Sem descrição cadastrada')
+    codfornec = models.IntegerField(default=0)
+    dtmov = models.DateTimeField(null=True, blank=True)
+    tipo = models.CharField(default='N')
+    
+    def save(self, *args, **kwargs):
+        self.dtmov = timezone.now()
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f'{self.idcampanha} - {self.codfornec}'
