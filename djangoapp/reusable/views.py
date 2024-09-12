@@ -13,6 +13,69 @@ import json
 from django.middleware.csrf import get_token
 from project.oracle import *
 
+def translate_column_name(column_name):
+    column_translation_dict = {
+        'enviaemail': 'Enviar Email',
+        'acumulativo': 'Acumulativo',
+        'restringe_fornec': 'Restringir Fornecedor',
+        'restringe_marca': 'Restringir Marca',
+        'restringe_prod': 'Restringir Produto',
+        'tipointensificador': 'Tipo Intensificador',
+        'usamarca': 'Uso Marca',
+        'usafornec': 'Uso Fornecedor',
+        'usaprod': 'Uso Produto'
+    }
+    return column_translation_dict.get(column_name, column_name)
+
+def translate_value(field_name, value):
+    # Dicionário de mapeamentos por campo
+    translation_dict = {
+        'enviaemail': {
+            'N': '1 - Não enviar email',
+            'S': '2 - Enviar email ao cliente informando os números da sorte obtidos'
+        },
+        'acumulativo': {
+            'N': '1 - Não acumular saldo entre vendas',
+            'S': '2 - Somente acumular saldo entre vendas com o valor total superior ao número da sorte',
+            'T': '3 - Acumular saldo entre todas as vendas'
+        },
+        'restringe_fornec': {
+            'N': '1 - Não utilizar restrição por fornecedor',
+            'C': '2 - Restrição por fornecedor cadastrado'
+        },
+        'restringe_marca': {
+            'N': '1 - Não utilizar restrição por marca',
+            'C': '2 - Restrição por marca cadastrada'
+        },
+        'restringe_prod': {
+            'N': '1 - Não utilizar restrição por produto',
+            'C': '2 - Restrição por produto cadastrado'
+        },
+        'tipointensificador': {
+            'N': '1 - Não utilizar intensificador',
+            'M': '2 - Multiplicação',
+            'S': '3 - Soma'
+        },
+        'usamarca': {
+            'N': '1 - Não utilizar intensificador por marca',
+            'C': '2 - Intensificador por marca cadastrada',
+            'M': '3 - Intensificador por marca múltipla'
+        },
+        'usafornec': {
+            'N': '1 - Não utilizar intensificador por fornecedor',
+            'C': '2 - Intensificador por fornecedor cadastrado',
+            'M': '3 - Intensificador por fornecedor múltiplo'
+        },
+        'usaprod': {
+            'N': '1 - Não utilizar intensificador por produto',
+            'C': '2 - Utilizar intensificador por produto cadastrado',
+            'M': '3 - Utilizar intensificador por produto múltiplo'
+        }
+    }
+
+    # Retorna o valor traduzido se existir no dicionário, caso contrário, retorna o valor original
+    return translation_dict.get(field_name, {}).get(value, value)
+
 # Create your views here.
 def dynamic_css(request):
     css_vars = getattr(request, 'custom_css_vars', {})

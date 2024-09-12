@@ -233,7 +233,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
         if codfiliais:
             # Crie registros de CuponagemCampanhaFilial para cada filial selecionada
             CampanhaFilial.objects.bulk_create(
-                CampanhaFilial(idcampanha=campanha, codfilial=codfilial)
+                CampanhaFilial(idcampanha=campanha.idcampanha, codfilial=codfilial)
                 for codfilial in codfiliais
             )
 

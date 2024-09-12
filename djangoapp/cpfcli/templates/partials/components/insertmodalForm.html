@@ -80,11 +80,13 @@
     
     function loadEditData(id) {
         $.ajax({
-            url: '/get_data_edit/', // Endpoint que retorna os dados da campanha
+            url: '/get_data/', // Endpoint que retorna os dados da campanha
             method: 'GET',
             data: { 
                     id: id,
-                    tipo: '{{tipoEditKey}}'
+                    app_name: '{{appname}}',
+                    model_name: '{{modelname}}',
+                    id_name: '{{primarykey}}'
                 },
             success: function(data) {
                 // Seleciona o modal específico pelo ID

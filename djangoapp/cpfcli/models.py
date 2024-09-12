@@ -108,6 +108,45 @@ class CampanhaProcessados(models.Model):
     def __str__(self):
         return f"Campanha: {self.idcampanha} - pedido: {self.numped}"
 
+class Cuponagem(models.Model):
+    dtmov = models.DateField()  # Data do movimento
+    numped = models.IntegerField()  # Número do pedido
+    valor = models.DecimalField(max_digits=50, decimal_places=12)  # Valor com até 38 dígitos e 12 casas decimais
+    numsorte = models.IntegerField()  # Número da sorte
+    codcli = models.IntegerField()  # Código do cliente
+    nomecli = models.TextField()
+    emailcli = models.TextField(null=True, blank=True)
+    telcli = models.TextField(null=True, blank=True)
+    cpf_cnpj = models.TextField(null=True, blank=True)
+    dataped = models.DateField()  # Data do pedido
+    bonificado = models.CharField(max_length=1, default='N')  # Bonificado com padrão 'N'
+    idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')  # ID da campanha
+    ativo = models.CharField(max_length=1, default='S')  # Ativo com padrão 'S'
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['dtmov', 'codcli', 'idcampanha'], name='MSCUPONAGEM_DTMOV_IDX'),
+            models.Index(fields=['numsorte'], name='MSCUPONAGEM_NUMSORTE_IDX'),
+        ]
+
+    def __str__(self):
+        return str(self.id)
+
+class CuponagemVencedores(models.Model):
+    idcampanha = models.ForeignKey(Campanha, on_delete=models.CASCADE, db_column='idcampanha')  # Chave estrangeira para Campanha
+    codcli = models.IntegerField()  # Código do cliente
+    dtsorteio = models.DateTimeField()  # Data e hora do sorteio
+    numsorteio = models.IntegerField()  # Número do sorteio
+    numsorte = models.ForeignKey(Cuponagem, on_delete=models.CASCADE, db_column='numsorte')  # Número da sorte
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['idcampanha', 'codcli'], name='idx_campanha_cliente'),  # Índice para idcampanha e codcli
+        ]
+
+    def __str__(self):
+        return f"Campanha {self.idcampanha} - Cliente {self.codcli} - Número Sorteado {self.numsorte}"
+    
 class Marcas(models.Model):
     idcampanha = models.IntegerField(default=0)
     #idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')
@@ -136,7 +175,6 @@ class Produtos(models.Model):
     
     def __str__(self):
         return f'{self.idcampanha} - {self.codprod}'
-    
 
 class Fornecedor(models.Model):
     idcampanha = models.IntegerField(default=0)  # Pode ser ForeignKey se houver um modelo de campanha

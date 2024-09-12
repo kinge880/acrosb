@@ -1,0 +1,72 @@
+{% load static %}
+{% block content %}
+
+<div class="modal fade" id="modaldinamico" tabindex="-1" aria-labelledby="dynamicmodalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dynamicmodalTitle">Dados do Objeto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dataForm">
+                    <!-- O conteúdo será preenchido dinamicamente -->
+                    <div class="row" id="dynamicDataContainer"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="{% static 'js/dictColuns.js' %}"></script>
+<script>
+    function loadDataModal(id, columns, title) {
+        $.ajax({
+            url: '/get_data/', // Endpoint que retorna os dados do objeto
+            method: 'GET',
+            data: { 
+                id: id,
+                app_name: '{{appname}}',
+                model_name: '{{modelname}}',
+                id_name: '{{primarykey}}'
+            },
+            success: function(data) {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                console.log(data); // Para depuração
+
+                // Seleciona o modal e o container dinâmico
+                var modal = $('#modaldinamico');
+                var dynamicmodalTitle = modal.find('#dynamicmodalTitle');
+                var container = modal.find('#dynamicDataContainer');
+                
+                // Limpa o conteúdo anterior
+                container.empty();
+
+                // Adiciona as colunas e valores como "cards"
+                columns.forEach(function(column) {
+                    var translatedColumnName = translateColumnName(column);
+                    dynamicmodalTitle.html(title)
+                    var card = $('<div>', { class: 'col-md-4 mb-3' });  // Define o layout da coluna
+                    var cardContent = `
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">${translatedColumnName}</h6>
+                                <p class="card-text">${data[column]}</p>
+                            </div>
+                        </div>`;
+                    card.append(cardContent);
+                    container.append(card);
+                });
+
+                // Exibe o modal
+                modal.modal('show');
+            }
+        });
+    }
+</script>
+
+{% endblock %}

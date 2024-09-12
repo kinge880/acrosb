@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.core.exceptions import PermissionDenied
 from functools import wraps
 from django.contrib import messages
@@ -165,488 +165,122 @@ def base(request):
 
 @login_required(login_url="/accounts/login/")
 @staff_required
-def get_data_delete(request):
+def get_data(request):
     id = request.GET.get('id')
+    id_name = request.GET.get('id_name')
     model_name = request.GET.get('model_name')
     app_name = request.GET.get('app_name')
     
     try:
-        # Obtém a classe do model dinamicamente
+        #Obtém a classe do model dinamicamente
         model = apps.get_model(app_label=app_name, model_name=model_name)
         
         # Filtra o registro pelo ID
-        response = model.objects.filter(id=id).first()
+        response = model.objects.filter(**{id_name: id}).first()
+        print(response)
 
         if not response:
             return JsonResponse({'error': 'Registro não encontrado'}, status=404)
 
-        # Constrói o dicionário de resposta dinamicamente
-        response_data = {field.name: getattr(response, field.name) for field in response._meta.fields}
+        # Constrói o dicionário de resposta dinamicamente com traduções
+        response_data = {}
+        for field in response._meta.fields:
+            field_value = getattr(response, field.name)
+            translated_value = translate_value(field.name, field_value)  # Aplica a tradução
+            response_data[field.name] = translated_value
         
         return JsonResponse(response_data)
     except LookupError:
         return JsonResponse({'error': 'Model não encontrada'}, status=400)
-
-@login_required(login_url="/accounts/login/")
-@staff_required
-def get_data_edit(request):
-    id = request.GET.get('id')
-    tipo = request.GET.get('tipo')
-    
-    if tipo == 'campanha':
-        conexao = conexao_oracle()
-        cursor = conexao.cursor()
-        cursor.execute(f'''
-            SELECT 
-                IDCAMPANHA, DESCRICAO, DTINIT, DTFIM, VALOR, MULTIPLICADOR, 
-                USAFORNEC, USAPROD, ENVIAEMAIL, TIPOINTENSIFICADOR, 
-                FORNECVALOR, PRODVALOR, ACUMULATIVO, MARCAVALOR, USAMARCA, 
-                RESTRINGE_FORNEC, RESTRINGE_MARCA, RESTRINGE_PROD 
-            FROM MSCUPONAGEMCAMPANHA 
-            WHERE IDCAMPANHA = {id}
-        ''')
-        data = cursor.fetchone()
-        
-        cursor.execute(f'''
-            SELECT CODFILIAL
-            FROM MSCUPONAGEMCAMPANHAFILIAL 
-            WHERE IDCAMPANHA = {id}
-        ''')
-        filiais = cursor.fetchall()
-        listfilial = []
-        
-        if len(filiais) > 0:
-            for item in filiais:
-                listfilial.extend(item)
-            
-        response_data = {
-            'idcampanha': data[0],
-            'descricao': data[1],
-            'dtinit': data[2],
-            'dtfim': data[3],
-            'valor': data[4],
-            'multiplicador': data[5],
-            'usafornec': data[6],
-            'usaprod': data[7],
-            'enviaemail': data[8],
-            'tipointensificador': data[9],
-            'fornecvalor': data[10],
-            'prodvalor': data[11],
-            'acumulativo': data[12],
-            'marcavalor': data[13],
-            'usamarca': data[14],
-            'restringe_fornec': data[15],
-            'restringe_marca': data[16],
-            'restringe_prod': data[17],
-            'filial': listfilial
-        }
-        conexao.close()
-        
-    return JsonResponse(response_data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
 def campanhas(request):
     context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
     context['tituloInsere'] = 'Criar nova campanha'
     context['tituloEdit'] = 'Editar campanha'
+    context['tituloDelete'] = 'Deletar a campanha'
+    context['tituloActive'] = 'Ativar a campanha'
+    context['tituloDeactive'] = 'Desativar a campanha'
     context['habilitaexportacaoplanilha'] = 'habilitaexportacaoplanilha'
     context['form'] = MscuponagemCampanhaForm()
     context['primarykey'] = 'idcampanha'
     context['tipoEditKey'] = 'campanha'
+    context['appname'] = 'cpfcli'
+    context['modelname'] = 'Campanha'
+    context['nomecolum'] = 'descricao'
+    context['primarykey'] = 'idcampanha'
 
     def getTable():
-        cursor.execute(f'''
-            SELECT 
-                IDCAMPANHA, 
-                DESCRICAO, 
-                to_char(DTINIT, 'dd/mm/yyyy'), 
-                to_char(DTFIM, 'dd/mm/yyyy'),
-                VALOR,
-                MULTIPLICADOR, 
-                USAFORNEC, 
-                USAPROD, 
-                CODGANHADOR,
-                GANHADOR,
-                ATIVO,
-                to_char(DTINIT, 'yyyy-mm-dd'),
-                to_char(DTFIM, 'yyyy-mm-dd'),
-                ENVIAEMAIL,
-                TIPOINTENSIFICADOR,
-                FORNECVALOR,
-                PRODVALOR,
-                ACUMULATIVO,
-                MARCAVALOR,
-                USAMARCA,
-                RESTRINGE_FORNEC,
-                RESTRINGE_MARCA,
-                RESTRINGE_PROD
-            FROM MSCUPONAGEMCAMPANHA
-            WHERE DTEXCLUSAO IS NULL
-        ''')
-        context['listacampanhas'] = cursor.fetchall()
+        context['listacampanhas'] = Campanha.objects.filter(dtexclusao__isnull=True).all()
     
     if request.method == 'POST':
-        idcampanha = request.POST.get('idcampanha')
-        codigo = request.POST.get('idcampanha')
-        descricao = request.POST.get('descricao')
-        dtinicial = request.POST.get('dtinit')
-        dtfinal = request.POST.get('dtfim')
-        valor = request.POST.get('valor')
-        multiplicador = request.POST.get('multiplicador')
-        usafornec = request.POST.get('usafornec')
-        usaprod = request.POST.get('usaprod')
-        usaemail = request.POST.get('enviaemail')
-        tipointensificador = request.POST.get('tipointensificador')
-        fornecvalor = request.POST.get('fornecvalor')
-        prodvalor = request.POST.get('prodvalor')
-        marcavalor = request.POST.get('marcavalor')
-        usamarca = request.POST.get('usamarca')
-        restringe_fornec = request.POST.get('restringe_fornec')
-        restringe_marca = request.POST.get('restringe_marca')
-        restringe_prod = request.POST.get('restringe_prod')
-        acumulativo = request.POST.get('acumulativo')
+        # Form data from the request
+        form = MscuponagemCampanhaForm(request.POST)
         filial = request.POST.getlist('filial')
+        idcampanha = request.POST.get('idcampanha')
         
+        print(request.POST)
         if 'link' in request.POST:
             return redirect(f'/campanhas/{idcampanha}/')
         
-        if 'delete' in request.POST:
-            cursor.execute(f'''
-                UPDATE MSCUPONAGEMCAMPANHA SET DTEXCLUSAO = SYSDATE, DTULTALT=SYSDATE, ATIVO = 'N'
-                WHERE IDCAMPANHA = {codigo}
-            ''')
-            messages.success(request, f"Campanha {codigo} deletada com sucesso")
+        if 'delete' in request.POST and idcampanha:
+            campanha = get_object_or_404(Campanha, pk=idcampanha)
+            campanha.dtexclusao = timezone.now()
+            campanha.ativo = 'N'
+            campanha.save()
+            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} deletada com sucesso")
         
-        elif 'desative' in request.POST:
-            cursor.execute(f'''
-                UPDATE MSCUPONAGEMCAMPANHA SET ATIVO = 'N', DTULTALT=SYSDATE 
-                WHERE IDCAMPANHA = {codigo}
-            ''')
-            messages.success(request, f"Campanha {codigo} desativada com sucesso")
+        # Handle deactivation
+        elif 'desative' in request.POST and idcampanha:
+            campanha = get_object_or_404(Campanha, pk=idcampanha)
+            campanha.ativo = 'N'
+            campanha.save()
+            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} desativada com sucesso")
         
-        elif 'active' in request.POST:
-            cursor.execute(f'''
-                SELECT 
-                    IDCAMPANHA
-                FROM MSCUPONAGEMCAMPANHA
-                WHERE ATIVO = 'S'
-            ''')
-            exist_active = cursor.fetchone()
-            
-            if exist_active is None:
-                cursor.execute(f'''
-                    UPDATE MSCUPONAGEMCAMPANHA SET ATIVO = 'S', DTULTALT=SYSDATE
-                    WHERE IDCAMPANHA = {codigo}
-                ''')
-                messages.success(request, f"Campanha {codigo} ativada com sucesso")
+        elif 'active' in request.POST and idcampanha:
+            print('entrou active')
+            if not Campanha.objects.filter(ativo='S').exists():
+                campanha = get_object_or_404(Campanha, pk=idcampanha)
+                campanha.ativo = 'S'
+                campanha.save()
+                messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} ativada com sucesso")
             else:
-                messages.error(request, "Já existe uma campanha ativa, somente uma campanha ativa pode existir ao mesmo tempo")
+                messages.error(request, "Já existe uma campanha ativa, somente uma pode estar ativa por vez.")
         
         elif 'insert' in request.POST:
-            cursor.execute(f'''
-                SELECT 
-                    IDCAMPANHA
-                FROM MSCUPONAGEMCAMPANHA
-                WHERE ATIVO = 'S'
-            ''')
-            exist_active = cursor.fetchone()
+            if form.is_valid():
+                nova_campanha = form.save(commit=False)
+                nova_campanha.ativo = 'S' if not Campanha.objects.filter(ativo='S').exists() else 'N'
+                nova_campanha.dtultalt = timezone.now()
+                nova_campanha.save()
                 
-            if exist_active is None:
-                ativoWhere = 'S'
+                messages.success(request, "Campanha inserida com sucesso")
             else:
-                ativoWhere = 'N'
-                
-            cursor.execute(f'''
-                INSERT INTO MSCUPONAGEMCAMPANHA
-                (
-                    IDCAMPANHA, 
-                    DESCRICAO, 
-                    DTULTALT, 
-                    DTINIT, 
-                    DTFIM, 
-                    MULTIPLICADOR, 
-                    VALOR, 
-                    USAFORNEC, 
-                    USAPROD, 
-                    ATIVO,
-                    ENVIAEMAIL,
-                    TIPOINTENSIFICADOR,
-                    FORNECVALOR,
-                    PRODVALOR,
-                    MARCAVALOR,
-                    USAMARCA,
-                    RESTRINGE_FORNEC,
-                    RESTRINGE_MARCA,
-                    RESTRINGE_PROD,
-                    ACUMULATIVO
-                )
-                VALUES(
-                    (
-                        SELECT COALESCE(MAX(IDCAMPANHA), 0) + 1 FROM MSCUPONAGEMCAMPANHA
-                    ), 
-                    '{descricao}', 
-                    SYSDATE, 
-                    to_date('{dtinicial}', 'yyyy-mm-dd'),
-                    to_date('{dtfinal}', 'yyyy-mm-dd'), 
-                    {multiplicador}, 
-                    {valor},
-                    '{usafornec}', 
-                    '{usaprod}', 
-                    '{ativoWhere}',
-                    '{usaemail}',
-                    '{tipointensificador}',
-                    {fornecvalor},
-                    {prodvalor},
-                    {marcavalor},
-                    '{usamarca}',
-                    '{restringe_fornec}',
-                    '{restringe_marca}',
-                    '{restringe_prod}',
-                    '{acumulativo}'
-                )
-            ''')
+                messages.error(request, "Erro ao inserir campanha") 
             
-            for item in filial:
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMCAMPANHAFILIAL
-                    (
-                        IDCAMPANHA, 
-                        CODFILIAL,
-                        ID
-                    )
-                    VALUES(
-                        (
-                            SELECT COALESCE(MAX(IDCAMPANHA), 0) FROM MSCUPONAGEMCAMPANHA
-                        ), 
-                        {item},
-                        (
-                            SELECT COALESCE(MAX(ID), 0) + 1 FROM MSCUPONAGEMCAMPANHAFILIAL
-                        )
-                    )
-                ''')
-            messages.success(request, f"Campanha inserida com sucesso")  
-            
-        
-        elif 'edit' in request.POST:
-            print(f'''
-                UPDATE MSCUPONAGEMCAMPANHA
-                SET  
-                    DESCRICAO='{descricao}', 
-                    DTULTALT=SYSDATE, 
-                    DTINIT=to_date('{dtinicial}', 'yyyy-mm-dd'), 
-                    DTFIM=to_date('{dtfinal}', 'yyyy-mm-dd'), 
-                    MULTIPLICADOR={multiplicador}, 
-                    VALOR={valor}, 
-                    USAFORNEC='{usafornec}', 
-                    USAPROD='{usaprod}',
-                    ENVIAEMAIL='{usaemail}',
-                    TIPOINTENSIFICADOR='{tipointensificador}',
-                    FORNECVALOR={fornecvalor},
-                    PRODVALOR={prodvalor},
-                    MARCAVALOR={marcavalor},
-                    USAMARCA='{usamarca}',
-                    RESTRINGE_FORNEC='{restringe_fornec}',
-                    RESTRINGE_MARCA='{restringe_marca}',
-                    RESTRINGE_PROD='{restringe_prod}'
-                WHERE IDCAMPANHA = {codigo} 
-            ''')
-            cursor.execute(f'''
-                UPDATE MSCUPONAGEMCAMPANHA
-                SET  
-                    DESCRICAO='{descricao}', 
-                    DTULTALT=SYSDATE, 
-                    DTINIT=to_date('{dtinicial}', 'yyyy-mm-dd'), 
-                    DTFIM=to_date('{dtfinal}', 'yyyy-mm-dd'), 
-                    MULTIPLICADOR={multiplicador}, 
-                    VALOR={valor}, 
-                    USAFORNEC='{usafornec}', 
-                    USAPROD='{usaprod}',
-                    ENVIAEMAIL='{usaemail}',
-                    TIPOINTENSIFICADOR='{tipointensificador}',
-                    FORNECVALOR={fornecvalor},
-                    PRODVALOR={prodvalor},
-                    MARCAVALOR={marcavalor},
-                    USAMARCA='{usamarca}',
-                    RESTRINGE_FORNEC='{restringe_fornec}',
-                    RESTRINGE_MARCA='{restringe_marca}',
-                    RESTRINGE_PROD='{restringe_prod}',
-                    ACUMULATIVO = '{acumulativo}'
-                WHERE IDCAMPANHA = {codigo} 
-            ''')
-            
-            cursor.execute(f'''
-                DELETE FROM MSCUPONAGEMCAMPANHAFILIAL
-                WHERE IDCAMPANHA = {codigo}
-            ''')
-            for item in filial:
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMCAMPANHAFILIAL
-                    (
-                        IDCAMPANHA, 
-                        CODFILIAL,
-                        ID
-                    )
-                    VALUES
-                    (
-                        {codigo}, 
-                        {item},
-                        (
-                            SELECT COALESCE(MAX(ID), 0) + 1 FROM MSCUPONAGEMCAMPANHAFILIAL
-                        ) 
-                    )
-                ''')
-            messages.success(request, f"Campanha {codigo} editada com sucesso")
-    
-    conexao.commit()
+        elif 'edit' in request.POST and idcampanha:
+            campanha = get_object_or_404(Campanha, pk=idcampanha)
+            if form.is_valid():
+                with transaction.atomic():
+                    for field, value in form.cleaned_data.items():
+                        setattr(campanha, field, value)
+                    campanha.dtultalt = timezone.now()
+                    campanha.save()
+                    
+                    # Clear old filials and add new ones
+                    CampanhaFilial.objects.filter(idcampanha=campanha.idcampanha).delete()
+                    for item in filial:
+                        CampanhaFilial.objects.create(idcampanha=campanha.idcampanha, codfilial=item)
+                    
+                    messages.success(request, f"Campanha {idcampanha} editada com sucesso")
+            else:
+                messages.error(request, "Erro ao editar campanha")
+
     getTable()
     return render(request, 'campanhas/campanha.html', context)
-
-@login_required(login_url="/accounts/login/")
-@staff_required
-def oldprodutos(request):
-    context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
-    context['tituloInsere'] = 'Adicionar produto'
-    context['tituloPlanilha'] = 'Adicionar planilha'
-    context['tipolink'] = 'P'
-    
-    campos = [
-        ['idcampanha', 'number', True, 'col-md-6 col-12', (), 'Código da campanha cadastrada'],       # Código
-        ['codprod', 'number', True, 'col-12 col-md-6', (), 'codprod winthor 203'],    # Descrição
-    ]
-    context['campos'] = campos
-    context['habilitaexportacao'] = 'Sim'
-    context['permiteplanilha'] = 'permiteplanilha'
-    
-    def getTable():
-        conexao.rollback()
-        cursor.execute(f'''
-            SELECT 
-                MSCUPONAGEMPROD.IDCAMPANHA, 
-                MSCUPONAGEMPROD.CODPROD, 
-                MSCUPONAGEMPROD.DTMOV, 
-                PCPRODUT.DESCRICAO
-            FROM MSCUPONAGEMPROD 
-            INNER JOIN PCPRODUT ON (MSCUPONAGEMPROD.CODPROD = PCPRODUT.CODPROD)
-        ''')
-        context['listprodutos'] = cursor.fetchall()
-    
-    if request.method == 'POST':
-        idcampanha = request.POST.get('idcampanha')
-        codprod = request.POST.get('codprod')
-        
-        if 'delete' in request.POST:
-            cursor.execute(f'''
-                DELETE FROM MSCUPONAGEMPROD
-                WHERE IDCAMPANHA = {idcampanha} AND CODPROD = {codprod}
-            ''')
-            messages.success(request, f"Produto {codprod} na campanha {idcampanha} deletado com sucesso")
-        
-        elif 'insert' in request.POST:
-            cursor.execute(f'''
-                SELECT CODPROD
-                FROM PCPRODUT
-                WHERE CODPROD = {codprod}
-            ''')
-            exist_prod = cursor.fetchone()
-            
-            if exist_prod is None:
-                messages.success(request, f"Não existe produto cadastrado no winthor com codprod {codprod}")
-            
-            cursor.execute(f'''
-                SELECT 
-                    IDCAMPANHA, CODPROD
-                FROM MSCUPONAGEMPROD
-                WHERE IDCAMPANHA = {idcampanha} AND CODPROD = {codprod}
-            ''')
-            exist_active = cursor.fetchone()
-                
-            if exist_active is None:
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMPROD
-                    (IDCAMPANHA, CODPROD, DTMOV)
-                    VALUES({idcampanha}, {codprod}, SYSDATE)
-                ''')
-                messages.success(request, f"Produto {codprod} inserido com sucesso na campanha {idcampanha}")
-            else:   
-                messages.error(request, f"Produto {codprod} já cadastrado na campanha {idcampanha}")     
-        
-        elif 'insertp' in request.POST:
-            file = request.FILES["planilhas"]
-            if file:
-                df = upload_planilha(file)
-                
-                # Verifica se df é um DataFrame
-                if not isinstance(df, pd.DataFrame):
-                    getTable()
-                    messages.error(request, df) 
-                    return render(request, 'produtos/produtos.html', context)
-            else:
-                getTable()
-                messages.error(request, f"Nenhuma planilha enviada")     
-                return render(request, 'produtos/produtos.html', context)
-            
-            if not 'idcampanha' in df.columns or not 'codprod' in df.columns:
-                getTable()
-                messages.error(request, f"Planilha enviada no formato errado")     
-                return render(request, 'produtos/produtos.html', context)
-            
-            for index, row in df.iterrows():
-                idcampanha = row['idcampanha']
-                codprod = row['codprod']
-                
-                cursor.execute(f'''
-                    SELECT DESCRICAO
-                    FROM MSCUPONAGEMCAMPANHA 
-                    WHERE 
-                        IDCAMPANHA = {idcampanha}
-                ''')
-                exist_campanha = cursor.fetchone()
-                
-                if exist_campanha is None:
-                    getTable()
-                    messages.error(request, f"Não existe campanha cadastrada com código {idcampanha}, verifique a planilha")
-                    return render(request, 'produtos/produtos.html', context)
-                    
-                cursor.execute(f'''
-                    SELECT CODPROD
-                    FROM PCPRODUT
-                    WHERE CODPROD = {codprod}
-                ''')
-                exist_prod = cursor.fetchone()
-                
-                if exist_prod is None:
-                    getTable()
-                    messages.error(request, f"Não existe produto cadastrado no winthor com codprod {codprod}, verifique a planilha")
-                    return render(request, 'produtos/produtos.html', context)
-                
-                cursor.execute(f'''
-                    SELECT 
-                        IDCAMPANHA, CODPROD
-                    FROM MSCUPONAGEMPROD
-                    WHERE IDCAMPANHA = {idcampanha} AND CODPROD = {codprod}
-                ''')
-                exist_active = cursor.fetchone()
-                    
-                if exist_active is None:
-                    cursor.execute(f'''
-                        INSERT INTO MSCUPONAGEMPROD
-                        (IDCAMPANHA, CODPROD, DTMOV)
-                        VALUES({idcampanha}, {codprod}, SYSDATE)
-                    ''')
-                else:   
-                    getTable()
-                    messages.error(request, f"Produto {codprod} já cadastrado na campanha {idcampanha}, verifique a planilha")  
-                    return render(request, 'produtos/produtos.html', context)   
-            
-            messages.success(request, f"Todos os produtos foram inseridos com sucesso!")    
-        conexao.commit()
-    getTable()
-    return render(request, 'produtos/produtos.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -771,146 +405,6 @@ def produtos(request):
 
     getTable()
     return render(request, 'cadastros/produtos.html', context)
-
-@login_required(login_url="/accounts/login/")
-@staff_required
-def oldfornecedores(request):
-    context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
-    context['tituloInsere'] = 'Adicionar fornecedor'
-    context['tituloPlanilha'] = 'Adicionar planilha de fornecedor'
-    context['tipolink'] = 'F'
-    
-    campos = [
-        ['idcampanha', 'number', True, 'col-md-6 col-12', (), 'Código da campanha cadastrada'],       # Código
-        ['codfornec', 'number', True, 'col-12 col-md-6', (), 'codfornec winthor 202'],    # Descrição
-    ]
-    context['campos'] = campos
-    context['habilitaexportacao'] = 'Sim'
-    context['permiteplanilha'] = 'permiteplanilha'
-    
-    def getTable():
-        conexao.rollback()
-        cursor.execute(f'''
-            SELECT MSCUPONAGEMFORNEC.IDCAMPANHA, MSCUPONAGEMFORNEC.CODFORNEC, MSCUPONAGEMFORNEC.DTMOV, PCFORNEC.FORNECEDOR
-            FROM MSCUPONAGEMFORNEC 
-            INNER JOIN PCFORNEC ON (MSCUPONAGEMFORNEC.CODFORNEC = PCFORNEC.CODFORNEC)
-        ''')
-        context['listfornecs'] = cursor.fetchall()
-    
-    if request.method == 'POST':
-        idcampanha = request.POST.get('idcampanha')
-        codfornec = request.POST.get('codfornec')
-        
-        if 'delete' in request.POST:
-            cursor.execute(f'''
-                DELETE FROM MSCUPONAGEMFORNEC
-                WHERE IDCAMPANHA = {idcampanha} AND CODFORNEC = {codfornec}
-            ''')
-            messages.success(request, f"Fornecedor {codfornec} na campanha {idcampanha} deletado com sucesso")
-        
-        elif 'insert' in request.POST:
-            cursor.execute(f'''
-                SELECT CODFORNEC
-                FROM PCFORNEC
-                WHERE CODFORNEC = {codfornec}
-            ''')
-            exist_prod = cursor.fetchone()
-            
-            if exist_prod is None:
-                messages.success(request, f"Não existe fornecedor cadastrado no winthor com codfornec {codfornec}")
-            
-            cursor.execute(f'''
-                SELECT 
-                    IDCAMPANHA, CODFORNEC
-                FROM MSCUPONAGEMFORNEC
-                WHERE IDCAMPANHA = {idcampanha} AND CODFORNEC = {codfornec}
-            ''')
-            exist_active = cursor.fetchone()
-                
-            if exist_active is None:
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMFORNEC
-                    (IDCAMPANHA, CODFORNEC, DTMOV)
-                    VALUES({idcampanha}, {codfornec}, SYSDATE)
-                ''')
-                messages.success(request, f"Fornecedor {codfornec} inserido com sucesso na campanha {idcampanha}")
-            else:   
-                messages.error(request, f"Fornecedor {codfornec} já cadastrado na campanha {idcampanha}")     
-        
-        elif 'insertp' in request.POST:
-            file = request.FILES["planilhas"]
-            if file:
-                df = upload_planilha(file)
-                
-                # Verifica se df é um DataFrame
-                if not isinstance(df, pd.DataFrame):
-                    getTable()
-                    messages.error(request, df) 
-                    return render(request, 'fornecedores/fornecedores.html', context)
-            else:
-                getTable()
-                messages.error(request, f"Nenhuma planilha enviada")     
-                return render(request, 'fornecedores/fornecedores.html', context)
-            
-            if not 'idcampanha' in df.columns or not 'codprod' in df.columns:
-                getTable()
-                messages.error(request, f"Planilha enviada no formato errado")     
-                return render(request, 'fornecedores/fornecedores.html', context)
-            
-            for index, row in df.iterrows():
-                idcampanha = row['idcampanha']
-                codfornec = row['codfornec']
-                
-                cursor.execute(f'''
-                    SELECT DESCRICAO
-                    FROM MSCUPONAGEMCAMPANHA 
-                    WHERE 
-                        IDCAMPANHA = {idcampanha}
-                ''')
-                exist_campanha = cursor.fetchone()
-                
-                if exist_campanha is None:
-                    getTable()
-                    messages.error(request, f"Não existe campanha cadastrada com código {idcampanha}, verifique a planilha")
-                    return render(request, 'fornecedores/fornecedores.html', context)
-                    
-                cursor.execute(f'''
-                    SELECT CODFORNEC
-                    FROM PCFORNEC
-                    WHERE CODFORNEC = {codfornec}
-                ''')
-                exist_prod = cursor.fetchone()
-                
-                if exist_prod is None:
-                    getTable()
-                    messages.error(request, f"Não existe fornecedor cadastrado no winthor com codfornec {codfornec}, verifique a planilha")
-                    return render(request, 'fornecedores/fornecedores.html', context)
-                
-                cursor.execute(f'''
-                    SELECT 
-                        IDCAMPANHA, CODFORNEC
-                    FROM MSCUPONAGEMFORNEC
-                    WHERE IDCAMPANHA = {idcampanha} AND CODFORNEC = {codfornec}
-                ''')
-                exist_active = cursor.fetchone()
-                    
-                if exist_active is None:
-                    cursor.execute(f'''
-                        INSERT INTO MSCUPONAGEMFORNEC
-                    (IDCAMPANHA, CODFORNEC, DTMOV)
-                    VALUES({idcampanha}, {codfornec}, SYSDATE)
-                    ''')
-                else:   
-                    getTable()
-                    messages.error(request, f"Fornecedor {codfornec} já cadastrado na campanha {idcampanha}, verifique a planilha")  
-                    return render(request, 'fornecedores/fornecedores.html', context)   
-            
-            messages.success(request, f"Todos os fornecedores foram inseridos com sucesso!")    
-        conexao.commit()
-    getTable()
-    return render(request, 'fornecedores/fornecedores.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -1284,210 +778,108 @@ def marcas(request):
 @staff_required
 def campanhasid(request, idcampanha):
     context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
+    context['tituloDelete'] = 'Deletar cliente'
+    context['primarykey'] = 'codcli'
+    context['appname'] = 'cpfcli'
+    context['modelname'] = 'Cuponagem'
+    context['nomecolum'] = 'nomecli'
+    
+    # Verifica se a campanha existe
+    try:
+        campanha = Campanha.objects.get(idcampanha=idcampanha)
+    except Campanha.DoesNotExist:
+        messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
+        return redirect('campanha')  # Redireciona para a página de campanhas
+    
     context['title'] = f'Lista de números da sorte na campanha {idcampanha}'
     
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE idcampanha = {idcampanha}
-    ''')
-    exist_active = cursor.fetchone()
-    
-    if exist_active is None:
-        messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
-        return redirect('campanha')
-    
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE idcampanha = {idcampanha} AND DTEXCLUSAO IS NOT NULL
-    ''')
-    exist_delete = cursor.fetchone()
-    if exist_delete:
+    # Verifica se a campanha foi excluída (supondo que a campanha tem um campo DTEXCLUSAO)
+    if campanha.dtexclusao:
         messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
     
-    context['campanha'] = f'{exist_active[1]}'
+    context['campanha'] = campanha.descricao
     
     def getTable():
-        cursor.execute(f'''
-            SELECT 
-                MSCUPONAGEM.IDCAMPANHA, 
-                PCCLIENT.CODCLI, 
-                PCCLIENT.CLIENTE, 
-                COUNT(DISTINCT NUMSORTE)
-            FROM MSCUPONAGEM 
-                INNER JOIN PCCLIENT ON (pcclient.codcli = MSCUPONAGEM.codcli)
-            WHERE 
-                MSCUPONAGEM.IDCAMPANHA = {idcampanha} AND 
-                MSCUPONAGEM.NUMSORTE > 0 AND 
-                PCCLIENT.CODCLI > 0 AND 
-                ATIVO = 'S'
-            GROUP BY 
-                PCCLIENT.CODCLI, 
-                MSCUPONAGEM.IDCAMPANHA, 
-                PCCLIENT.CODCLI, 
-                PCCLIENT.CLIENTE
-        ''')
-        context['listaclients'] = cursor.fetchall()
-        conexao.close()
-    
+        # Consulta usando ORM do Django
+        dados = Cuponagem.objects.filter(
+            idcampanha=campanha, 
+            ativo='S'
+        ).values('idcampanha', 'codcli', 'nomecli').annotate(total_numsorte=Count('numsorte'))
+        
+        context['dados'] = dados
+
     if request.method == 'POST':
         idcampanha = request.POST.get('idcampanha')
         codcli = request.POST.get('codcli')
         nomecli = request.POST.get('nomecli')
+        
         if 'delete' in request.POST:
-            cursor.execute(f'''
-                UPDATE MSCUPONAGEM SET ATIVO = 'N', DTMOV = SYSDATE 
-                WHERE 
-                    IDCAMPANHA = {idcampanha} AND 
-                    CODCLI = {codcli}
-            ''')
-            conexao.commit()
-            messages.success(request,f'Cliente {codcli} - {nomecli} deletado com sucesso da campanha {idcampanha}')
-
+            # Atualização usando ORM
+            Cuponagem.objects.filter(idcampanha=idcampanha, codcli=codcli).update(ativo='N', dtmov=timezone.now())
+            messages.success(request, f'Cliente {codcli} - {nomecli} deletado com sucesso da campanha {idcampanha}')
+    
     getTable()
     return render(request, 'campanhas/campanhaNumeros.html', context)
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Cuponagem, Campanha
 
 @login_required(login_url="/accounts/login/")
 @staff_required
 def campanhasidclient(request, idcampanha, idclient):
     context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
     context['title'] = f'Lista de números da sorte do cliente {idclient}'
     
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE idcampanha = {idcampanha}
-    ''')
-    exist_active = cursor.fetchone()
-    
-    if exist_active is None:
+    try:
+        campanha = Campanha.objects.get(idcampanha=idcampanha)
+    except Campanha.DoesNotExist:
         messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
         return redirect('campanha')
     
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE idcampanha = {idcampanha} AND DTEXCLUSAO IS NOT NULL
-    ''')
-    exist_delete = cursor.fetchone()
-    if exist_delete:
+    if campanha.dtexclusao:
         messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
+        return redirect('campanha')
     
-    cursor.execute(f'''
-        SELECT IDCAMPANHA, CODCLI
-        FROM MSCUPONAGEM
-        WHERE idcampanha = {idcampanha} AND codcli = {idclient}
-    ''')
-    exist_client = cursor.fetchone()
-    
-    if exist_client is None:
+    if not Cuponagem.objects.filter(idcampanha=idcampanha, codcli=idclient).exists():
         messages.error(request, f'Não existe nenhum cupom registrado para o cliente {idclient} na campanha {idcampanha}')
         return redirect(f'/campanhas/{idcampanha}/')
     
-    context['campanha'] = f'{exist_active[1]}'
+    context['campanha'] = campanha.descricao
     context['cliente'] = f'o cliente {idclient}'
     
-    def getTable():
-        cursor.execute(f'''
-            SELECT 
-                MSCUPONAGEM.IDCAMPANHA, 
-                PCCLIENT.CODCLI, 
-                PCCLIENT.CLIENTE,
-                PCPEDC.NUMPED,
-                MSCUPONAGEM.VALOR,
-                COUNT(MSCUPONAGEM.NUMSORTE),
-                TO_CHAR(PCPEDC."DATA", 'dd/mm/yyyy')
-                
-            FROM MSCUPONAGEM 
-                INNER JOIN PCCLIENT ON PCCLIENT.CODCLI = MSCUPONAGEM.CODCLI
-                LEFT JOIN PCPEDC ON MSCUPONAGEM.NUMPED = PCPEDC.NUMPED
-            WHERE 
-                MSCUPONAGEM.IDCAMPANHA = {idcampanha} AND 
-                MSCUPONAGEM.NUMSORTE > 0 AND 
-                PCCLIENT.CODCLI = {idclient}
-            GROUP BY 
-                MSCUPONAGEM.IDCAMPANHA, 
-                PCCLIENT.CODCLI, 
-                PCCLIENT.CLIENTE,
-                PCPEDC.NUMPED,
-                MSCUPONAGEM.VALOR,
-                TO_CHAR(PCPEDC."DATA", 'dd/mm/yyyy')
-        ''')
-        context['listanumeros'] = cursor.fetchall()
+    context['dados'] = Cuponagem.objects.filter(
+        idcampanha=idcampanha,
+        codcli=idclient,
+        ativo='S'
+    ).all()
 
-    getTable()
     return render(request, 'campanhas/campanhaNumerosClient.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
 def campanhasidclientnumped(request, idcampanha, idclient, numped):
     context = {}
+    context['title'] = f'Lista de items no pedido {numped}'
     conexao = conexao_oracle()
     cursor = conexao.cursor()
-    context['title'] = f'Lista de produtos no pedido {numped} do cliente {idclient}'
     context['numped'] = numped
     
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE idcampanha = {idcampanha}
-    ''')
-    exist_active = cursor.fetchone()
-    
-    if exist_active is None:
+    try:
+        campanha = Campanha.objects.get(idcampanha=idcampanha)
+    except Campanha.DoesNotExist:
         messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
         return redirect('campanha')
     
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE 
-            IDCAMPANHA = {idcampanha} AND 
-            DTEXCLUSAO IS NOT NULL
-    ''')
-    exist_delete = cursor.fetchone()
-    if exist_delete:
+    if campanha.dtexclusao:
         messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
+        return redirect('campanha')
     
-    cursor.execute(f'''
-        SELECT IDCAMPANHA, CODCLI
-        FROM MSCUPONAGEM
-        WHERE 
-            IDCAMPANHA = {idcampanha} AND 
-            CODCLI = {idclient}
-    ''')
-    exist_client = cursor.fetchone()
-    
-    if exist_client is None:
+    if not Cuponagem.objects.filter(idcampanha=idcampanha, codcli=idclient).exists():
         messages.error(request, f'Não existe nenhum cupom registrado para o cliente {idclient} na campanha {idcampanha}')
         return redirect(f'/campanhas/{idcampanha}/')
     
-    cursor.execute(f'''
-        SELECT IDCAMPANHA, CODCLI
-        FROM MSCUPONAGEM
-        WHERE 
-            IDCAMPANHA = {idcampanha} AND 
-            CODCLI = {idclient} AND 
-            NUMPED = {numped}
-    ''')
-    exist_client = cursor.fetchone()
-    
-    if exist_client is None:
-        messages.error(request, f'Não existe nenhuma venda registrada para o cliente {idclient} na campanha {idcampanha} com o numped ')
-        return redirect(f'/campanhas/{idcampanha}/{idclient}/')
-    
-    context['campanha'] = f'{exist_active[1]}'
+    context['campanha'] = f'{campanha.descricao}'
     context['cliente'] = f'{idclient}'
     
     def getTable():
@@ -1525,133 +917,86 @@ def cadastro_cliente(request):
 @staff_required
 def gerador(request, idcampanha):
     context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
     context['title'] = f'Sorteio campanha {idcampanha}'
-    
-    def getTable():
-        #obetem os dados gerais do sorteio
-        cursor.execute(f'''
-            SELECT NUMSORTE, SYSDATE, cliente, codcli
-            FROM (
-                SELECT NUMSORTE, MSCUPONAGEM.codcli, PCCLIENT.cliente
-                FROM MSCUPONAGEM
-                JOIN PCCLIENT ON MSCUPONAGEM.codcli = PCCLIENT.CODCLI
-                WHERE 
-                    MSCUPONAGEM.IDCAMPANHA = {idcampanha}
-                    AND MSCUPONAGEM.NUMSORTE > 0
-                    AND PCCLIENT.CODCLI > 0
-                    AND MSCUPONAGEM.ATIVO = 'S'
-                    AND not exists (
-                        SELECT CODCLI FROM MSCUPONAGEMVENCEDORES 
-                        WHERE NUMSORTE = MSCUPONAGEM.NUMSORTE
-                    )
-                ORDER BY DBMS_RANDOM.VALUE
-            )
-            WHERE ROWNUM = 1
-        ''')
-        numsorte = cursor.fetchone()
-        context['numsorteado'] = numsorte
-        
-        #obtem o numero menor e maior de cupons da sorte
-        cursor.execute(f'''
-            SELECT MAX(NUMSORTE), MIN(NUMSORTE)
-            FROM MSCUPONAGEM
-            WHERE 
-                IDCAMPANHA = {idcampanha}
-                AND NUMSORTE > 0
-                AND CODCLI > 0
-        ''')
-        context['contnumsorteado'] = cursor.fetchone()
-        
-        if numsorte:
-            #insere o vencedor
-            cursor.execute(f'''
-                INSERT INTO MSCUPONAGEMVENCEDORES
-                (IDCAMPANHA, CODCLI, DTSORTEIO, NUMSORTEIO, NUMSORTE)
-                VALUES(
-                    {idcampanha}, 
-                    {numsorte[3]}, 
-                    SYSDATE, 
-                    (
-                        select count(numsorte)
-                        from MSCUPONAGEMVENCEDORES 
-                        where 
-                            idcampanha = {idcampanha}
-                    ) + 1, 
-                    {numsorte[0]}
-                )
-            ''')
-            
-            conexao.commit()
-            
-            #obtem o numero do sorteio atual
-            cursor.execute(f'''
-                SELECT NUMSORTEIO
-                FROM MSCUPONAGEMVENCEDORES
-                WHERE 
-                    IDCAMPANHA = {idcampanha} AND
-                    NUMSORTE = {numsorte[0]} AND
-                    CODCLI = {numsorte[3]}
-            ''')
-            context['numsorteio'] = cursor.fetchone()
 
-    getTable()
+    try:
+        # Obtem os dados gerais do sorteio
+        cuponagem_sorteado = Cuponagem.objects.filter(
+            idcampanha_id=idcampanha,
+            numsorte__gt=0,
+            codcli__gt=0,
+            ativo='S'
+        ).exclude(
+            codcli__in=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).values_list('codcli', flat=True)
+        ).select_related('idcampanha').order_by('?').first()
+
+        if cuponagem_sorteado:
+            context['numsorteado'] = cuponagem_sorteado
+
+            # Obtem o número mínimo e máximo de cupons da sorte
+            numsorte_max_min = Cuponagem.objects.filter(
+                idcampanha_id=idcampanha,
+                numsorte__gt=0,
+                codcli__gt=0
+            ).aggregate(
+                max_numsorte=models.Max('numsorte'),
+                min_numsorte=models.Min('numsorte')
+            )
+            context['contnumsorteado'] = (numsorte_max_min['max_numsorte'], numsorte_max_min['min_numsorte'])
+
+            # Insere o vencedor
+            CuponagemVencedores.objects.create(
+                idcampanha_id=idcampanha,
+                codcli=cuponagem_sorteado.codcli,
+                dtsorteio=timezone.now(),
+                numsorteio=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).count() + 1,
+                numsorte=cuponagem_sorteado
+            )
+
+            # Obtem o número do sorteio atual
+            context['numsorteio'] = CuponagemVencedores.objects.filter(
+                idcampanha_id=idcampanha,
+                numsorte=cuponagem_sorteado.numsorte,
+                codcli=cuponagem_sorteado.codcli
+            ).values('numsorteio').first()
+
+    except Exception as e:
+        context['error'] = str(e)
+
     return render(request, 'sorteio/gerador.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
 def sorteio(request):
     context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
-    
-    def getTable():
-        cursor.execute(f'''
-            SELECT 
-                IDCAMPANHA, 
-                DESCRICAO, 
-                to_char(DTINIT, 'dd/mm/yyyy'), 
-                to_char(DTFIM, 'dd/mm/yyyy'),
-                VALOR,
-                MULTIPLICADOR, 
-                USAFORNEC, 
-                USAPROD, 
-                CODGANHADOR,
-                GANHADOR,
-                ATIVO,
-                to_char(DTINIT, 'yyyy-mm-dd'),
-                to_char(DTFIM, 'yyyy-mm-dd'),
-                (SELECT COUNT(NUMSORTE) FROM MSCUPONAGEM WHERE IDCAMPANHA = MSCUPONAGEMCAMPANHA.IDCAMPANHA)
-            FROM MSCUPONAGEMCAMPANHA
-            WHERE DTEXCLUSAO IS NULL
-        ''')
-        listacampanhas = cursor.fetchall()
-        # Supondo que você tenha uma função para obter campanhas
-        campaigns = listacampanhas  # Substitua por sua lógica real de obtenção de campanhas
 
-        today = now().date()  # Obtém a data atual como datetime.date
+    def getTable():
+        # Obter campanhas que não foram excluídas (onde dtexclusao é None)
+        campaigns = Campanha.objects.filter(dtexclusao__isnull=True).annotate(
+            count_cupons=models.Count('cuponagem')
+        )
+
+        today = now().date()  # Data atual
         processed_campaigns = []
+        
         for campanha in campaigns:
             # Criar dicionário para cada campanha
             campanha_dict = {
-                'IDCAMPANHA': campanha[0],
-                'DESCRICAO': campanha[1],
-                'dtinit': datetime.strptime(campanha[11], '%Y-%m-%d').date(),
-                'dtfim': datetime.strptime(campanha[12], '%Y-%m-%d').date(),
-                'VALOR': campanha[4],
-                'MULTIPLICADOR': campanha[5],
-                'USAFORNEC': campanha[6],
-                'USAPROD': campanha[7],
-                'CODGANHADOR': campanha[8],
-                'GANHADOR': campanha[9],
-                'ATIVO': campanha[10],
-                'count_cupons': campanha[13],
+                'IDCAMPANHA': campanha.idcampanha,
+                'DESCRICAO': campanha.descricao,
+                'dtinit': campanha.dtinit,
+                'dtfim': campanha.dtfim,
+                'VALOR': campanha.valor,
+                'MULTIPLICADOR': campanha.multiplicador,
+                'USAFORNEC': campanha.usafornec,
+                'USAPROD': campanha.usaprod,
+                'ATIVO': campanha.ativo,
+                'count_cupons': campanha.count_cupons,  # Contagem de cupons
             }
 
             # Calcular total de dias e dias restantes
-            total_days = (campanha_dict['dtfim'] - campanha_dict['dtinit']).days
-            days_remaining = (campanha_dict['dtfim'] - today).days
+            total_days = (campanha.dtfim - campanha.dtinit).days
+            days_remaining = (campanha.dtfim - today).days
             # Calcular progresso
             if total_days > 0 and days_remaining > 0:
                 progress = 100.0 - (days_remaining / total_days * 100)
@@ -1666,9 +1011,9 @@ def sorteio(request):
             # Adicionar dicionário à lista de campanhas processadas
             processed_campaigns.append(campanha_dict)
 
-        context ['listacampanhas'] = processed_campaigns
+        context['listacampanhas'] = processed_campaigns
         return render(request, 'sorteio/campanhas.html', context)
-    
+
     if request.method == 'POST':
         idcampanha = request.POST.get('idcampanha')
         codigo = request.POST.get('codigo')
@@ -1679,10 +1024,10 @@ def sorteio(request):
         multiplicador = request.POST.get('multiplicador')
         usafornec = request.POST.get('usafornec')
         usaprod = request.POST.get('usaprod')
-        
+
         if 'pesq' in request.POST:
             return redirect(f'/campanhas/{idcampanha}/')
-        
+
     getTable()
     return render(request, 'sorteio/campanhas.html', context)
 

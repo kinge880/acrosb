@@ -19,8 +19,7 @@ urlpatterns = [
     path('sorteio/<int:idcampanha>/', views.gerador, name='gerador'),
     path('ganhadores/<int:idcampanha>/', views.sorteioganhadores, name='ganhadores'),
     path('upload/', views.upload_planilha, name='upload_planilha'),
-    path('get_data_edit/', views.get_data_edit, name='get_data_edit'),
-    path('get_data_delete/', views.get_data_delete, name='get_data_delete'),
+    path('get_data/', views.get_data, name='get_data_dict'),
     path('baixar-modelo/<str:tipo>/', views.baixar_modelo, name='baixar_modelo')
 ] 
 

@@ -35,12 +35,13 @@
 <script>
     function loadDataDelete(id) {
         $.ajax({
-            url: '/get_data_delete/', // Endpoint que retorna os dados da campanha
+            url: '/get_data/', // Endpoint que retorna os dados da campanha
             method: 'GET',
             data: { 
-                    id: id ,
+                    id: id,
                     app_name: '{{appname}}',
-                    model_name: '{{modelname}}'
+                    model_name: '{{modelname}}',
+                    id_name: '{{primarykey}}'
                 },
             success: function(data) {
                 console.log(data)
@@ -51,7 +52,7 @@
                 form.removeClass('was-validated');
                 
                 // Atribui o valor de codmarca ao input hidden
-                modal.find('#id_{{primarykey}}').val(data.id);
+                modal.find('#id_{{primarykey}}').val(data.{{primarykey}});
 
                 // Ajusta o modal para edição
                 modal.find('#modalTitle').html('{{tituloDelete}} ' + data.{{nomecolum}});

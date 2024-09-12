@@ -1,0 +1,125 @@
+<!-- Modal de Desativar -->
+<div class="modal fade" id="deactivateModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content needs-validation" method="POST">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Desativar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
+                    <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
+                    <div class="text-center w-100 mt-5 mb-4">
+                        <i class="fas fa-ban fa-6x" style="color: #ffc107;"></i>
+                    </div>
+                    <div class="text-center w-100 mb-3">
+                        <h4 class="modal-title">Você tem certeza?</h4>
+                    </div>
+                    <div class="form-group">
+                        <p class="text-center">Deseja realmente desativar o item?</p>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-center flex-nowrap">
+                    <button type="button" class="btn btn-secondary col-6" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="desative" id="modalSubmitButton" class="btn btn-warning col-6">Desativar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Ativar -->
+<div class="modal fade" id="activateModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content needs-validation" method="POST">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Ativar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
+                    <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
+                    <div class="text-center w-100 mt-5 mb-4">
+                        <i class="fa fa-check fa-6x" style="color: Green;"></i>
+                    </div>
+                    <div class="text-center w-100 mb-3">
+                        <h4 class="modal-title">Você tem certeza?</h4>
+                    </div>
+                    <div class="form-group">
+                        <p class="text-center">Deseja realmente ativar o item?</p>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-center flex-nowrap">
+                    <button type="button" class="btn btn-secondary col-6" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="active" id="modalSubmitButton" class="btn btn-success col-6">Ativar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function loadDataActive(id) {
+        $.ajax({
+            url: '/get_data/', // Endpoint que retorna os dados da campanha
+            method: 'GET',
+            data: { 
+                    id: id,
+                    app_name: '{{appname}}',
+                    model_name: '{{modelname}}',
+                    id_name: '{{primarykey}}'
+                },
+            success: function(data) {
+                console.log(data)
+                // Seleciona o modal específico pelo ID
+                var modal = $('#activateModal');
+                var form = modal.find('form');
+                form[0].reset();
+                form.removeClass('was-validated');
+                
+                // Atribui o valor de codmarca ao input hidden
+                modal.find('#id_{{primarykey}}').val(data.{{primarykey}});
+
+                // Ajusta o modal para edição
+                modal.find('#modalTitle').html('{{tituloActive}} ' + data.{{nomecolum}});
+                modal.find('#modalSubmitButton').attr('name', 'active').text('Ativar');
+                
+                // Exibe o modal
+                modal.modal('show');
+            }
+        });
+    }
+
+    function loadDataDeactive(id) {
+        $.ajax({
+            url: '/get_data/', // Endpoint que retorna os dados da campanha
+            method: 'GET',
+            data: { 
+                    id: id,
+                    app_name: '{{appname}}',
+                    model_name: '{{modelname}}',
+                    id_name: '{{primarykey}}'
+                },
+            success: function(data) {
+                console.log(data)
+                // Seleciona o modal específico pelo ID
+                var modal = $('#deactivateModal');
+                var form = modal.find('form');
+                form[0].reset();
+                form.removeClass('was-validated');
+                
+                // Atribui o valor de codmarca ao input hidden
+                modal.find('#id_{{primarykey}}').val(data.{{primarykey}});
+
+                // Ajusta o modal para edição
+                modal.find('#modalTitle').html('{{tituloDeactive}} ' + data.{{nomecolum}});
+                modal.find('#modalSubmitButton').attr('name', 'desative').text('Desativar');
+                
+                // Exibe o modal
+                modal.modal('show');
+            }
+        });
+    }
+</script>

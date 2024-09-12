@@ -1,0 +1,102 @@
+{% load static %}
+{% block content %}
+<script>
+    $(document).ready(function() {
+        $('.tableSearch').DataTable({
+            "language": {
+                "url": "{% static 'css/dataTables/ptbr10_19.json' %}"
+            },
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+            dom: "<'row w-100 d-flex justify-content-between'<'col-12 col-sm-4'l><'col-12 col-sm-4 text-center'B><'col-12 col-sm-4'f>>" +
+                "<'row w-100'<'col-sm-12'tr>>" +
+                "<'row w-100 d-flex justify-content-between'<'col-12 col-md-6'i><'col-12 col-md-6 d-flex justify-content-end'p>>",
+            serverSide: true, // Ativa a paginação no lado do servidor
+            processing: true, // Exibe um indicador de carregamento
+            ajax: {
+                "url": "{% url 'ganhadores' idcampanha %}", // URL que vai carregar os dados via Ajax
+                "type": "GET"
+            },
+            columns: [
+                { "data": "idcampanha" },
+                { "data": "codcli" },
+                { "data": "nomecli" },
+                { "data": "total_numsorte" }
+            ],
+            buttons: [
+                {
+                    text: '<i class="fa fa-plus" aria-hidden="true"></i>',
+                    titleAttr: '{{tituloInsere}}',
+                    className: 'btn btn-sm btn-primary',
+                    action: function (e, dt, node, config) {
+                        var modal = $('#insertEditModal').modal('show');
+                        var form = modal.find('form');
+                        modal.find('#modalTitle').html('{{tituloInsere}}');
+                        modal.find('#modalSubmitButton').attr('name', 'insert').text('Inserir');
+                        
+                        // Resetar o formulário (inputs, selects, textareas)
+                        form[0].reset(); 
+                        form.removeClass('was-validated');
+                        modal.find('input').val('');
+                        modal.find('textarea').val('');
+                        modal.find(".select2").val('').trigger('change');
+                        modal.find('select').prop('selectedIndex', 0);
+                        modal.modal('show');
+                    }
+                },
+                {% if permiteplanilha %}
+                {
+                    text: '<i class="fa-solid fa-circle-plus"></i>',
+                    titleAttr: '{{tituloInsere}}',
+                    className: 'btn btn-sm btn-primary',
+                    action: function (e, dt, node, config) {
+                        $('#insertModalPlanilha').modal('show');
+                    }
+                },
+                {% endif %}
+                {% if habilitaexportacao or habilitaexportacaoplanilha %}
+                {
+                    extend: 'excel',
+                    className: 'btn-sm btn-success btnDataTable',
+                    titleAttr: 'Exportar dados para EXCEL',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    exportOptions: {
+                        columns: ':visible',
+                        format: {
+                            body: function(data, row, column, node) {
+                                data = $('<p>' + data + '</p>').text();
+                                return $.isNumeric(data.replace(',', '.')) ? data.replace(',', '.') : data;
+                            }
+                        }
+                    }
+                },
+                {% endif %}
+                {% if habilitaexportacao %}
+                {
+                    extend: 'pdf',
+                    className: 'btn-sm btn-danger btnDataTable',
+                    titleAttr: 'Exportar dados para PDF',
+                    text: '<i class="fa-solid fa-file-pdf"></i>',
+                },
+                {
+                    extend: 'print',
+                    className: 'btn-sm btn-info btnDataTable',
+                    titleAttr: 'Imprimir dados',
+                    text: '<i class="fa-solid fa-print"></i>',
+                }
+                {% endif %}
+            ],
+            initComplete: function (settings, json) {
+                $(".btnDataTable").removeClass("btn-secondary");
+            }
+        });
+
+        function loadSpinnerTH(elemento, colsp) {
+            // Seleciona o elemento pai
+            const pai = elemento.parentNode.parentNode;
+            // Substitui o conteúdo pelo spinner
+            pai.innerHTML = '<th colspan="'+colsp+'" class="w-100 text-center"><i class="fas fa-spinner fa-spin spinner"></i></th>';
+        }
+    });
+</script>
+
+{% endblock %}
