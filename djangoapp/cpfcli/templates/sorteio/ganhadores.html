@@ -13,29 +13,29 @@
                 <table class="table tableSearchButton table-primary table-hover table-striped">
                     <thead>
                         <tr>
-                            <th class="text-start">CÓDIGO CAMPANHA</th>
-                            <th class="text-start">ORDEM DO SORTEIO</th>
-                            <th class="text-start">NÚMERO SORTEADO</th>
-                            <th class="text-start">DATA DO SORTEIO</th>
-                            <th class="text-start">CÓDIGO DO CLIENTE</th>
-                            <th class="text-start">NOME DO CLIENTE</th>
-                            <th class="text-start">EMAIL</th>
-                            <th class="text-start">TEL</th>
-                            <th class="text-start">CPF/CNPJ</th>
+                            <th class="text-start">Código campanha</th>
+                            <th class="text-start">Ordem do sorteio</th>
+                            <th class="text-start">Número sorteado</th>
+                            <th class="text-start">Data do sorteio</th>
+                            <th class="text-start">Código do cliente</th>
+                            <th class="text-start">Nome do cliente</th>
+                            <th class="text-start">Email</th>
+                            <th class="text-start">Tel</th>
+                            <th class="text-start">Cpf/cnpj</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for client in listaclients %}
+                        {% for dado in dados %}
                             <tr>
-                                <td class="text-start">{{client.0}}</td>
-                                <td class="text-start">{{client.1}}</td>
-                                <td class="text-start">{{client.4}}</td>
-                                <td class="text-start">{{client.5}}</td>
-                                <td class="text-start">{{client.2}}</td>
-                                <td class="text-start">{{client.3}}</td>
-                                <td class="text-start">{{client.6}}</td>
-                                <td class="text-start">{{client.7}}</td>
-                                <td class="text-start">{{client.8}}</td>
+                                <td class="text-start">{{dado.idcampanha.idcampanha}}</td>
+                                <td class="text-start">{{dado.numsorteio}}</td>
+                                <td class="text-start">{{dado.numsorte.numsorte}}</td>
+                                <td class="text-start">{{dado.dtsorteio}}</td>
+                                <td class="text-start">{{dado.numsorte.codcli}}</td>
+                                <td class="text-start">{{dado.numsorte.nomecli}}</td>
+                                <td class="text-start">{{dado.numsorte.emailcli}}</td>
+                                <td class="text-start">{{dado.numsorte.telcli}}</td>
+                                <td class="text-start">{{dado.numsorte.cpf_cnpj}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

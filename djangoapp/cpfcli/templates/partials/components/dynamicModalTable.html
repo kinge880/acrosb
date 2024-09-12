@@ -22,13 +22,14 @@
 <script>
     function loadDataModal(id, columns, title) {
         $.ajax({
-            url: '/get_data/', // Endpoint que retorna os dados do objeto
+            url: '/get_data/', // Endpoint que retorna os dados da campanha
             method: 'GET',
             data: { 
-                id: id,
-                app_name: '{{appname}}',
-                model_name: '{{modelname}}',
-                id_name: '{{primarykey}}'
+                    id: id,
+                    app_name: '{{appname}}',
+                    model_name: '{{modelname}}',
+                    id_name: '{{primarykey}}',
+                    transation: 'S'
             },
             success: function(data) {
                 if (data.error) {

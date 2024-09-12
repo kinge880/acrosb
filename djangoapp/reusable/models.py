@@ -15,7 +15,12 @@ class AccessLog(models.Model):
         return f"{self.timestamp} - {self.ip_address} - {self.path} - {self.action_type}"
     
 class Agent(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=500, unique = True)
     agent_ip = models.CharField(max_length=100)
     coupons_generated = models.PositiveIntegerField(default=0)
+    cpu_usage = models.FloatField(null=True, blank=True)
+    memory_usage = models.FloatField(null=True, blank=True)
+    uptime = models.DurationField(null=True, blank=True)
+    service_version = models.CharField(max_length=100, null=True, blank=True)
+    last_restart = models.DateTimeField(null=True, blank=True)
     last_heartbeat = models.DateTimeField(auto_now=True)

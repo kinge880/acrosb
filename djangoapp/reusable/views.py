@@ -3,15 +3,18 @@ from django.contrib import messages
 from django.template.loader import render_to_string
 from django.conf import settings
 from project.middlewares import CustomCSSMiddleware
-from .models import AccessLog
+from .models import AccessLog, Agent
 from django.db.models import Count
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 import json
+from cpfcli.models import *
 from django.middleware.csrf import get_token
 from project.oracle import *
+from datetime import datetime
+from django.core import serializers
 
 def translate_column_name(column_name):
     column_translation_dict = {
@@ -163,15 +166,69 @@ def get_csrf_token(request):
 @csrf_exempt
 def agent_status(request):
     if request.method == 'POST':
+        print('chegou dados')
         try:
             data = json.loads(request.body)
-            coupons_generated = data.get('coupons_generated')
-            agent_ip = data.get('agent_ip')
+
+            # Extrai os dados da requisição
             name = data.get('name')
-            # Aqui você pode processar e armazenar os dados no banco de dados
-            # Exemplo: salvar no modelo AgentStatus
+            agent_ip = data.get('agent_ip')
+            coupons_generated = data.get('coupons_generated', 0)
+            cpu_usage = data.get('cpu_usage')
+            memory_usage = data.get('memory_usage')
+            uptime = data.get('uptime')  # Esperado no formato de segundos
+            errors_count = data.get('errors_count', 0)
+            service_status = data.get('service_status')
+            service_version = data.get('service_version')
+            last_restart = data.get('last_restart')  # Esperado no formato 'YYYY-MM-DD HH:MM:SS'
+
+            # Valida os dados obrigatórios
+            if not name or not agent_ip:
+                return JsonResponse({'error': 'Nome e IP do agente são obrigatórios'}, status=400)
+
+            # Converte uptime de segundos para uma duração
+            from datetime import timedelta
+            if uptime:
+                uptime = timedelta(seconds=uptime)
+
+            # Cria ou atualiza o registro do agente
+            agent, created = Agent.objects.update_or_create(
+                name=name,
+                agent_ip=agent_ip,
+                defaults={
+                    'coupons_generated': coupons_generated,
+                    'cpu_usage': cpu_usage,
+                    'memory_usage': memory_usage,
+                    'uptime': uptime,
+                    'service_version': service_version,
+                    'last_restart': last_restart
+                }
+            )
 
             return JsonResponse({'message': 'Status recebido com sucesso'}, status=200)
+
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Dados inválidos'}, status=400)
+
     return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+@csrf_exempt
+def campanha_ativa(request):
+    if request.method == 'GET':
+        # Filtrando campanhas ativas com data atual maior que dtinit, menor que dtfim, e dtexclusao é None
+        campanhas_ativas = Campanha.objects.filter(
+            ativo='S',
+            dtinit__lte=datetime.now(),  # Data inicial menor ou igual ao dia atual
+            dtfim__gte=datetime.now(),   # Data final maior ou igual ao dia atual
+            dtexclusao = None      # dtexclusao deve ser null
+        )
+
+        # Se não houver campanhas ativas
+        if not campanhas_ativas.exists():
+            return JsonResponse({'message': 'Não existe campanha ativa'}, status=404)
+
+        # Serializando os dados
+        campanhas_json = serializers.serialize('json', campanhas_ativas)
+
+        # Retornando as campanhas ativas em JSON
+        return JsonResponse({'campanhas': campanhas_json}, safe=False, status=200)

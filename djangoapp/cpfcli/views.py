@@ -15,7 +15,10 @@ from django.views.decorators.http import require_http_methods
 from .models import *
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-
+from django.core.serializers import serialize
+from django.db.models import OuterRef, Subquery
+from django.contrib.postgres.aggregates import ArrayAgg
+from project.conexao_postgresql import *
 def staff_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
@@ -170,6 +173,7 @@ def get_data(request):
     id_name = request.GET.get('id_name')
     model_name = request.GET.get('model_name')
     app_name = request.GET.get('app_name')
+    transation = request.GET.get('transation')
     
     try:
         #Obtém a classe do model dinamicamente
@@ -177,23 +181,27 @@ def get_data(request):
         
         # Filtra o registro pelo ID
         response = model.objects.filter(**{id_name: id}).first()
-        print(response)
-
+    
         if not response:
             return JsonResponse({'error': 'Registro não encontrado'}, status=404)
-
-        # Constrói o dicionário de resposta dinamicamente com traduções
         response_data = {}
-        for field in response._meta.fields:
-            field_value = getattr(response, field.name)
-            translated_value = translate_value(field.name, field_value)  # Aplica a tradução
-            response_data[field.name] = translated_value
+        
+        if transation == 'S':
+            # Constrói o dicionário de resposta dinamicamente com traduções
+            for field in response._meta.fields:
+                field_value = getattr(response, field.name)
+                translated_value = translate_value(field.name, field_value)  # Aplica a tradução
+                response_data[field.name] = translated_value
+        elif transation == 'N':
+            # Constrói o dicionário de resposta dinamicamente
+            response_data = {field.name: getattr(response, field.name) for field in response._meta.fields}
         
         return JsonResponse(response_data)
     except LookupError:
         return JsonResponse({'error': 'Model não encontrada'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -214,8 +222,60 @@ def campanhas(request):
     context['primarykey'] = 'idcampanha'
 
     def getTable():
-        context['listacampanhas'] = Campanha.objects.filter(dtexclusao__isnull=True).all()
-    
+        conn = conectar_banco()
+        cursor = conn.cursor()
+
+        sql = """
+        SELECT
+            c.idcampanha,
+            c.descricao,
+            c.dtultalt,
+            c.dtinit,
+            c.dtfim,
+            c.multiplicador,
+            c.valor,
+            c.usafornec,
+            c.usamarca,
+            c.usaprod,
+            c.ativo,
+            c.dtexclusao,
+            c.enviaemail,
+            c.tipointensificador,
+            c.fornecvalor,
+            c.marcavalor,
+            c.prodvalor,
+            c.acumulativo,
+            c.restringe_fornec,
+            c.restringe_marca,
+            c.restringe_prod,
+            STRING_AGG(cf.codfilial::TEXT, ',') AS codfiliais
+        FROM
+            cpfcli_campanha c
+        LEFT JOIN
+            cpfcli_campanhafilial cf ON c.idcampanha = cf.idcampanha
+        WHERE
+            c.dtexclusao IS NULL
+        GROUP BY
+            c.idcampanha, c.descricao, c.dtultalt, c.dtinit, c.dtfim, c.multiplicador,
+            c.valor, c.usafornec, c.usamarca, c.usaprod, c.ativo, c.dtexclusao,
+            c.enviaemail, c.tipointensificador, c.fornecvalor, c.marcavalor, c.prodvalor,
+            c.acumulativo, c.restringe_fornec, c.restringe_marca, c.restringe_prod
+        ORDER BY
+            c.idcampanha;
+        """
+
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]
+
+        # Mapear os resultados em um dicionário
+        resultado = [dict(zip(columns, row)) for row in rows]
+        
+        cursor.close()
+        conn.close()
+
+        context['listacampanhas'] = resultado
+
     if request.method == 'POST':
         # Form data from the request
         form = MscuponagemCampanhaForm(request.POST)
@@ -918,8 +978,13 @@ def cadastro_cliente(request):
 def gerador(request, idcampanha):
     context = {}
     context['title'] = f'Sorteio campanha {idcampanha}'
-
+    
     try:
+        
+        if not Cuponagem.objects.filter(idcampanha=idcampanha).exists():
+            messages.error(request, f'Nenhum cupom gerado na campanha {idcampanha}, sorteio não é possivel')
+            return redirect('sorteio')
+        
         # Obtem os dados gerais do sorteio
         cuponagem_sorteado = Cuponagem.objects.filter(
             idcampanha_id=idcampanha,
@@ -929,7 +994,7 @@ def gerador(request, idcampanha):
         ).exclude(
             codcli__in=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).values_list('codcli', flat=True)
         ).select_related('idcampanha').order_by('?').first()
-
+        
         if cuponagem_sorteado:
             context['numsorteado'] = cuponagem_sorteado
 
@@ -1035,59 +1100,23 @@ def sorteio(request):
 @staff_required
 def sorteioganhadores(request, idcampanha):
     context = {}
-    conexao = conexao_oracle()
-    cursor = conexao.cursor()
     context['title'] = f'Lista de números da sorte na campanha {idcampanha}'
-    
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE idcampanha = {idcampanha}
-    ''')
-    exist_active = cursor.fetchone()
-    
-    if exist_active is None:
+
+    # Verificando se a campanha existe e se não foi excluída
+    try:
+        campanha = Campanha.objects.get(idcampanha=idcampanha)
+        context['campanha'] = campanha.descricao
+
+        if campanha.dtexclusao is not None:
+            messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
+    except Campanha.DoesNotExist:
         messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
         return redirect('campanha')
-    
-    cursor.execute(f'''
-        SELECT 
-            IDCAMPANHA, DESCRICAO
-        FROM MSCUPONAGEMCAMPANHA
-        WHERE idcampanha = {idcampanha} AND DTEXCLUSAO IS NOT NULL
-    ''')
-    exist_delete = cursor.fetchone()
-    if exist_delete:
-        messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
-    
-    context['campanha'] = f'{exist_active[1]}'
-    
-    def getTable():
-        cursor.execute(f'''
-            SELECT 
-                MSCUPONAGEMVENCEDORES.IDCAMPANHA, 
-                MSCUPONAGEMVENCEDORES.NUMSORTEIO,
-                PCCLIENT.CODCLI, 
-                PCCLIENT.CLIENTE, 
-                MSCUPONAGEMVENCEDORES.NUMSORTE,
-                MSCUPONAGEMVENCEDORES.DTSORTEIO,
-                PCCLIENT.EMAIL,
-                PCCLIENT.TELCOB,
-                PCCLIENT.CGCENT
-            FROM MSCUPONAGEMCAMPANHA 
-                INNER JOIN MSCUPONAGEMVENCEDORES ON (MSCUPONAGEMCAMPANHA.IDCAMPANHA = MSCUPONAGEMVENCEDORES.IDCAMPANHA)
-                INNER JOIN PCCLIENT ON (pcclient.codcli = MSCUPONAGEMVENCEDORES.codcli)
-            WHERE 
-                MSCUPONAGEMCAMPANHA.IDCAMPANHA = {idcampanha}
-            ORDER BY 
-                MSCUPONAGEMVENCEDORES.NUMSORTE
-        ''')
-        context['listaclients'] = cursor.fetchall()
-    
-    if request.method == 'POST':
-        pass   
 
-    getTable()
+    # Buscando a lista de vencedores da campanha usando ORM
+    vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha).select_related('numsorte', 'idcampanha')
+
+    context['dados'] = vencedores
+
     return render(request, 'sorteio/ganhadores.html', context)
 

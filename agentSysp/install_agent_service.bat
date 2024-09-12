@@ -1,7 +1,7 @@
 @echo off
 REM Configurações
 SET NSSM_PATH=C:\agentSysp\nssm.exe
-SET AGENT_SCRIPT_PATH=C:\agentSysp\agente.py
+SET AGENT_SCRIPT_PATH=C:\agentSysp\main.py
 SET SERVICE_NAME=AgentSysp
 
 REM Verifica se o NSSM está disponível
