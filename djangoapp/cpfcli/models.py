@@ -96,10 +96,12 @@ class CampanhaFilial(models.Model):
 
 class CampanhaProcessados(models.Model):
     idcampanha = models.IntegerField(null=True, blank=True)
-    numped = models.IntegerField(null=True, blank=True)
+    numped = models.BigIntegerField(null=True, blank=True)
     dtmov = models.DateTimeField(null=True, blank=True)
     historico = models.TextField(null=True, blank=True)
     codcli = models.IntegerField(null=True, blank=True)
+    geroucupom = models.TextField(max_length=1, null=True, blank=True)
+    geroubonus = models.TextField(max_length=1, null=True, blank=True)
     
     def save(self, *args, **kwargs):     
         self.dtmov = timezone.now()
@@ -110,9 +112,9 @@ class CampanhaProcessados(models.Model):
 
 class Cuponagem(models.Model):
     dtmov = models.DateField()  # Data do movimento
-    numped = models.IntegerField()  # Número do pedido
+    numped = models.BigIntegerField()  # Número do pedido
     valor = models.DecimalField(max_digits=50, decimal_places=12)  # Valor com até 38 dígitos e 12 casas decimais
-    numsorte = models.IntegerField()  # Número da sorte
+    numsorte = models.BigIntegerField()  # Número da sorte
     codcli = models.IntegerField()  # Código do cliente
     nomecli = models.TextField()
     emailcli = models.TextField(null=True, blank=True)
@@ -132,6 +134,23 @@ class Cuponagem(models.Model):
     def __str__(self):
         return str(self.id)
 
+class CuponagemSaldo(models.Model):
+    codcli = models.IntegerField(db_column='CODCLI')  # Número de cliente
+    nomecli = models.TextField()
+    emailcli = models.TextField(null=True, blank=True)
+    telcli = models.TextField(null=True, blank=True)
+    cpf_cnpj = models.TextField(null=True, blank=True)
+    idcampanha = models.IntegerField(db_column='IDCAMPANHA')  # Número da campanha
+    saldo = models.IntegerField(db_column='SALDO')  # Saldo
+    dtmov = models.DateTimeField(db_column='DTMOV')  # Data de movimentação
+
+    class Meta: 
+        verbose_name = 'Saldo de Cupom'
+        verbose_name_plural = 'Saldos de Cupons'
+
+    def __str__(self):
+        return f"Cliente {self.codcli} - Campanha {self.idcampanha} - Saldo {self.saldo}"
+    
 class CuponagemVencedores(models.Model):
     idcampanha = models.ForeignKey(Campanha, on_delete=models.CASCADE, db_column='idcampanha')  # Chave estrangeira para Campanha
     codcli = models.IntegerField()  # Código do cliente

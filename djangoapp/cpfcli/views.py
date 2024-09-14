@@ -94,73 +94,44 @@ def validacpf(cpf):
 
 def base(request):
     context = {}
+    context['tableOnlyView'] = 'SIM'
+    
     if request.method == 'POST':
         context['postmethod'] = True
         currenttime = datetime.now()
         context['currenttime'] = currenttime
         context['parametroValor'] = '100'
         cpf = request.POST.get('cpf')
-        email = request.POST.get('email')
+        email = request.POST.get('email').strip()
         
-        is_valid = validacpf(cpf)
+        # Limpando o CPF para remover caracteres não numéricos
+        cpf_cleaned = ''.join(filter(str.isdigit, cpf))
         
-        if not is_valid:
-            messages.error(request, "CPF inválido")
-            return render(request, 'index.html', context)
-        
-        conexao = conexao_oracle()
-        cursor = conexao.cursor()
-        
-        cursor.execute(f'''
-            WITH CleanedData AS (
-                SELECT 
-                    REGEXP_REPLACE(CGCENT, '[^0-9]', '') AS Cleaned_CGCENT, 
-                    codcli, cliente, 
-                    email
-                FROM 
-                    pcclient
-            )
-            SELECT 
-                Cleaned_CGCENT, codcli, cliente, email
-            FROM 
-                CleanedData
-            WHERE 
-            Cleaned_CGCENT = '{cpf}' AND email = upper('{email}')
-        ''')
-        cpf_exist = cursor.fetchone()
-        print(cpf_exist)
-        
+        # Verifica se o CPF e email estão na base de clientes (simulação de PCCLIENT via ORM)
+        cpf_exist = Cuponagem.objects.filter(
+            cpf_cnpj=cpf_cleaned, 
+            emailcli__iexact=email
+        ).values('codcli', 'nomecli', 'emailcli').first()
+
         if cpf_exist is None:
-            messages.error(request, "O CPF e email informados não foram encontrados")
+            messages.error(request, "O CPF/CNPJ ou email informados não foram encontrados")
             context['postmethod'] = False
             return render(request, 'pesquisacpf.html', context)
-        
-        cursor.execute(f'''
-            SELECT
-                IDCAMPANHA
-            FROM MSCUPONAGEMCAMPANHA
-            WHERE 
-                ATIVO = 'S'
-        ''')
-        campanha_ativa = cursor.fetchone()
-        
+
+        # Busca por campanhas ativas
+        campanha_ativa = Campanha.objects.filter(ativo='S').values('idcampanha').first()
+
         if campanha_ativa is None:
             messages.warning(request, "Atualmente não existe nenhuma campanha promocional ativa no sistema")
             context['postmethod'] = False
             return render(request, 'pesquisacpf.html', context)
-        
-        cursor.execute(f'''
-            SELECT
-                COALESCE(COUNT(DISTINCT M.numsorte), 0) AS TotalCupons,
-                MC.DESCRICAO,
-                MC.VALOR
-            FROM MSCUPONAGEMCAMPANHA MC
-                LEFT JOIN MSCUPONAGEM M ON MC.IDCAMPANHA = M.IDCAMPANHA AND M.CODCLI = {cpf_exist[1]}
-            WHERE 
-                MC.ATIVO = 'S'
-            GROUP BY MC.DESCRICAO, MC.VALOR
-        ''')
-        num_da_sorte = cursor.fetchone()
+
+        # Buscando cupons do cliente na campanha ativa
+        num_da_sorte = Cuponagem.objects.filter(
+            codcli=cpf_exist['codcli'],
+            idcampanha=campanha_ativa['idcampanha']
+        ).values('numsorte', 'idcampanha__descricao', 'idcampanha__valor', 'dataped')
+
         context['num_da_sorte'] = num_da_sorte
         context['cpf_exist'] = cpf_exist
             
@@ -393,7 +364,8 @@ def produtos(request):
                     idcampanha=idcampanha,
                     codprod=codprod,
                     tipo = tipo,
-                    nomeprod=exist[1]  # Supondo que `descricao` seja o nome do produto
+                    nomeprod=exist[1],
+                    dtmov = datetime.now()
                 )
                 messages.success(request, f"Produto {exist[1]} inserido com sucesso na campanha {idcampanha}")
             else:
@@ -443,7 +415,8 @@ def produtos(request):
                                 idcampanha=idcampanha,
                                 codprod=codprod,
                                 tipo = tipo,
-                                nomeprod=exist[1]
+                                nomeprod=exist[1],
+                                dtmov = datetime.now()
                             )
                         else:
                             transaction.rollback()
@@ -515,7 +488,8 @@ def fornecedores(request):
                     idcampanha=idcampanha,
                     codfornec=codfornec,
                     tipo=tipo,
-                    nomefornec=exist[1]
+                    nomefornec=exist[1],
+                    dtmov = datetime.now()
                 )
                 messages.success(request, f"Fornecedor {exist[0]} - {exist[1]} inserido com sucesso na campanha {exist_test[0]} - {exist_test[1]}")
             else:
@@ -563,7 +537,8 @@ def fornecedores(request):
                                 idcampanha=idcampanha,
                                 codfornec=codfornec,
                                 tipo=tipo,
-                                nomefornec=exist[1]
+                                nomefornec=exist[1],
+                                dtmov = datetime.now()
                             )
                         else:
                             transaction.rollback()
@@ -639,7 +614,8 @@ def blacklist(request):
                     CODCLI = exist_cli[0], 
                     EMAIL = exist_cli[2],
                     CPFCNPJ = exist_cli[3],
-                    NOMECLI = exist_cli[1]
+                    NOMECLI = exist_cli[1],
+                    DTMOV = datetime.now()
                 )
                 messages.success(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} inserido com sucesso na blacklist da campanha {idcampanha}")
             else:
@@ -690,7 +666,8 @@ def blacklist(request):
                                 CODCLI = exist_cli[0], 
                                 EMAIL = exist_cli[2],
                                 CPFCNPJ = exist_cli[3],
-                                NOMECLI = exist_cli[1]
+                                NOMECLI = exist_cli[1],
+                                DTMOV = datetime.now()
                             )
                         else:
                             transaction.rollback() 
@@ -763,7 +740,8 @@ def marcas(request):
                     idcampanha=idcampanha, 
                     codmarca=codmarca,
                     tipo=tipo,
-                    nomemarca = exist[1]
+                    nomemarca = exist[1],
+                    dtmov = datetime.now()
                 )
                 messages.success(request, f"Marca {exist[0]} - {exist[1]} inserida com sucesso na campanha {exist_test[0]} - {exist_test[1]}")
             else:
@@ -811,7 +789,8 @@ def marcas(request):
                                 idcampanha=idcampanha, 
                                 codmarca=codmarca,
                                 tipo = tipo,
-                                nomemarca = exist[1]
+                                nomemarca = exist[1],
+                                dtmov = datetime.now()
                             )
                         else:
                             transaction.rollback() 

@@ -11,6 +11,7 @@
                 "<'row w-100'<'col-sm-12'tr>>" +
                 "<'row w-100 d-flex justify-content-between'<'col-12 col-md-6'i><'col-12 col-md-6 d-flex justify-content-end'p>>",
                 buttons: [
+                    {% if not tableOnlyView %}    
                     {
                         text: '<i class="fa fa-plus" aria-hidden="true"></i>',
                         titleAttr: '{{tituloInsere}}',
@@ -38,6 +39,7 @@
                             modal.modal('show');
                         }
                     },
+                    {% endif %}
                     {% if permiteplanilha %}
                     {
                         text: '<i class="fa-solid fa-circle-plus"></i>',

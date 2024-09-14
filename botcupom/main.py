@@ -14,15 +14,15 @@ import math
 
 #envio de email
 # Configurações do servidor SMTP
-""" smtp_server = "smtp.gmail.com"
+smtp_server = "smtp.gmail.com"
 smtp_port = 587
 smtp_username = "deeptrackemails@gmail.com"
-smtp_password = "egqpqsoxbacwulkl" """
+smtp_password = "egqpqsoxbacwulkl"
 
-smtp_server = "smtp.zeptomail.com"
+""" smtp_server = "smtp.zeptomail.com"
 smtp_port = 587
 smtp_username = "contato@idbatacadistas.com.br"
-smtp_password = "Ts0rpH5hH6Mv"
+smtp_password = "Ts0rpH5hH6Mv" """
 
 def enviaremail(qtnumeros, nome, email, qtcupons_total, numcupom):
 
@@ -64,32 +64,33 @@ def processacupom():
     conexao = conexao_oracle()
     cursor = conexao.cursor()
     
-    cursor.execute(f'''
-        SELECT
-            IDCAMPANHA, 
-            DESCRICAO, 
-            USAFORNEC, 
-            USAPROD,
-            VALOR,
-            MULTIPLICADOR, 
-            to_char(DTINIT, 'yyyy-mm-dd'), 
-            to_char(DTFIM, 'yyyy-mm-dd'), 
-            ENVIAEMAIL, 
-            TIPOINTENSIFICADOR, 
-            FORNECVALOR, 
-            PRODVALOR, 
-            ACUMULATIVO, 
-            USAMARCA, 
-            MARCAVALOR, 
-            RESTRINGE_FORNEC, 
-            RESTRINGE_MARCA, 
-            RESTRINGE_PROD,
-            (SELECT COUNT(CODFILIAL) FROM MSCUPONAGEMCAMPANHAFILIAL WHERE IDCAMPANHA = MSCUPONAGEMCAMPANHA.IDCAMPANHA)
-        FROM MSCUPONAGEMCAMPANHA
+    cursor_postgre.execute(f'''
+        SELECT 
+            idcampanha, 
+            descricao, 
+            usafornec, 
+            usaprod, 
+            valor, 
+            multiplicador, 
+            to_char(dtinit, 'yyyy-mm-dd') AS dtinit, 
+            to_char(dtfim, 'yyyy-mm-dd') AS dtfim, 
+            enviaemail, 
+            tipointensificador, 
+            fornecvalor, 
+            prodvalor, 
+            acumulativo, 
+            usamarca, 
+            marcavalor, 
+            restringe_fornec, 
+            restringe_marca, 
+            restringe_prod,
+            (SELECT COUNT(codfilial) FROM cpfcli_campanhafilial WHERE idcampanha = cpfcli_campanha.idcampanha) AS total_filiais
+        FROM 
+            cpfcli_campanha
         WHERE 
-            ATIVO = 'S'
+            ativo = 'S'
     ''')
-    campanha = cursor.fetchone()
+    campanha = cursor_postgre.fetchone()
 
     if campanha is None:
         return 'Não existe campanha ativa'
@@ -110,6 +111,7 @@ def processacupom():
     listaprods = []
     listfornecs = []
     marcas_list = []
+    lista_filiais = []
     usa_marca = campanha[13]
     marca_valor = campanha[14]
     restringe_fornec = campanha[15]
@@ -127,131 +129,234 @@ def processacupom():
     produtoFornecWhere = ',NULL'
     marcas_intensifica_where = ',NULL'
     
-    #------------------------------------------------RESTRIÇOES DE CAMPANHA --------------------------------
+    def divide_chunks(lst, chunk_size):
+        """Divide a lista em pedaços menores de tamanho máximo chunk_size."""
+        for i in range(0, len(lst), chunk_size):
+            yield lst[i:i + chunk_size]
+
+    def build_not_in_clause(field, values):
+        """Constrói a cláusula NOT IN, incluindo divisão em chunks."""
+        # Se houver apenas um item, retornar !=
+        if len(values) == 1:
+            return f"{field} != {values[0]}"
+        
+        # Caso tenha mais de um item, dividir em chunks e construir várias cláusulas NOT IN
+        not_in_clauses = []
+        chunks = list(divide_chunks(values, 999))
+        
+        for chunk in chunks:
+            if len(chunk) == 1:
+                not_in_clauses.append(f"{field} != {chunk[0]}")
+            else:
+                not_in_clauses.append(f"{field} NOT IN ({', '.join(map(str, chunk))})")
+        
+        # Unir todas as cláusulas com ' AND '
+        return ' AND '.join(not_in_clauses)
+    
+    #------------------------------------------------RESTRIÇÃO POR MARCA --------------------------------
     if restringe_marca and restringe_marca == 'C':
         cursor_postgre.execute(f'''
             select codmarca  
             from cpfcli_marcas 
             where idcampanha  = {idcampanha} AND tipo IN ('T', 'R')
         ''')
-        marcas = cursor.fetchall()
+        marcas = cursor_postgre.fetchall()
 
         if marcas and len(marcas) > 0:
             for item in marcas:
                 marcas_list.extend(item[0])
-        
-        if len(marcas_list) > 0:
-            marcas_restringe_Where = f'AND (SELECT COUNT(CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODMARCA IN {marcas_list}) > 0'
+            marcas_list = tuple(marcas_list)
+            
+            if len(marcas_list) == 1:
+                marcas_restringe_Where = f'AND (SELECT COUNT(CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODMARCA = {marcas_list[0]}) > 0'
+            else:
+                marcas_restringe_Where = f'AND (SELECT COUNT(CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODMARCA IN {marcas_list}) > 0'
     
+    #------------------------------------------------ INTENSIFICADOR POR PRODUTO --------------------------------
     if restringe_prod and restringe_prod == 'C':
         cursor_postgre.execute(f'''
             SELECT codprod 
             FROM cpfcli_produtos 
             where idcampanha  = {idcampanha} AND tipo IN ('T', 'R')
         ''')
-        produtos = cursor.fetchall()
+        produtos = cursor_postgre.fetchall()
 
-        for item in produtos:
-            listaprods.extend(item)
-        listaprods = tuple(listaprods)
-
-        if len(listaprods) > 0:
-            listprods_restringe_where = f'AND (SELECT COUNT(CODPROD) FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED )  > 0'
+        if produtos and len(produtos) > 0:
+            for item in produtos:
+                listaprods.extend(item[0])
+            listaprods = tuple(listaprods)
+            
+            if len(listaprods) == 1:
+                listprods_restringe_where = f'AND (SELECT COUNT(CODPROD) FROM PCPEDI WHERE CODPROD = {listaprods[0]} AND NUMPED = PCPEDC.NUMPED) > 0'
+            else:
+                listprods_restringe_where = f'AND (SELECT COUNT(CODPROD) FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED) > 0'
     
+    #------------------------------------------------ RESTRIÇÃO POR FORNECEDOR --------------------------------
     if restringe_fornec and restringe_fornec == 'C':
         cursor_postgre.execute(f'''
             SELECT codfornec 
             FROM cpfcli_fornecedor 
             where idcampanha  = {idcampanha} AND tipo IN ('T', 'R')
         ''')
-        fornecedores = cursor.fetchall()
+        fornecedores = cursor_postgre.fetchall()
 
-        for item in fornecedores:
-            listfornecs.extend(item)
-        listfornecs = tuple(listfornecs)
+        if fornecedores and len(fornecedores) > 0:
+            for item in fornecedores:
+                listfornecs.extend(item[0])
+            listfornecs = tuple(listfornecs)
 
-        if len(listfornecs) > 0:
-            fornec_restringe_Where = f'AND (SELECT COUNT(CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODFORNEC IN {listfornecs}) > 0'
+            if len(listfornecs) == 1:
+                fornec_restringe_Where = f'AND (SELECT COUNT(CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODFORNEC = {listfornecs[0]}) > 0'
+            else:
+                fornec_restringe_Where = f'AND (SELECT COUNT(CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODFORNEC IN {listfornecs}) > 0'
     
     if acumulavenda and acumulavenda == 'S':
         ignora_vendas_abaixo_do_valor_cupom_where = f'''AND PCPEDC.VLTOTAL >= {valor}'''
 
+    #---------------------------------------------------INTENSIFICADOR POR FILIAL ---------------------------------------------- 
     if filiais > 0:
-        filial_restringe_Where = f'AND PCPEDC.CODFILIAL IN (SELECT CODFILIAL FROM MSCUPONAGEMCAMPANHAFILIAL WHERE IDCAMPANHA = {idcampanha} )'
+        cursor_postgre.execute(f'''
+            SELECT codfilial 
+            FROM cpfcli_campanhafilial 
+            WHERE idcampanha = {idcampanha}
+        ''')
+        filiais = cursor_postgre.fetchall()
         
-    #---------------------------------------------------INTENSIFICADORES -----------------------------------
+        if filiais and len(filiais) > 0:
+            for item in filiais:
+                lista_filiais.extend(item[0])
+            lista_filiais = tuple(lista_filiais)
+            
+            if len(lista_filiais) == 1:
+                filial_restringe_Where = f'AND PCPEDC.CODFILIAL != {lista_filiais[0]}'
+            else:
+                filial_restringe_Where = f'AND PCPEDC.CODFILIAL IN {lista_filiais}'
+        else:
+            filial_restringe_Where = ' '
+        
+    #---------------------------------------------------INTENSIFICADOR POR PRODUTO -----------------------------------
     if usa_prod and usa_prod == 'C':
         cursor_postgre.execute(f'''
             SELECT codprod 
             FROM cpfcli_produtos 
             where idcampanha  = {idcampanha} AND tipo IN ('I')
         ''')
-        produtos = cursor.fetchall()
+        produtos = cursor_postgre.fetchall()
 
-        for item in produtos:
-            listaprods.extend(item)
-        listaprods = tuple(listaprods)
-
-        if len(listaprods) > 0:
-            produtos_intensifica_where = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
-    
+        if produtos and len(produtos) > 0:
+            for item in produtos:
+                listaprods.extend(item[0])
+            listaprods = tuple(listaprods)
+            
+            if len(listaprods) == 1:
+                produtos_intensifica_where = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD = {listaprods[0]} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
+            else:
+                produtos_intensifica_where = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN {listaprods} AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
     elif usa_prod and usa_prod == 'M':
         produtos_intensifica_where = f',(SELECT COUNT(DISTINCT CODPROD) FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED)'
-    
-    #parametros de fornecedor  
+
+    #------------------------------------------------ INTENSIFICADOR POR FORNECEDOR --------------------------------
     if usa_fornec and usa_fornec == 'C':
         cursor_postgre.execute(f'''
             SELECT codfornec 
             FROM cpfcli_fornecedor 
             where idcampanha  = {idcampanha} AND tipo IN ('I')
         ''')
-        fornecedores = cursor.fetchall()
+        fornecedores = cursor_postgre.fetchall()
 
-        for item in fornecedores:
-            listfornecs.extend(item)
-        listfornecs = tuple(listfornecs)
+        if fornecedores and len(fornecedores) > 0:
+            for item in fornecedores:
+                listfornecs.extend(item[0])
+            listfornecs = tuple(listfornecs)
 
-        if len(listfornecs) > 0:
-            produtoFornecWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN (select codprod from pcprodut where codfornec in {listfornecs}) AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
-    
+            if len(listfornecs) == 1:
+                produtoFornecWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN (SELECT codprod FROM pcprodut WHERE codfornec = {listfornecs[0]}) AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
+            else:
+                produtoFornecWhere = f',(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN (SELECT codprod FROM pcprodut WHERE codfornec IN {listfornecs}) AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)'
     elif usa_fornec and usa_fornec == 'M':
         produtoFornecWhere = f',(SELECT COUNT(DISTINCT CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED))'
-    
-    #parametros da marca
+
+    #------------------------------------------------ INTENSIFICADOR POR MARCA --------------------------------
     if usa_marca and usa_marca == 'C':
         cursor_postgre.execute(f'''
             select codmarca 
             from cpfcli_marcas 
             where idcampanha  = {idcampanha} AND tipo IN ('I')
         ''')
-        marcas = cursor.fetchall()
-        marcas_list = []
+        marcas = cursor_postgre.fetchall()
 
         if marcas and len(marcas) > 0:
             for item in marcas:
                 marcas_list.extend(item[0])
-            marcas_intensifica_where = f"AND (SELECT codmarca FROM pcprodut WHERE codprod = pcpedi.codprod) NOT IN {marcas_list}"
-            
+            marcas_list = tuple(marcas_list)
+
+            if len(marcas_list) == 1:
+                marcas_intensifica_where = f", (SELECT codmarca FROM pcprodut WHERE codprod = pcpedi.codprod AND codmarca != {marcas_list[0]})"
+            else:
+                marcas_intensifica_where = f", (SELECT codmarca FROM pcprodut WHERE codprod = pcpedi.codprod AND codmarca NOT IN {marcas_list})"
     elif usa_marca and usa_marca == 'M':
-        marcas_intensifica_where = f',SELECT (SELECT COUNT(DISTINCT CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED))'
-        
+        marcas_intensifica_where = f',(SELECT COUNT(DISTINCT CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED))'
+            
     print('iniciando pesquisa de pedidos...')
 
-    #parametros da black list
+    #------------------------------------------------ CALCULA A BLACK LIST --------------------------------
     cursor_postgre.execute(f'''
         select "CODCLI" from cpfcli_blacklist where "IDCAMPANHA"  = {idcampanha} 
     ''')
-    black_list = cursor.fetchall()
-    cpflist = []
-    blacklistWhere = ''
-
+    black_list = cursor_postgre.fetchall()
+    
     if black_list and len(black_list) > 0:
-        for item in black_list:
-            cpflist.extend(item[0])
-        blacklistWhere = f"AND PCPEDC.CODCLI NOT IN {cpflist}"
+        cpflist = [str(item[0]) for item in black_list]
+        blacklistWhere = build_not_in_clause("AND PCPEDC.CODCLI", cpflist)
     else:
         blacklistWhere = ''
 
+    #------------------------------------------------ CALCULA OS PEDIDOS JÁ PROCESSADOS --------------------------------
+    cursor_postgre.execute(f'''
+        SELECT DISTINCT NUMPED
+        FROM cpfcli_campanhaprocessados
+        WHERE IDCAMPANHA = {idcampanha}
+    ''')
+    list_numpeds = cursor_postgre.fetchall()
+    
+    if list_numpeds and len(list_numpeds) > 0:
+        numped_list_postgre = [str(item[0]) for item in list_numpeds]
+        not_in_clauses = build_not_in_clause("AND PCPEDC.NUMPED", numped_list_postgre)
+    else:
+        not_in_clauses = ''
+    
+    #------------------------------------------------ GERA A SQL PRINCIPAL --------------------------------
+    print(f'''
+        SELECT 
+            NUMPED, 
+            VLTOTAL,
+            TO_CHAR("DATA", 'yyyy-mm-dd'), 
+            CODCLI,
+            (SELECT CLIENTE FROM PCCLIENT WHERE CODCLI = PCPEDC.CODCLI ),
+            (SELECT EMAIL FROM PCCLIENT WHERE CODCLI = PCPEDC.CODCLI)
+            {produtoFornecWhere}
+            {produtos_intensifica_where}
+            {marcas_intensifica_where}
+        FROM PCPEDC 
+        WHERE 
+            "DATA" BETWEEN to_date('{dt_inicial}', 'yyyy-mm-dd') AND to_date('{dt_final}', 'yyyy-mm-dd') AND
+            POSICAO = 'F' AND 
+            ORIGEMPED IN ('F', 'T', 'R', 'B', 'A') AND 
+            CONDVENDA != 10 AND
+            NOT EXISTS (
+                SELECT 1
+                FROM MSCUPONAGEM
+                WHERE MSCUPONAGEM.NUMPED = PCPEDC.NUMPED
+            )
+            {not_in_clauses}
+            {ignora_vendas_abaixo_do_valor_cupom_where}
+            {blacklistWhere}
+            {marcas_restringe_Where}
+            {listprods_restringe_where}
+            {fornec_restringe_Where}
+            {filial_restringe_Where}
+    ''')
+    
     cursor.execute(f'''
         SELECT 
             NUMPED, 
@@ -273,9 +378,8 @@ def processacupom():
                 SELECT 1
                 FROM MSCUPONAGEM
                 WHERE MSCUPONAGEM.NUMPED = PCPEDC.NUMPED
-            ) AND 
-            CODCLI > 1 AND 
-            PCPEDC.NUMPED NOT IN (SELECT NUMPED FROM MSCUPONAGEMCAMPANHAPROCESSADOS WHERE IDCAMPANHA = {idcampanha} AND NUMPED = PCPEDC.NUMPED)
+            )
+            {not_in_clauses}
             {ignora_vendas_abaixo_do_valor_cupom_where}
             {blacklistWhere}
             {marcas_restringe_Where}
@@ -287,9 +391,7 @@ def processacupom():
 
     print('pedidos pesquisados, calculando numeros da sorte')
     cont = 1
-
     
-    #----------------------------CALCULA SALDO DA VENDA E QUANTIDADE INICIAL DE CUPONS ----------------------------
     for ped in pedidos:
         multiplicador_cupom = campanha[5]
         valor_bonus = 0
@@ -297,54 +399,61 @@ def processacupom():
         saldo_atual = 0
         print(f'processando pedido {ped} posição {cont} de {len(pedidos)}')
         print(acumulavenda)
+        
+        #------------------------------------------------ COMEÇA A CALCULAR O SALDO --------------------------------
         if acumulavenda in ('S', 'T'):
             print('Calculando se existe saldo...')
-            #busca saldo do cliente
-            cursor.execute(f'''
+            # Busca saldo do cliente na tabela cpfcli_cuponagemsaldo
+            cursor_postgre.execute(f'''
                 SELECT SALDO 
-                FROM MSCUPONAGEMSALDO 
+                FROM cpfcli_cuponagemsaldo 
                 WHERE 
-                    CODCLI = {ped[3]} AND 
-                    IDCAMPANHA = {idcampanha}
+                    "CODCLI" = {ped[3]} AND 
+                    "IDCAMPANHA" = {idcampanha}
             ''')
-            saldo_cli = cursor.fetchone()
-            
+            saldo_cli = cursor_postgre.fetchone()
+
             if saldo_cli:
                 saldo_atual = saldo_cli[0]
-                
+            
             # Calcula cupons
             qtcupons = int(math.floor((ped[1] + saldo_atual) / valor))
             histgeracao += f'0 - Calculou uma quantidade de {qtcupons} números'
+            
             # Calcula a sobra
             sobra = (ped[1] + saldo_atual) % valor
             
             if sobra and saldo_cli:
-                cursor.execute(f'''
-                    UPDATE MSCUPONAGEMSALDO 
+                # Atualiza o saldo na tabela cpfcli_cuponagemsaldo
+                cursor_postgre.execute(f'''
+                    UPDATE cpfcli_cuponagemsaldo 
                     SET 
-                        SALDO = {sobra}, 
-                        DTMOV = SYSDATE
+                        "SALDO" = {sobra}, 
+                        "DTMOV" = NOW() 
                     WHERE 
-                        CODCLI = {ped[3]} AND 
-                        IDCAMPANHA = {idcampanha}
+                        "CODCLI" = {ped[3]} AND 
+                        "IDCAMPANHA" = {idcampanha}
                 ''')
                 histgeracao += f'$$$1 - Calculou uma sobra de R$ {sobra}'
+            
             elif sobra:
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMSALDO
-                    (CODCLI, IDCAMPANHA, SALDO, DTMOV)
-                    VALUES({ped[3]}, {idcampanha}, {sobra}, SYSDATE)
+                # Insere um novo saldo na tabela cpfcli_cuponagemsaldo
+                cursor_postgre.execute(f'''
+                    INSERT INTO cpfcli_cuponagemsaldo
+                    ("CODCLI", "IDCAMPANHA", "SALDO", "DTMOV", nomecli, emailcli)
+                    VALUES ({ped[3]}, {idcampanha}, {sobra}, NOW(), '{ped[4]}', '{ped[5]}')
                 ''')
                 histgeracao += f'$$$1 - Calculou uma sobra de R$ {sobra}'
+            
             print('Saldo calculado...')
+        
         else:
             qtcupons = int(math.floor(ped[1] / valor))
             histgeracao += f'0 - Calculou uma quantidade de {qtcupons} números'
             histgeracao += f'$$$1 - Nenhuma sobra calculada'
             print('1 - Sobra não calculada...')
         
-        #----------------------------CALCULA SALDO DA VENDA E QUANTIDADE INICIAL DE CUPONS ----------------------------
-        #intensificação por fornecedor cadastrado
+        #----------------------------CALCULA INTENSIFICAÇÃO POR FORNECEDOR CADASTRADO ----------------------------
         if usa_fornec == 'C' and ped[6] is not None:
             print('Calculando se bonifica fornecedor cadastrado...')
             cursor.execute(f'''
@@ -366,7 +475,7 @@ def processacupom():
             
             histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor cadastrado em {cont}'
         
-        #intensificação por fornecedor multiplo
+        #----------------------------CALCULA INTENSIFICAÇÃO POR FORNECEDOR MULTIPLO ----------------------------
         elif usa_fornec == 'M' and ped[6] is not None:
             print('Calculando se bonifica fornecedor Multiplo...')
             cursor.execute(f'''
@@ -389,8 +498,9 @@ def processacupom():
         else:
             histgeracao += f'$$$2 - Não houve bônus de números da sorte baseado no fornecedor'
             
+            #----------------------------CALCULA INTENSIFICAÇÃO POR MARCA CADASTRADA ----------------------------
         if usa_marca == 'C' and ped[8] is not None:
-            print('Calculando se bonifica fornecedor cadastrado...')
+            print('Calculando se bonifica MARCA cadastrado...')
             cursor.execute(f'''
                 SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), PCPRODUT.CODMARCA
                 FROM PCPEDI
@@ -410,9 +520,9 @@ def processacupom():
             
             histgeracao += f'$$$3 - Aumentou o bônus de números da sorte baseado na marca cadastrada em {cont}'
         
-        #intensificação por fornecedor multiplo
+        #----------------------------CALCULA INTENSIFICAÇÃO POR MARCA MULTIPLA ----------------------------
         elif usa_marca == 'M' and ped[8] is not None:
-            print('Calculando se bonifica fornecedor Multiplo...')
+            print('Calculando se bonifica MARCA Multiplo...')
             cursor.execute(f'''
                 SELECT COUNT(DISTINCT PCPRODUT.CODMARCA)
                 FROM PCPEDI
@@ -433,7 +543,7 @@ def processacupom():
         else:
             histgeracao += f'$$$3 - Não houve bônus de números da sorte baseado na marca'
             
-        #verifica se existe um produto na venda que vendeu acima do valor por produto, caso sim aumente o bonus de cupom
+        #----------------------------CALCULA INTENSIFICAÇÃO POR PRODUTO CADASTRADO ----------------------------
         if usa_prod == 'C' and ped[7] is not None:
             print('Calculando se bonifica produto cadastrado...')
             cursor.execute(f'''
@@ -452,7 +562,7 @@ def processacupom():
 
             histgeracao += f'$$$4 - Aumentou o bônus de números da sorte baseado no produto cadastrado em {cont}'
             
-        #verifica se existe multiplos produtos na venda
+        #----------------------------CALCULA INTENSIFICAÇÃO POR PRODUTO MULTIPLO ----------------------------
         elif usa_prod == 'M' and ped[7] is not None:
             print('Calculando se bonifica produto cadastrado...')
             cursor.execute(f'''
@@ -492,28 +602,64 @@ def processacupom():
             histgeracao += f'$$$5 - Não foi gerado nenhum número bônus'
         
         print(qtcupons)
+        cursor.execute(f'''
+            SELECT CODCLI, CLIENTE, EMAIL, CGCENT, TELCOB FROM PCCLIENT WHERE CODCLI = {ped[3]}
+        ''')
+        client = cursor.fetchone()
+        
+        if client:
+            codcli = client[0]
+            nomecli = client[1]
+            emailcli = client[2]
+            cpf_cnpj = client[3] if client[3] else ''
+            telcli = client[4] if client[4] else ''
+                
         if qtcupons >= 1:
             for i in range(qtcupons):
-                print(f'''gerando numero da sorte pedido {ped[0]} volume {i + 1} de {qtcupons}''')
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEM
-                    (ID, DATAPED, DTMOV, NUMPED, VALOR, BONIFICADO, NUMSORTE, CODCLI, IDCAMPANHA)
-                    VALUES((SELECT COALESCE(MAX(id), 0) + 1 FROM MSCUPONAGEM), TO_DATE('{ped[2]}', 'yyyy-mm-dd'), SYSDATE, {ped[0]}, {ped[1]}, 
-                    '{bonificadoWhere}', (SELECT COALESCE(MAX(NUMSORTE), 0) + 1 FROM MSCUPONAGEM WHERE IDCAMPANHA = {idcampanha}), {ped[3]}, {idcampanha})
-                ''')
+                print(f'Gerando número da sorte pedido {ped[0]} volume {i + 1} de {qtcupons}')
                 
-                cursor.execute(f'''
-                    INSERT INTO MSCUPONAGEMCAMPANHAPROCESSADOS
-                    (NUMPED, IDCAMPANHA, DTMOV, HISTORICO, CODCLI, GEROUCUPOM, GEROUBONUS)
-                    VALUES({ped[0]}, {idcampanha}, SYSDATE, '{histgeracao}', {ped[3]}, 'S', '{bonificadoWhere}')
+                # Inserção em cpfcli_cuponagem
+                cursor_postgre.execute(f'''
+                    INSERT INTO cpfcli_cuponagem
+                    (id, dtmov, numped, valor, numsorte, codcli, nomecli, emailcli, telcli, cpf_cnpj, dataped, bonificado, ativo, idcampanha)
+                    VALUES (
+                        DEFAULT, 
+                        NOW(), 
+                        {ped[0]},  -- Número do pedido
+                        {ped[1]},  -- Valor total
+                        (SELECT COALESCE(MAX(numsorte), 0) FROM cpfcli_cuponagem WHERE idcampanha = {idcampanha} ),
+                        {codcli},  -- Código do cliente
+                        '{nomecli}', 
+                        '{emailcli}', 
+                        '{telcli}', 
+                        '{cpf_cnpj}', 
+                        '{ped[2]}',  -- Data do pedido
+                        '{bonificadoWhere}',         -- Bonificado (ajustar conforme necessário)
+                        'S',        -- Ativo
+                        {idcampanha} -- ID da campanha
+                    )
                 ''')
-            
-            cursor.execute(f'''
-                SELECT count(DISTINCT numsorte) FROM MSCUPONAGEM WHERE CODCLI = {ped[3]}
+
+            # Inserção em cpfcli_campanhaprocessados
+            cursor_postgre.execute(f'''
+                INSERT INTO cpfcli_campanhaprocessados
+                (id, idcampanha, codcli, dtmov, historico, numped, geroucupom, geroubonus)
+                VALUES (
+                    DEFAULT, 
+                    {idcampanha},  -- ID da campanha
+                    {codcli},      -- Código do cliente
+                    NOW(),         -- Data de movimento
+                    '{histgeracao}',  -- Histórico
+                    {ped[0]},       -- Número do pedido
+                    'S',
+                    '{bonificadoWhere}'
+                )
             ''')
-            qtcupons_total = cursor.fetchone()
             
-            conexao.commit()
+            cursor_postgre.execute(f'''
+                SELECT count(DISTINCT numsorte) from cpfcli_cuponagem where codcli = {ped[3]}
+            ''')
+            qtcupons_total = cursor_postgre.fetchone()
             
             if envia_email and envia_email == 'S':
                 if testa_envio_email:
@@ -521,16 +667,42 @@ def processacupom():
                 else:
                     enviaremail(qtcupons, ped[4], ped[5], qtcupons_total, ped[0])
         else:
-            cursor.execute(f'''
-                INSERT INTO MSCUPONAGEMCAMPANHAPROCESSADOS
-                (NUMPED, IDCAMPANHA, DTMOV, HISTORICO, CODCLI, GEROUCUPOM, GEROUBONUS)
-                VALUES({ped[0]}, {idcampanha}, SYSDATE, '{histgeracao}', {ped[3]}, 'N', 'N')
+            print(f'''
+                INSERT INTO cpfcli_campanhaprocessados
+                (id, idcampanha, codcli, dtmov, historico, numped, geroucupom, geroubonus)
+                VALUES (
+                    DEFAULT, 
+                    {idcampanha},  -- ID da campanha
+                    {codcli},      -- Código do cliente
+                    NOW(),         -- Data de movimento
+                    '{histgeracao}',  -- Histórico
+                    {ped[0]},       -- Número do pedido
+                    'N',
+                    '{bonificadoWhere}'
+                )
+            ''') 
+            cursor_postgre.execute(f'''
+                INSERT INTO cpfcli_campanhaprocessados
+                (id, idcampanha, codcli, dtmov, historico, numped, geroucupom, geroubonus)
+                VALUES (
+                    DEFAULT, 
+                    {idcampanha},  -- ID da campanha
+                    {codcli},      -- Código do cliente
+                    NOW(),         -- Data de movimento
+                    '{histgeracao}',  -- Histórico
+                    {ped[0]},       -- Número do pedido
+                    'N',
+                    '{bonificadoWhere}'
+                )
             ''') 
         cont += 1
+        conexao.commit()
+        conexao_postgre.commit()
         print(f'pedido finalizado ')
 
     print('todos os pedidos finalizados')
     conexao.close() 
+    conexao_postgre.close()
     return 'processo finalizado, esperando contador para próximo processamento...'
 
 # Agendamento da tarefa
