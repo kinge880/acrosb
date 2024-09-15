@@ -65,8 +65,8 @@
                         </div>
                         <!-- Container for additional options -->
                         <div class="card-options">
-                            <a class="btn btn-primary btn-sm {% if campanha.count_cupons <= 0 %} disabled {% else %} disabled {% endif %}" href="{{campanha.IDCAMPANHA}}/">Sortear</a>
-                            <a class="btn btn-secondary btn-sm {% if campanha.count_cupons <= 0 %} disabled {% else %} disabled {% endif %}" href="/ganhadores/{{campanha.IDCAMPANHA}}/">Ganhadores</a>
+                            <a class="btn btn-primary btn-sm {% if campanha.permite_sorteio == 'N' %} disabled {% endif %}" href="{{campanha.IDCAMPANHA}}/">Sortear</a>
+                            <a class="btn btn-secondary btn-sm {% if campanha.permite_sorteio == 'N' %} disabled {% endif %}" href="/ganhadores/{{campanha.IDCAMPANHA}}/">Ganhadores</a>
                         </div>
                     </div>
                 </div>

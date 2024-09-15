@@ -3,7 +3,7 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-w<style>
+<style>
     .number {
         font-size: 5rem;
         font-weight: bold;
@@ -26,8 +26,9 @@ w<style>
     }
 </style>
 <div class="container mt-5 vh-75 ">
-    {% if not numsorte %}
-        <h1 class="text-center mb-2">Resultado do {{numsorteio.0}} Sorteio</h1>
+    {% include 'partials/message.html' %}
+    {% if numsorteado %}
+        <h1 class="text-center mb-2">Resultado do {{ numsorteio.numsorteio }} Sorteio</h1>
 
         <!-- Número Sorteado -->
         <div id="fundosorteio" class="text-center mb-4">
@@ -44,7 +45,7 @@ w<style>
                 <div class="card text-center">
                     <div class="card-body">
                         <h5 class="card-title">Data e Hora</h5>
-                        <p class="card-text">{{ numsorteado.1 }}</p> <!-- Data e Hora do Sorteio -->
+                        <p class="card-text">{{ numsorteio.dtsorteio }}</p> <!-- Data e Hora do Sorteio -->
                     </div>
                 </div>
             </div>
@@ -54,7 +55,7 @@ w<style>
                 <div class="card text-center">
                     <div class="card-body">
                         <h5 class="card-title">Ganhador</h5>
-                        <p class="card-text">{{ numsorteado.2 }}</p> <!-- Nome do Ganhador -->
+                        <p class="card-text">{{ numsorteio.numsorte.nomecli }}</p> <!-- Nome do Ganhador -->
                     </div>
                 </div>
             </div>
@@ -64,7 +65,7 @@ w<style>
                 <div class="card text-center">
                     <div class="card-body">
                         <h5 class="card-title">Números sorteados entre</h5>
-                        <p class="card-text">{{ contnumsorteado.1 }} e {{ contnumsorteado.0 }}</p> <!-- Quantidade de Números -->
+                        <p class="card-text">{{ contnumsorteado.min_numsorte }} e {{ contnumsorteado.max_numsorte }}</p> <!-- Quantidade de Números -->
                     </div>
                 </div>
             </div>
@@ -83,7 +84,7 @@ w<style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const targetNumber = {{ numsorteado.0 }}; // Recebe o número sorteado do template
+        const targetNumber = {{ numsorteio.numsorte }}; // Recebe o número sorteado do template
         const numberElement = document.getElementById('number');
         const cards = document.querySelectorAll('.row');
         
@@ -94,10 +95,10 @@ w<style>
 
         // Função para criar a animação
         function animateNumber() {
-            const duration = 5000; // Duração da animação em milissegundos
+            const duration = 3000; // Duração da animação em milissegundos
             const startTime = Date.now();
-            const interval = 50; // Intervalo de atualização em milissegundos
-            const maxNumber = targetNumber;
+            const interval = 25; // Intervalo de atualização em milissegundos
+            const maxNumber = {{contnumsorteado.max_numsorte}};
 
             function update() {
                 const elapsed = Date.now() - startTime;
@@ -112,7 +113,7 @@ w<style>
                         requestAnimationFrame(update);
                     }, interval);
                 } else {
-                    numberElement.textContent = targetNumber; // Garante que o número final seja o sorteado
+                    numberElement.textContent = {{numsorteio.numsorte.numsorte}}; // Garante que o número final seja o sorteado
                     showCards(); // Mostra os cards após a animação do número
                 }
             }

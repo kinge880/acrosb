@@ -146,32 +146,35 @@ def get_data(request):
     app_name = request.GET.get('app_name')
     transation = request.GET.get('transation')
     
-    try:
-        #Obtém a classe do model dinamicamente
-        model = apps.get_model(app_label=app_name, model_name=model_name)
-        
-        # Filtra o registro pelo ID
-        response = model.objects.filter(**{id_name: id}).first()
+    # Obtém a classe do model dinamicamente
+    model = apps.get_model(app_label=app_name, model_name=model_name)
     
-        if not response:
-            return JsonResponse({'error': 'Registro não encontrado'}, status=404)
-        response_data = {}
+    # Filtra o registro pelo ID
+    response = model.objects.filter(**{id_name: id}).first()
+
+    if not response:
+        return JsonResponse({'error': 'Registro não encontrado'}, status=404)
+    
+    response_data = {}
+
+    # Constrói o dicionário de resposta dinamicamente
+    for field in response._meta.fields:
+        field_value = getattr(response, field.name)
         
+        # Verifica se o campo é uma chave estrangeira
+        if field.is_relation and field.many_to_one:
+            # Se for uma chave estrangeira, pegar o valor relacionado (como o ID)
+            related_object = getattr(response, field.name)
+            field_value = related_object.pk if related_object else None
+        
+        # Traduz o valor se necessário
         if transation == 'S':
-            # Constrói o dicionário de resposta dinamicamente com traduções
-            for field in response._meta.fields:
-                field_value = getattr(response, field.name)
-                translated_value = translate_value(field.name, field_value)  # Aplica a tradução
-                response_data[field.name] = translated_value
-        elif transation == 'N':
-            # Constrói o dicionário de resposta dinamicamente
-            response_data = {field.name: getattr(response, field.name) for field in response._meta.fields}
-        
-        return JsonResponse(response_data)
-    except LookupError:
-        return JsonResponse({'error': 'Model não encontrada'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+            translated_value = translate_value(field.name, field_value)  # Aplica a tradução
+            response_data[field.name] = translated_value
+        else:
+            response_data[field.name] = field_value
+    
+    return JsonResponse(response_data)
 
 
 @login_required(login_url="/accounts/login/")
@@ -439,7 +442,7 @@ def produtos(request):
     getTable()
     return render(request, 'cadastros/produtos.html', context)
 
-@login_required(login_url="/accounts/login/")
+@login_required(login_url="//accounts/login/")
 @staff_required
 def fornecedores(request):
     context = {}
@@ -822,6 +825,7 @@ def campanhasid(request, idcampanha):
     context['appname'] = 'cpfcli'
     context['modelname'] = 'Cuponagem'
     context['nomecolum'] = 'nomecli'
+    context['transation'] = 'N'
     
     # Verifica se a campanha existe
     try:
@@ -848,15 +852,16 @@ def campanhasid(request, idcampanha):
         context['dados'] = dados
 
     if request.method == 'POST':
-        idcampanha = request.POST.get('idcampanha')
         codcli = request.POST.get('codcli')
-        nomecli = request.POST.get('nomecli')
         
         if 'delete' in request.POST:
-            # Atualização usando ORM
-            Cuponagem.objects.filter(idcampanha=idcampanha, codcli=codcli).update(ativo='N', dtmov=timezone.now())
-            messages.success(request, f'Cliente {codcli} - {nomecli} deletado com sucesso da campanha {idcampanha}')
-    
+            dados = Cuponagem.objects.filter(codcli=codcli, idcampanha=idcampanha).first()
+            if dados:
+                # Atualização usando ORM
+                Cuponagem.objects.filter(codcli=codcli, idcampanha = idcampanha).update(ativo='N', dtmov=timezone.now())
+                messages.success(request, f'Cliente {dados.codcli} - {dados.nomecli} deletado com sucesso da campanha {dados.idcampanha.descricao}')
+            else:
+                messages.error(request, f'Ocorreu um erro ao buscar o cliente na campanha, caso persista por favor contate o suporte')
     getTable()
     return render(request, 'campanhas/campanhaNumeros.html', context)
 
@@ -869,7 +874,20 @@ from .models import Cuponagem, Campanha
 def campanhasidclient(request, idcampanha, idclient):
     context = {}
     context['title'] = f'Lista de números da sorte do cliente {idclient}'
+    context['tituloDelete'] = 'Deletar número da sorte'
+    context['primarykey'] = 'id'
+    context['appname'] = 'cpfcli'
+    context['modelname'] = 'Cuponagem'
+    context['nomecolum'] = 'numsorte'
+    context['transation'] = 'N'
     
+    def getTable():
+        context['dados'] = Cuponagem.objects.filter(
+            idcampanha=idcampanha,
+            codcli=idclient,
+            ativo='S'
+        ).all()
+        
     try:
         campanha = Campanha.objects.get(idcampanha=idcampanha)
     except Campanha.DoesNotExist:
@@ -880,19 +898,26 @@ def campanhasidclient(request, idcampanha, idclient):
         messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
         return redirect('campanha')
     
-    if not Cuponagem.objects.filter(idcampanha=idcampanha, codcli=idclient).exists():
+    if not Cuponagem.objects.filter(idcampanha=idcampanha, codcli=idclient, ativo='S').exists():
         messages.error(request, f'Não existe nenhum cupom registrado para o cliente {idclient} na campanha {idcampanha}')
         return redirect(f'/campanhas/{idcampanha}/')
     
     context['campanha'] = campanha.descricao
     context['cliente'] = f'o cliente {idclient}'
     
-    context['dados'] = Cuponagem.objects.filter(
-        idcampanha=idcampanha,
-        codcli=idclient,
-        ativo='S'
-    ).all()
-
+    if request.method == 'POST':
+        id = request.POST.get('id')
+        
+        if 'delete' in request.POST:
+            dados = Cuponagem.objects.filter(id=id, idcampanha=idcampanha).first()
+            if dados:
+                # Atualização usando ORM
+                Cuponagem.objects.filter(id=id, idcampanha = idcampanha).update(ativo='N', dtmov=timezone.now())
+                messages.success(request, f'Cliente {dados.codcli} - {dados.nomecli}, teve o seu número da sorte {dados.numsorte} deletado com sucesso da campanha {dados.idcampanha.descricao}')
+            else:
+                messages.error(request, f'Ocorreu um erro ao buscar o número da sorte na campanha, caso persista por favor contate o suporte')
+    
+    getTable()
     return render(request, 'campanhas/campanhaNumerosClient.html', context)
 
 @login_required(login_url="/accounts/login/")
@@ -958,54 +983,48 @@ def gerador(request, idcampanha):
     context = {}
     context['title'] = f'Sorteio campanha {idcampanha}'
     
-    try:
-        
-        if not Cuponagem.objects.filter(idcampanha=idcampanha).exists():
-            messages.error(request, f'Nenhum cupom gerado na campanha {idcampanha}, sorteio não é possivel')
-            return redirect('sorteio')
-        
-        # Obtem os dados gerais do sorteio
-        cuponagem_sorteado = Cuponagem.objects.filter(
+    if not Cuponagem.objects.filter(idcampanha=idcampanha).exists():
+        messages.error(request, f'Nenhum cupom gerado na campanha {idcampanha}, sorteio não é possivel')
+        return redirect('sorteio')
+    
+    # Obtem os dados gerais do sorteio
+    cuponagem_sorteado = Cuponagem.objects.filter(
+        idcampanha_id=idcampanha,
+        ativo='S'
+    ).exclude(
+        codcli__in=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).values_list('codcli', flat=True)
+    ).select_related('idcampanha').order_by('?').first()
+    
+    if cuponagem_sorteado:
+        context['numsorteado'] = cuponagem_sorteado
+
+        # Obtem o número mínimo e máximo de cupons da sorte
+        numsorte_max_min = Cuponagem.objects.filter(
             idcampanha_id=idcampanha,
-            numsorte__gt=0,
-            codcli__gt=0,
             ativo='S'
-        ).exclude(
-            codcli__in=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).values_list('codcli', flat=True)
-        ).select_related('idcampanha').order_by('?').first()
-        
-        if cuponagem_sorteado:
-            context['numsorteado'] = cuponagem_sorteado
+        ).aggregate(
+            max_numsorte=models.Max('numsorte'),
+            min_numsorte=models.Min('numsorte')
+        )
+        context['contnumsorteado'] = numsorte_max_min
 
-            # Obtem o número mínimo e máximo de cupons da sorte
-            numsorte_max_min = Cuponagem.objects.filter(
-                idcampanha_id=idcampanha,
-                numsorte__gt=0,
-                codcli__gt=0
-            ).aggregate(
-                max_numsorte=models.Max('numsorte'),
-                min_numsorte=models.Min('numsorte')
-            )
-            context['contnumsorteado'] = (numsorte_max_min['max_numsorte'], numsorte_max_min['min_numsorte'])
+        # Insere o vencedor
+        CuponagemVencedores.objects.create(
+            idcampanha_id=idcampanha,
+            codcli=cuponagem_sorteado.codcli,
+            dtsorteio=timezone.now(),
+            numsorteio=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).count() + 1,
+            numsorte=cuponagem_sorteado
+        )
 
-            # Insere o vencedor
-            CuponagemVencedores.objects.create(
-                idcampanha_id=idcampanha,
-                codcli=cuponagem_sorteado.codcli,
-                dtsorteio=timezone.now(),
-                numsorteio=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).count() + 1,
-                numsorte=cuponagem_sorteado
-            )
-
-            # Obtem o número do sorteio atual
-            context['numsorteio'] = CuponagemVencedores.objects.filter(
-                idcampanha_id=idcampanha,
-                numsorte=cuponagem_sorteado.numsorte,
-                codcli=cuponagem_sorteado.codcli
-            ).values('numsorteio').first()
-
-    except Exception as e:
-        context['error'] = str(e)
+        # Obtem o número do sorteio atual
+        context['numsorteio'] = CuponagemVencedores.objects.filter(
+            idcampanha_id=idcampanha,
+            numsorte=cuponagem_sorteado,
+            codcli=cuponagem_sorteado.codcli
+        ).first()
+    else:
+        messages.error(request, f'Não foi possivel sortear nenhum número na campanha')
 
     return render(request, 'sorteio/gerador.html', context)
 
@@ -1024,6 +1043,13 @@ def sorteio(request):
         processed_campaigns = []
         
         for campanha in campaigns:
+            if campanha.dtfim and campanha.dtfim <= datetime.today().date() and campanha.count_cupons and campanha.count_cupons > 0:
+                # O dia atual é superior à data de término da campanha
+                permite_sorteio = 'S'
+            else:
+                # A campanha ainda está ativa
+                permite_sorteio = 'N'
+            
             # Criar dicionário para cada campanha
             campanha_dict = {
                 'IDCAMPANHA': campanha.idcampanha,
@@ -1036,6 +1062,7 @@ def sorteio(request):
                 'USAPROD': campanha.usaprod,
                 'ATIVO': campanha.ativo,
                 'count_cupons': campanha.count_cupons,  # Contagem de cupons
+                'permite_sorteio': permite_sorteio
             }
 
             # Calcular total de dias e dias restantes

@@ -28,26 +28,22 @@
                     <tbody>
                         {% for dado in dados %}
                             <tr>
-                                <td class="text-start">{{ dado.idcampanha }}</td>
+                                <td class="text-start">{{ dado.idcampanha.idcampanha }}</td>
                                 <td class="text-start">{{ dado.codcli }}</td>
                                 <td class="text-start">{{ dado.nomecli }}</td>
                                 <td class="text-start">{{ dado.numped }}</td>
-                                <td class="text-start">{{ dado.valor }}</td>
+                                <td class="text-start">{{ dado.valor|floatformat:2 }}</td>
                                 <td class="text-start">{{ dado.numsorte }}</td>
                                 <td class="text-start">{{ dado.dataped }}</td>
                                 <td class="text-start d-flex justify-content-start">
-                                    <a href="{{ dado.codcli }}/" class="btn btn-info btn-sm">
+                                    <a href="{{ dado.numped }}/" class="btn btn-info btn-sm">
                                         <i class="fa-solid fa-door-open"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="loadDataDelete({{ dado.idcampanha }})">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="loadDataDelete({{ dado.id }})">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </td>
                             </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="8">Nenhum dado disponível.</td>
-                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>

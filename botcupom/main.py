@@ -151,7 +151,7 @@ def processacupom():
                 not_in_clauses.append(f"{field} NOT IN ({', '.join(map(str, chunk))})")
         
         # Unir todas as cláusulas com ' AND '
-        return ' AND '.join(not_in_clauses)
+        return ' '.join(not_in_clauses)
     
     #------------------------------------------------RESTRIÇÃO POR MARCA --------------------------------
     if restringe_marca and restringe_marca == 'C':
@@ -210,10 +210,12 @@ def processacupom():
             else:
                 fornec_restringe_Where = f'AND (SELECT COUNT(CODFORNEC) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED) AND CODFORNEC IN {listfornecs}) > 0'
     
+    #---------------------------------------------------Restringe POR VALOR DO CUPOM ---------------------------------------------- 
+    
     if acumulavenda and acumulavenda == 'S':
         ignora_vendas_abaixo_do_valor_cupom_where = f'''AND PCPEDC.VLTOTAL >= {valor}'''
 
-    #---------------------------------------------------INTENSIFICADOR POR FILIAL ---------------------------------------------- 
+    #---------------------------------------------------Restringe POR FILIAL ---------------------------------------------- 
     if filiais > 0:
         cursor_postgre.execute(f'''
             SELECT codfilial 
@@ -223,16 +225,10 @@ def processacupom():
         filiais = cursor_postgre.fetchall()
         
         if filiais and len(filiais) > 0:
-            for item in filiais:
-                lista_filiais.extend(item[0])
-            lista_filiais = tuple(lista_filiais)
-            
-            if len(lista_filiais) == 1:
-                filial_restringe_Where = f'AND PCPEDC.CODFILIAL != {lista_filiais[0]}'
-            else:
-                filial_restringe_Where = f'AND PCPEDC.CODFILIAL IN {lista_filiais}'
+            lista_filiais = [str(item[0]) for item in filiais]
+            filial_restringe_Where = build_not_in_clause("AND PCPEDC.CODFILIAL", lista_filiais)
         else:
-            filial_restringe_Where = ' '
+            filial_restringe_Where = ''
         
     #---------------------------------------------------INTENSIFICADOR POR PRODUTO -----------------------------------
     if usa_prod and usa_prod == 'C':
@@ -390,14 +386,14 @@ def processacupom():
     pedidos = cursor.fetchall()
 
     print('pedidos pesquisados, calculando numeros da sorte')
-    cont = 1
+    contador = 1
     
     for ped in pedidos:
         multiplicador_cupom = campanha[5]
         valor_bonus = 0
         histgeracao = ''
         saldo_atual = 0
-        print(f'processando pedido {ped} posição {cont} de {len(pedidos)}')
+        print(f'processando pedido {ped} posição {contador} de {len(pedidos)}')
         print(acumulavenda)
         
         #------------------------------------------------ COMEÇA A CALCULAR O SALDO --------------------------------
@@ -405,11 +401,11 @@ def processacupom():
             print('Calculando se existe saldo...')
             # Busca saldo do cliente na tabela cpfcli_cuponagemsaldo
             cursor_postgre.execute(f'''
-                SELECT SALDO 
+                select saldo 
                 FROM cpfcli_cuponagemsaldo 
                 WHERE 
-                    "CODCLI" = {ped[3]} AND 
-                    "IDCAMPANHA" = {idcampanha}
+                    codcli = {ped[3]} AND 
+                    idcampanha = {idcampanha}
             ''')
             saldo_cli = cursor_postgre.fetchone()
 
@@ -428,20 +424,29 @@ def processacupom():
                 cursor_postgre.execute(f'''
                     UPDATE cpfcli_cuponagemsaldo 
                     SET 
-                        "SALDO" = {sobra}, 
-                        "DTMOV" = NOW() 
+                        saldo = {sobra}, 
+                        dtmov = NOW() 
                     WHERE 
-                        "CODCLI" = {ped[3]} AND 
-                        "IDCAMPANHA" = {idcampanha}
+                        codcli = {ped[3]} AND 
+                        idcampanha = {idcampanha}
                 ''')
                 histgeracao += f'$$$1 - Calculou uma sobra de R$ {sobra}'
             
             elif sobra:
                 # Insere um novo saldo na tabela cpfcli_cuponagemsaldo
+                if ped[4]:
+                    nomecli = ped[4].replace("'", "")
+                else:
+                    nomecli = ped[4]
+                if ped[4]:
+                    emailcli = ped[4].replace("'", "")
+                else:
+                    emailcli = ped[4]
+                    
                 cursor_postgre.execute(f'''
-                    INSERT INTO cpfcli_cuponagemsaldo
-                    ("CODCLI", "IDCAMPANHA", "SALDO", "DTMOV", nomecli, emailcli)
-                    VALUES ({ped[3]}, {idcampanha}, {sobra}, NOW(), '{ped[4]}', '{ped[5]}')
+                    insert into cpfcli_cuponagemsaldo
+                    (codcli, idcampanha, saldo, dtmov, nomecli, emailcli)
+                    VALUES ({ped[3]}, {idcampanha}, {sobra}, NOW(), '{nomecli}', '{emailcli}')
                 ''')
                 histgeracao += f'$$$1 - Calculou uma sobra de R$ {sobra}'
             
@@ -609,10 +614,10 @@ def processacupom():
         
         if client:
             codcli = client[0]
-            nomecli = client[1]
-            emailcli = client[2]
-            cpf_cnpj = client[3] if client[3] else ''
-            telcli = client[4] if client[4] else ''
+            nomecli = client[1].replace("'", "") if client[1] else '' 
+            emailcli = client[2].replace("'", "") if client[2] else ''
+            cpf_cnpj = client[3].replace("'", "") if client[3] else ''
+            telcli = client[4].replace("'", "") if client[4] else ''
                 
         if qtcupons >= 1:
             for i in range(qtcupons):
@@ -627,7 +632,7 @@ def processacupom():
                         NOW(), 
                         {ped[0]},  -- Número do pedido
                         {ped[1]},  -- Valor total
-                        (SELECT COALESCE(MAX(numsorte), 0) FROM cpfcli_cuponagem WHERE idcampanha = {idcampanha} ),
+                        (SELECT COALESCE(MAX(numsorte), 0) + 1 FROM cpfcli_cuponagem WHERE idcampanha = {idcampanha} ),
                         {codcli},  -- Código do cliente
                         '{nomecli}', 
                         '{emailcli}', 
@@ -695,7 +700,7 @@ def processacupom():
                     '{bonificadoWhere}'
                 )
             ''') 
-        cont += 1
+        contador += 1
         conexao.commit()
         conexao_postgre.commit()
         print(f'pedido finalizado ')

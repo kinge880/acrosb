@@ -135,14 +135,14 @@ class Cuponagem(models.Model):
         return str(self.id)
 
 class CuponagemSaldo(models.Model):
-    codcli = models.IntegerField(db_column='CODCLI')  # Número de cliente
+    codcli = models.IntegerField(db_column='codcli')  # Número de cliente
     nomecli = models.TextField()
     emailcli = models.TextField(null=True, blank=True)
     telcli = models.TextField(null=True, blank=True)
     cpf_cnpj = models.TextField(null=True, blank=True)
-    idcampanha = models.IntegerField(db_column='IDCAMPANHA')  # Número da campanha
-    saldo = models.IntegerField(db_column='SALDO')  # Saldo
-    dtmov = models.DateTimeField(db_column='DTMOV')  # Data de movimentação
+    idcampanha = models.IntegerField(db_column='idcampanha')  # Número da campanha
+    saldo = models.IntegerField(db_column='saldo')  # Saldo
+    dtmov = models.DateTimeField(db_column='dtmov')  # Data de movimentação
 
     class Meta: 
         verbose_name = 'Saldo de Cupom'

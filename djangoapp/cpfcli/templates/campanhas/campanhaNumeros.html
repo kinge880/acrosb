@@ -28,12 +28,12 @@
                                 <td class="text-start">{{dado.idcampanha}}</td>
                                 <td class="text-start">{{dado.codcli}}</td>
                                 <td class="text-start">{{dado.nomecli}}</td>
-                                <td class="text-start">{{dado.numsorte}}</td>
+                                <td class="text-start">{{dado.total_numsorte}}</td>
                                 <td class="text-start d-flex justify-content-start">
                                     <a href="{{dado.codcli}}/" class="btn btn-info btn-sm">
                                         <i class="fa-solid fa-door-open"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="loadDataDelete({{campanha.idcampanha}})">
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="loadDataDelete({{dado.codcli}})">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </td>
