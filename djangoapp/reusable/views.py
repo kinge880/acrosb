@@ -73,6 +73,10 @@ def translate_value(field_name, value):
             'N': '1 - Não utilizar intensificador por produto',
             'C': '2 - Utilizar intensificador por produto cadastrado',
             'M': '3 - Utilizar intensificador por produto múltiplo'
+        },
+        'usa_numero_da_sorte': {
+            'S': '1 - Deve utilizar números da sorte',
+            'N': '2 - Deve utilizar cuponagem física no caixa'
         }
     }
 

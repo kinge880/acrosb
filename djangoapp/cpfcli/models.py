@@ -82,6 +82,7 @@ class Campanha(models.Model):
     restringe_fornec = models.CharField(max_length=1, default='N')
     restringe_marca = models.CharField(max_length=1, default='N')
     restringe_prod = models.CharField(max_length=1, default='N')
+    usa_numero_da_sorte = models.CharField(max_length=1, default='S')
 
     def save(self, *args, **kwargs):     
         self.dtultalt = timezone.now()

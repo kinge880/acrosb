@@ -19,6 +19,7 @@ from django.core.serializers import serialize
 from django.db.models import OuterRef, Subquery
 from django.contrib.postgres.aggregates import ArrayAgg
 from project.conexao_postgresql import *
+
 def staff_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):

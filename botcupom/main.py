@@ -10,8 +10,6 @@ import datetime
 from DateFormat import dateFormat
 import math
 
-'ALTER TABLE PCPEDC ADD EMITECUPOM VARCHAR2(1) NULL;'
-
 #envio de email
 # Configurações do servidor SMTP
 smtp_server = "smtp.gmail.com"
@@ -88,7 +86,7 @@ def processacupom():
         FROM 
             cpfcli_campanha
         WHERE 
-            ativo = 'S'
+            ativo = 'S' and usa_numero_da_sorte = 'S'
     ''')
     campanha = cursor_postgre.fetchone()
 
@@ -134,24 +132,33 @@ def processacupom():
         for i in range(0, len(lst), chunk_size):
             yield lst[i:i + chunk_size]
 
-    def build_not_in_clause(field, values):
+    def build_clause(field, values, in_or_not):
         """Constrói a cláusula NOT IN, incluindo divisão em chunks."""
         # Se houver apenas um item, retornar !=
         if len(values) == 1:
-            return f"{field} != {values[0]}"
+            if in_or_not == 'NOT':
+                return f"{field} != {values[0]}"
+            else:
+                return f"{field} = {values[0]}"
         
         # Caso tenha mais de um item, dividir em chunks e construir várias cláusulas NOT IN
-        not_in_clauses = []
+        clauses = []
         chunks = list(divide_chunks(values, 999))
         
         for chunk in chunks:
             if len(chunk) == 1:
-                not_in_clauses.append(f"{field} != {chunk[0]}")
+                if in_or_not == 'NOT':
+                    clauses.append(f"{field} != {chunk[0]}")
+                else:
+                    clauses.append(f"{field} = {chunk[0]}")
             else:
-                not_in_clauses.append(f"{field} NOT IN ({', '.join(map(str, chunk))})")
+                if in_or_not == 'NOT':
+                    clauses.append(f"{field} NOT IN ({', '.join(map(str, chunk))})")
+                else:
+                    clauses.append(f"{field} IN ({', '.join(map(str, chunk))})")
         
         # Unir todas as cláusulas com ' AND '
-        return ' '.join(not_in_clauses)
+        return ' '.join(clauses)
     
     #------------------------------------------------RESTRIÇÃO POR MARCA --------------------------------
     if restringe_marca and restringe_marca == 'C':
@@ -226,7 +233,7 @@ def processacupom():
         
         if filiais and len(filiais) > 0:
             lista_filiais = [str(item[0]) for item in filiais]
-            filial_restringe_Where = build_not_in_clause("AND PCPEDC.CODFILIAL", lista_filiais)
+            filial_restringe_Where = build_clause("AND PCPEDC.CODFILIAL", lista_filiais, 'IN')
         else:
             filial_restringe_Where = ''
         
@@ -287,9 +294,9 @@ def processacupom():
             marcas_list = tuple(marcas_list)
 
             if len(marcas_list) == 1:
-                marcas_intensifica_where = f", (SELECT codmarca FROM pcprodut WHERE codprod = pcpedi.codprod AND codmarca != {marcas_list[0]})"
+                marcas_intensifica_where = f",(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN (SELECT codprod FROM pcprodut WHERE codmarca = {marcas_list[0]}) AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)"
             else:
-                marcas_intensifica_where = f", (SELECT codmarca FROM pcprodut WHERE codprod = pcpedi.codprod AND codmarca NOT IN {marcas_list})"
+                marcas_intensifica_where = f",(SELECT NUMPED FROM PCPEDI WHERE CODPROD IN (SELECT codprod FROM pcprodut WHERE codmarca = {marcas_list}) AND NUMPED = PCPEDC.NUMPED AND ROWNUM = 1)"
     elif usa_marca and usa_marca == 'M':
         marcas_intensifica_where = f',(SELECT COUNT(DISTINCT CODMARCA) FROM PCPRODUT WHERE CODPROD IN (SELECT CODPROD FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED))'
             
@@ -303,7 +310,7 @@ def processacupom():
     
     if black_list and len(black_list) > 0:
         cpflist = [str(item[0]) for item in black_list]
-        blacklistWhere = build_not_in_clause("AND PCPEDC.CODCLI", cpflist)
+        blacklistWhere = build_clause("AND PCPEDC.CODCLI", cpflist, 'NOT')
     else:
         blacklistWhere = ''
 
@@ -317,7 +324,7 @@ def processacupom():
     
     if list_numpeds and len(list_numpeds) > 0:
         numped_list_postgre = [str(item[0]) for item in list_numpeds]
-        not_in_clauses = build_not_in_clause("AND PCPEDC.NUMPED", numped_list_postgre)
+        not_in_clauses = build_clause("AND PCPEDC.NUMPED", numped_list_postgre, 'NOT')
     else:
         not_in_clauses = ''
     

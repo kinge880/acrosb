@@ -137,18 +137,22 @@ class MscuponagemCampanhaForm(forms.ModelForm):
         choices=obter_choices_filiais(),
         required=True,
         label='Lista de filiais',
-        widget=forms.SelectMultiple(attrs={'class': ' select2', 'classdiv': 'col-12  mb-3', 'autocomplete': 'off', 'select2Label': 'select'})
+        widget=forms.SelectMultiple(attrs={'class': 'form-select select2', 'classdiv': 'col-12  mb-3', 'autocomplete': 'off', 'select2Label': 'select'})
     )
     class Meta:
         model = Campanha
         fields = [
-            'idcampanha',  'descricao', 'filial', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
+            'idcampanha',  'descricao', 'filial', 'usa_numero_da_sorte', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
             'restringe_fornec', 'restringe_marca', 'restringe_prod',
             'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor'
         ]
         widgets = {
             'idcampanha': forms.HiddenInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
-            'descricao': forms.TextInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
+            'descricao': forms.TextInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-12 mb-3', 'autocomplete': 'off'}),
+            'usa_numero_da_sorte': forms.Select(choices=[
+                ('S', '1 - Deve utilizar números da sorte'),
+                ('N', '2 - Deve utilizar cuponagem física no caixa')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
             'dtinit': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
             'dtfim': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
             'enviaemail': forms.Select(choices=[
@@ -197,6 +201,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('M', '3 - Utilizar intensificador por produto multiplo')
             ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
             'prodvalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+            
         }
         
         labels = {
