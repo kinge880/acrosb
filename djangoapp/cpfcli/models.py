@@ -113,9 +113,12 @@ class CampanhaProcessados(models.Model):
 
 class Cuponagem(models.Model):
     dtmov = models.DateField()  # Data do movimento
-    numped = models.BigIntegerField()  # Número do pedido
+    numped = models.BigIntegerField(null=True, blank=True)  # Número do pedido
+    numpedecf = models.IntegerField(null=True, blank=True)
+    numcaixa = models.IntegerField(null=True, blank=True)
+    tipo = models.CharField(max_length=2, default='NS')
     valor = models.DecimalField(max_digits=50, decimal_places=12)  # Valor com até 38 dígitos e 12 casas decimais
-    numsorte = models.BigIntegerField()  # Número da sorte
+    numsorte = models.BigIntegerField(null=True, blank=True)  # Número da sorte
     codcli = models.IntegerField()  # Código do cliente
     nomecli = models.TextField()
     emailcli = models.TextField(null=True, blank=True)
@@ -125,7 +128,7 @@ class Cuponagem(models.Model):
     bonificado = models.CharField(max_length=1, default='N')  # Bonificado com padrão 'N'
     idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')  # ID da campanha
     ativo = models.CharField(max_length=1, default='S')  # Ativo com padrão 'S'
-
+    
     class Meta:
         indexes = [
             models.Index(fields=['dtmov', 'codcli', 'idcampanha'], name='MSCUPONAGEM_DTMOV_IDX'),

@@ -1,0 +1,8 @@
+psutil==5.9.3
+requests==2.31.0
+pytz
+asgiref==3.6.0
+cx-Oracle==8.3.0
+sqlparse==0.4.3
+tzdata==2022.7
+python-dotenv==1.0.1
