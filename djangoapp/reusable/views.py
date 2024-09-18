@@ -177,7 +177,8 @@ def agent_status(request):
             # Extrai os dados da requisição
             name = data.get('name')
             agent_ip = data.get('agent_ip')
-            coupons_generated = data.get('coupons_generated', 0)
+            numcaixa = data.get('numcaixa', 0)
+            codfilial = data.get('codfilial', 0)
             cpu_usage = data.get('cpu_usage')
             memory_usage = data.get('memory_usage')
             uptime = data.get('uptime')  # Esperado no formato de segundos
@@ -200,12 +201,13 @@ def agent_status(request):
                 name=name,
                 agent_ip=agent_ip,
                 defaults={
-                    'coupons_generated': coupons_generated,
+                    'numcaixa': numcaixa,
                     'cpu_usage': cpu_usage,
                     'memory_usage': memory_usage,
                     'uptime': uptime,
                     'service_version': service_version,
-                    'last_restart': last_restart
+                    'last_restart': last_restart,
+                    'codfilial': codfilial
                 }
             )
 

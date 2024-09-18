@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.timezone import now
 import pandas as pd
 from reusable.views import *
+from reusable.models import *
 from .forms import *
 from django.db import transaction
 from io import BytesIO
@@ -19,6 +20,9 @@ from django.core.serializers import serialize
 from django.db.models import OuterRef, Subquery
 from django.contrib.postgres.aggregates import ArrayAgg
 from project.conexao_postgresql import *
+from django.utils import timezone
+from datetime import timedelta
+from .models import Cuponagem, Campanha
 
 def staff_required(view_func):
     @wraps(view_func)
@@ -51,7 +55,7 @@ def baixar_modelo(request, tipo):
     elif tipo == 'F':
         df = pd.DataFrame(columns=['idcampanha', 'codfornec', 'tipo'])
     elif tipo == 'C':
-        df = pd.DataFrame(columns=['idcampanha', 'codcli'])
+        df = pd.DataFrame(columns=['idcampanha', 'codcli', 'tipo'])
     elif tipo == 'M':
         df = pd.DataFrame(columns=['idcampanha', 'codmarca', 'tipo'])
     else:
@@ -586,12 +590,13 @@ def blacklist(request):
     
     def getTable():
         context['listclis'] = BlackList.objects.all().values(
-            'id', 'IDCAMPANHA', 'CODCLI', 'NOMECLI', 'EMAIL', 'CPFCNPJ', 'DTMOV'
+            'id', 'IDCAMPANHA', 'CODCLI', 'NOMECLI', 'EMAIL', 'CPFCNPJ', 'DTMOV', 'TIPO'
         )
 
     if request.method == 'POST':
         idcampanha = request.POST.get('IDCAMPANHA')
         codcli = request.POST.get('CODCLI')
+        tipo = request.POST.get('TIPO')
         id = request.POST.get(f"{context['primarykey']}")
         
         if 'delete' in request.POST:
@@ -605,25 +610,29 @@ def blacklist(request):
             if exist_test is None:
                 getTable()
                 messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
-                return render(request, 'sorteio/listanegra.html', context)
+                return render(request, 'cadastros/listanegra.html', context)
             
             if exist_cli is None:
                 getTable()
                 messages.error(request, f"Não existe cliente cadastrado com codcli {codcli}")
-                return render(request, 'sorteio/listanegra.html', context)
+                return render(request, 'cadastros/listanegra.html', context)
             
-            if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli).exists():
+            if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli, TIPO = tipo).exists():
                 BlackList.objects.create(
                     IDCAMPANHA=idcampanha, 
                     CODCLI = exist_cli[0], 
                     EMAIL = exist_cli[2],
                     CPFCNPJ = exist_cli[3],
                     NOMECLI = exist_cli[1],
-                    DTMOV = datetime.now()
+                    DTMOV = datetime.now(),
+                    TIPO = tipo
                 )
                 messages.success(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} inserido com sucesso na blacklist da campanha {idcampanha}")
             else:
-                messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na blacklist da campanha {idcampanha}") 
+                if tipo == 'B':
+                    messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na BlackList da campanha {idcampanha}") 
+                else:
+                    messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na WhiteList da campanha {idcampanha}") 
             
         elif 'insertp' in request.POST:
             file = request.FILES.get("planilhas")
@@ -632,23 +641,24 @@ def blacklist(request):
                 if not isinstance(df, pd.DataFrame):
                     getTable()
                     messages.error(request, df)
-                    return render(request, 'sorteio/listanegra.html', context)
+                    return render(request, 'cadastros/listanegra.html', context)
             else:
                 getTable()
                 messages.error(request, "Nenhuma planilha enviada")
-                return render(request, 'sorteio/listanegra.html', context)
+                return render(request, 'cadastros/listanegra.html', context)
             
             if not 'idcampanha' in df.columns or not 'codcli' in df.columns:
                 getTable()
                 messages.error(request, "Planilha enviada no formato errado")
-                return render(request, 'sorteio/listanegra.html', context)
+                return render(request, 'cadastros/listanegra.html', context)
 
             try:
                 with transaction.atomic():
                     for index, row in df.iterrows():
                         idcampanha = row['idcampanha']
                         codcli = row['codcli']
-
+                        tipo = row['tipo']
+                        
                         exist_cli = exist_client(cursor, codcli)
                         exist_test = exist_campanha(cursor, idcampanha)
                         
@@ -656,28 +666,32 @@ def blacklist(request):
                             transaction.rollback() 
                             getTable()
                             messages.error(request, f"Não existe cliente cadastrado com codcli {codcli}")
-                            return render(request, 'sorteio/listanegra.html', context)
+                            return render(request, 'cadastros/listanegra.html', context)
             
                         if exist_test is None:
                             transaction.rollback() 
                             getTable()
                             messages.error(request, f"Não existe campanha cadastrada com idcampanha {idcampanha}")
-                            return render(request, 'sorteio/listanegra.html', context)
+                            return render(request, 'cadastros/listanegra.html', context)
             
-                        if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli).exists():
+                        if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli, TIPO = tipo).exists():
                             BlackList.objects.create(
                                 IDCAMPANHA=idcampanha, 
                                 CODCLI = exist_cli[0], 
                                 EMAIL = exist_cli[2],
                                 CPFCNPJ = exist_cli[3],
                                 NOMECLI = exist_cli[1],
-                                DTMOV = datetime.now()
+                                DTMOV = datetime.now(),
+                                TIPO = tipo
                             )
                         else:
                             transaction.rollback() 
                             getTable()
-                            messages.error(request, f"Cliente {codcli} já cadastrado na campanha {idcampanha}, verifique a planilha")
-                            return render(request, 'sorteio/listanegra.html', context)
+                            if tipo == 'B':
+                                messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na BlackList da campanha {idcampanha}") 
+                            else:
+                                messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na WhiteList da campanha {idcampanha}") 
+                            return render(request, 'cadastros/listanegra.html', context)
 
                     messages.success(request, "Todos os clientes foram inseridos com sucesso!")
 
@@ -685,15 +699,15 @@ def blacklist(request):
                 transaction.rollback()  # Garante que qualquer erro fará o rollback da transação
                 getTable()
                 messages.error(request, f"Ocorreu um erro ao processar a planilha: {str(e)}")
-                return render(request, 'sorteio/listanegra.html', context)
+                return render(request, 'cadastros/listanegra.html', context)
 
         else:
             getTable()
             messages.error(request, "Ação não reconhecida")
-            return render(request, 'sorteio/listanegra.html', context)
+            return render(request, 'cadastros/listanegra.html', context)
 
     getTable()
-    return render(request, 'sorteio/listanegra.html', context)
+    return render(request, 'cadastros/listanegra.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -866,10 +880,6 @@ def campanhasid(request, idcampanha):
     getTable()
     return render(request, 'campanhas/campanhaNumeros.html', context)
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import Cuponagem, Campanha
-
 @login_required(login_url="/accounts/login/")
 @staff_required
 def campanhasidclient(request, idcampanha, idclient):
@@ -1037,14 +1047,15 @@ def sorteio(request):
     def getTable():
         # Obter campanhas que não foram excluídas (onde dtexclusao é None)
         campaigns = Campanha.objects.filter(dtexclusao__isnull=True).annotate(
-            count_cupons=models.Count('cuponagem')
+            count_cupons=models.Count('cuponagem', filter=models.Q(cuponagem__numsorte__gt=0)),
+            count_cupomcx=models.Count('cuponagem', filter=models.Q(cuponagem__numcaixa__isnull=False))
         )
 
         today = now().date()  # Data atual
         processed_campaigns = []
         
         for campanha in campaigns:
-            if campanha.dtfim and campanha.dtfim <= datetime.today().date() and campanha.count_cupons and campanha.count_cupons > 0:
+            if campanha.dtfim and campanha.dtfim <= datetime.today().date() and campanha.count_cupons and campanha.count_cupons > 0 and campanha.usa_numero_da_sorte == 'S':
                 # O dia atual é superior à data de término da campanha
                 permite_sorteio = 'S'
             else:
@@ -1063,7 +1074,9 @@ def sorteio(request):
                 'USAPROD': campanha.usaprod,
                 'ATIVO': campanha.ativo,
                 'count_cupons': campanha.count_cupons,  # Contagem de cupons
-                'permite_sorteio': permite_sorteio
+                'permite_sorteio': permite_sorteio,
+                'count_cupomcx': campanha.count_cupomcx,
+                'usa_numero_da_sorte': campanha.usa_numero_da_sorte
             }
 
             # Calcular total de dias e dias restantes
@@ -1127,3 +1140,80 @@ def sorteioganhadores(request, idcampanha):
 
     return render(request, 'sorteio/ganhadores.html', context)
 
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def agent_manager(request):
+    # Capturar parâmetros de filtro
+    codfilial = request.GET.get('codfilial')
+    agent_ip = request.GET.get('agent_ip')
+    numcaixa = request.GET.get('numcaixa')
+    status = request.GET.get('status')
+
+    # Inicializa a queryset com todos os agentes
+    agents = Agent.objects.all()
+
+    # Aplica os filtros com base nos parâmetros recebidos
+    if codfilial:
+        agents = agents.filter(codfilial=codfilial)
+    
+    if agent_ip:
+        agents = agents.filter(agent_ip__icontains=agent_ip)
+    
+    if numcaixa:
+        agents = agents.filter(numcaixa__icontains=numcaixa)
+    
+    desactive_agents = AgentDesactive.objects.values_list('numcaixa', flat=True)
+    
+    now = timezone.now()
+    filtered_agents = []
+
+    # Itera pelos agentes para verificar o status e filtrar pelo status, se necessário
+    for agent in agents:
+        # Verifica se o agente está desativado
+        if agent.numcaixa in desactive_agents:
+            agent.status = "Desativado"
+        else:
+            # Calcula a diferença de tempo desde o último heartbeat
+            last_heartbeat = agent.last_heartbeat or timezone.now()
+            if now - last_heartbeat > timedelta(minutes=1):
+                agent.status = "Falha"
+            else:
+                agent.status = "Ativo"
+
+        # Filtrar pelo status, se o parâmetro for passado
+        if status and agent.status != status:
+            continue
+        
+        filtered_agents.append(agent)
+    
+    # Agrupar agentes por filial
+    agents_by_filial = {}
+    for agent in filtered_agents:
+        if agent.codfilial not in agents_by_filial:
+            agents_by_filial[agent.codfilial] = []
+        agents_by_filial[agent.codfilial].append(agent)
+    
+    # Buscar filiais para popular o dropdown de filtro
+    filiais = Agent.objects.values('codfilial').distinct()
+
+    return render(request, 'cadastros/agent_manager.html', {
+        'agents_by_filial': agents_by_filial,
+        'filiais': filiais,
+        'form': AgentForm(request.GET),
+    })
+
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def desativar_servico(request, numcaixa):
+    if request.method == "POST":
+        AgentDesactive.objects.create(numcaixa=numcaixa, dtmov=timezone.now())
+    return redirect('agent_manager')
+
+@login_required(login_url="/accounts/login/")
+@staff_required
+def reativar_servico(request, numcaixa):
+    if request.method == "POST":
+        AgentDesactive.objects.filter(numcaixa=numcaixa).delete()
+    return redirect('agent_manager')

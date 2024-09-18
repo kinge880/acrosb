@@ -11,6 +11,7 @@ class BlackList(models.Model):
     EMAIL = models.CharField(default='Sem email cadastrado')
     CPFCNPJ = models.CharField(default='Sem cpf ou cnpj cadastrado')
     DTMOV = models.DateTimeField(null=True, blank=True)
+    TIPO = models.CharField(default='N')
     
     def save(self, *args, **kwargs):     
         self.dtmov = timezone.now()
@@ -83,7 +84,9 @@ class Campanha(models.Model):
     restringe_marca = models.CharField(max_length=1, default='N')
     restringe_prod = models.CharField(max_length=1, default='N')
     usa_numero_da_sorte = models.CharField(max_length=1, default='S')
-
+    tipo_cluster_cliente = models.CharField(max_length=1, default='S')
+    acumula_intensificadores = models.CharField(max_length=1, default='N')
+    
     def save(self, *args, **kwargs):     
         self.dtultalt = timezone.now()
         super().save(*args, **kwargs)

@@ -1,1 +1,1 @@
-pyinstaller main.py --add-data ".env;.env" --add-data "instantclient_18_5;instantclient_18_5" --add-data "Cupons;Cupons" --clean --noconfirm
+pyinstaller main.py --add-data "instantclient_18_5;instantclient_18_5" --add-data "Cupons;Cupons" --clean --noconfirm

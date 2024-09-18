@@ -13,8 +13,8 @@ except cx_Oracle.DatabaseError as e:
     print("Error:", e)
 
 def createConnection():
-    host=socket.gethostbyname(socket.gethostname())
-    #host='172.16.22.110'
+    #host=socket.gethostbyname(socket.gethostname())
+    host='172.16.22.106'
 
     print('instancia a conexão')
     conexao = cx_Oracle.connect(f"CAIXA/CAIXA@{host}/XE")

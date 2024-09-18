@@ -2,6 +2,7 @@ from django import forms
 import re
 from .models import *
 from reusable.views import *
+from reusable.models import *
 from django.forms import inlineformset_factory
 
 class ClienteForm(forms.ModelForm):
@@ -142,9 +143,9 @@ class MscuponagemCampanhaForm(forms.ModelForm):
     class Meta:
         model = Campanha
         fields = [
-            'idcampanha',  'descricao', 'filial', 'usa_numero_da_sorte', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
+            'idcampanha',  'descricao', 'filial', 'usa_numero_da_sorte', 'tipo_cluster_cliente', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
             'restringe_fornec', 'restringe_marca', 'restringe_prod',
-            'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor'
+            'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor', 'acumula_intensificadores'
         ]
         widgets = {
             'idcampanha': forms.HiddenInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
@@ -152,7 +153,12 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'usa_numero_da_sorte': forms.Select(choices=[
                 ('S', '1 - Deve utilizar números da sorte'),
                 ('N', '2 - Deve utilizar cuponagem física no caixa')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
+            'tipo_cluster_cliente': forms.Select(choices=[
+                ('N', '1 - Não utiliza Cluster por cliente'),
+                ('B', '2 - Deve utilizar BlackList'),
+                ('W', '3 - Deve utilizar WhiteList')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
             'dtinit': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
             'dtfim': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
             'enviaemail': forms.Select(choices=[
@@ -201,7 +207,10 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('M', '3 - Utilizar intensificador por produto multiplo')
             ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
             'prodvalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
-            
+            'acumula_intensificadores': forms.Select(choices=[
+                ('N', '1 - Não acumular intensificadores'),
+                ('A', '2 - Acumular intensificadores')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
         }
         
         labels = {
@@ -223,6 +232,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'fornecvalor': 'Valor do fornecedor',
             'marcavalor': 'Valor da marca',
             'prodvalor': 'Valor de produtos',
+            'tipo_cluster_cliente': 'Qual o tipo de cluster dos clientes',
+            'acumula_intensificadores': 'Acumulação de intensificadores'
         }
 
     def __init__(self, *args, **kwargs):
@@ -244,6 +255,50 @@ class MscuponagemCampanhaForm(forms.ModelForm):
 
         return campanha
     
+class AgentForm(forms.Form):
+    codfilial = forms.CharField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+            'classdiv': 'col-12 col-md-3 mb-3',
+            'autocomplete': 'off'
+        }),
+        label='Código da Filial'
+    )
+    numcaixa = forms.CharField(
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+            'classdiv': 'col-12 col-md-2 mb-3',
+            'autocomplete': 'off'
+        }),
+        label='Número do Caixa'
+    )
+    agent_ip = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+            'classdiv': 'col-12 col-md-2 mb-3',
+            'autocomplete': 'off'
+        }),
+        label='IP do Agente'
+    )
+    status = forms.ChoiceField(
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 
+            'classdiv': 'col-12 col-md-3 mb-3',
+            'autocomplete': 'off'
+        }),
+        choices=[
+            ('', 'Todos'),
+            ('Ativo', 'Ativo'),
+            ('Desativado', 'Desativado'),
+            ('Falha', 'Falha'),
+        ],
+        label='Status'
+    )
+        
 class MarcasForm(forms.ModelForm):
     class Meta:
         model = Marcas
@@ -343,7 +398,7 @@ class BlackListForm(forms.ModelForm):
     class Meta:
         model = BlackList
         fields = [
-            'IDCAMPANHA', 'CODCLI'
+            'IDCAMPANHA', 'CODCLI', 'TIPO'
         ]
         widgets = {
             'IDCAMPANHA': forms.NumberInput(attrs={
@@ -355,12 +410,17 @@ class BlackListForm(forms.ModelForm):
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
-            })
+            }),
+            'TIPO': forms.Select(choices=[
+                ('B', '1 - Cliente deve ficar banido da campanha (Black List)'),
+                ('W', '2 - Campanha só deve funcionar para esse cliente (White List)')
+            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-12 mb-3', 'autocomplete': 'off'}),
         }
         
         labels = {
             'IDCAMPANHA': 'Código da Campanha',
             'CODCLI': 'Código do Cliente',
+            'TIPO': 'Qual tipo de lista o cliente deve se encaixar?'
         }
 
     def __init__(self, *args, **kwargs):

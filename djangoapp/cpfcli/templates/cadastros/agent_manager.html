@@ -1,0 +1,114 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+<div class="container-fluid vh-75">
+  <div class="row w-100">
+      <form method="GET" action="{% url 'agent_manager' %}" class="row col-12 mt-4">
+        {% for field in form %}
+          <div class="input-group-cosmic-cascade-tetra-49m7 {{ field.field.widget.attrs.classdiv }}">
+              {% if field.field.widget.attrs.select2Label %}
+                  <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {% endif %}
+              {{ field }}
+              {% if not field.field.widget.attrs.select2Label %}
+                  <label class="user-label-cosmic-cascade-tetra-49m7 {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {% endif %}
+              {% if field.errors %}
+                  <div class="invalid-feedback">
+                      {% for error in field.errors %}
+                          <p>{{ error }}</p>
+                      {% endfor %}
+                  </div>
+              {% endif %}
+          </div>
+        {% endfor %}
+    
+        <div class="col-12 col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+      </form>
+      {% include 'partials/message.html' %}
+
+      <!-- Dropdown para seleção de filial -->
+      <div class="col-12 mb-3">
+          <div class="accordion" id="accordionFiliais">
+              {% for filial, agents in agents_by_filial.items %}
+              <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse{{ forloop.counter }}">
+                          {{ filial }}
+                      </button>
+                  </h2>
+                  <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#accordionFiliais">
+                      <div class="accordion-body">
+                          <div class="row">
+                              {% for agent in agents %}
+                              <div class="col-md-4 mb-3">
+                                  <div class="card shadow-sm {% if agent.status == 'Falha' %}border-danger{% elif agent.status == 'Desativado' %}border-warning{% else %}border-success{% endif %}">
+                                      <div class="card-body">
+                                          <!-- Título do Serviço -->
+                                          <h5 class="card-title">Caixa: {{ agent.numcaixa }}</h5>
+                                          <h6 class="card-subtitle mb-2 text-muted">IP: {{ agent.agent_ip }}</h6>
+                                          
+                                          <!-- Status -->
+                                          <p class="card-text">
+                                              Status:
+                                              {% if agent.status == "Desativado" %}
+                                              <span class="badge text-bg-warning">Desativado</span>
+                                              {% elif agent.status == "Falha" %}
+                                              <span class="badge text-bg-danger">Falha</span>
+                                              {% else %}
+                                              <span class="badge text-bg-success">Ativo</span>
+                                              {% endif %}
+                                          </p>
+
+                                          <!-- Ações -->
+                                          <div class="row">
+                                              {% if agent.status != "Desativado" %}
+                                              <form method="POST" action="{% if agent.numcaixa %}{% url 'desativar_servico' agent.numcaixa %}{% endif %}" class="col-4">
+                                                  {% csrf_token %}
+                                                  <button class="btn btn-warning btn-sm col-12" type="submit">Desativar</button>
+                                              </form>
+                                              {% endif %}
+                                              
+                                              {% if agent.status == "Desativado" %}
+                                              <form method="POST" action="{% if agent.numcaixa %}{% url 'reativar_servico' agent.numcaixa %}{% endif %}" class="col-4">
+                                                  {% csrf_token %}
+                                                  <button class="btn btn-success btn-sm col-12" type="submit" {% if not agent.numcaixa %}disabled{% endif %}>Reativar</button>
+                                              </form>
+                                              {% endif %}
+
+                                              <form method="POST" action="{% if agent.numcaixa %}{% url 'reativar_servico' agent.numcaixa %}{% endif %}" class="col-4">
+                                                {% csrf_token %}
+                                                <button class="btn btn-primary btn-sm disabled col-12" type="submit">Reiniciar</button>
+                                              </form>
+
+                                              <button class="btn btn-primary btn-sm col-4" type="button" data-bs-toggle="collapse" data-bs-target="#info-{{ agent.id }}" aria-expanded="false" aria-controls="info-{{ agent.id }}">
+                                                  Infos
+                                              </button>
+                                          </div>
+                                          
+                                          <!-- Informações Adicionais (inicialmente ocultas) -->
+                                          <div class="collapse mt-3" id="info-{{ agent.id }}">
+                                              <p class="card-text"><strong>Versão do Serviço:</strong> {{ agent.service_version }}</p>
+                                              <p class="card-text"><strong>Nome do dispositivo:</strong> {{ agent.name }}</p>
+                                              <p class="card-text"><strong>Tempo ativo:</strong> {{ agent.uptime }}</p>
+                                              <p class="card-text"><strong>Último Reinício:</strong> {{ agent.last_restart|date:"d/m/Y H:i" }}</p>
+                                              <p class="card-text"><strong>Último Sinal de vida:</strong> {{ agent.last_heartbeat|date:"d/m/Y H:i:s" }}</p>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              {% endfor %}
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              {% endfor %}
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

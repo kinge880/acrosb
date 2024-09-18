@@ -38,9 +38,10 @@ def get_system_info():
 # Função para enviar o status do agente para o servidor
 def send_agent_status():
     system_info = get_system_info()
-    coupons_generated = get_total_coupons_generated()
+    dadoscaixa = get_numcaixa()
     data = {
-        'coupons_generated': coupons_generated,
+        'numcaixa': dadoscaixa[0],
+        'codfilial': dadoscaixa[1],
         'agent_ip': socket.gethostbyname(socket.gethostname()),  # IP do agente
         'name': socket.gethostname(),  # Nome do host
         'cpu_usage': system_info['cpu_usage'],  # Uso da CPU
@@ -64,52 +65,53 @@ def main():
         print(numpedecf)
         print(ultnumped)
         if ultnumped != numpedecf[0]:
-            ped = processacupom(numpedecf[0])
+            pedidos = processacupom(numpedecf[0])
             
-            if ped:
+            if pedidos and len(pedidos) > 0:
                 update_last_coupon(numpedecf[0])
                 
                 conexao_postgre = conectar_banco()
                 cursor_postgre = conexao_postgre.cursor()
                 
-                if ped and len(ped) > 0:
-                    for i in range(ped[11]):
-                        criar_cupom(
-                            ped[3], ped[0],  numpedecf[2],  numpedecf[3], numpedecf[3], '68 99207-0446',
-                            ped[2], ped[3], ped[5], ped[6], ped[10]
-                        )
-                        
-                        imprimir_cupom(ped[0])
-                        
-                        # Inserção em cpfcli_cuponagem
-                        cursor_postgre.execute(f'''
-                            INSERT INTO cpfcli_cuponagem
-                            (
-                                id, dtmov, numpedecf, valor, codcli, nomecli, emailcli, telcli, cpf_cnpj, 
-                                dataped, bonificado, ativo, idcampanha, tipo, numcaixa
+                for ped in pedidos:
+                    if ped and len(ped) > 0:
+                        for i in range(ped[11]):
+                            criar_cupom(
+                                ped[3], ped[0],  numpedecf[2],  numpedecf[3], numpedecf[3], '68 99207-0446',
+                                ped[2], ped[3], ped[5], ped[6], ped[10]
                             )
-                            VALUES (
-                                DEFAULT, 
-                                NOW(), 
-                                {ped[0]},  -- Número do pedido
-                                {ped[1]},  -- Valor total
-                                {ped[2]},  -- Código do cliente
-                                '{ped[3]}', -- nomecli
-                                '{ped[4]}', --email
-                                '{ped[5]}', --tell
-                                '{ped[6]}', --cpf_cnpj
-                                '{ped[7]}', -- Data do pedido
-                                '{ped[8]}', -- Bonificado (ajustar conforme necessário)
-                                'S', -- Ativo
-                                {ped[9]}, -- ID da campanha
-                                'CC',
-                                {numpedecf[1]}
-                            )
-                        ''')
-                        
-                        conexao_postgre.commit()
-                else:
-                    print('venda não gerou cupom!')
+                            
+                            imprimir_cupom(ped[0])
+                            
+                            # Inserção em cpfcli_cuponagem
+                            cursor_postgre.execute(f'''
+                                INSERT INTO cpfcli_cuponagem
+                                (
+                                    id, dtmov, numpedecf, valor, codcli, nomecli, emailcli, telcli, cpf_cnpj, 
+                                    dataped, bonificado, ativo, idcampanha, tipo, numcaixa
+                                )
+                                VALUES (
+                                    DEFAULT, 
+                                    NOW(), 
+                                    {ped[0]},  -- Número do pedido
+                                    {ped[1]},  -- Valor total
+                                    {ped[2]},  -- Código do cliente
+                                    '{ped[3]}', -- nomecli
+                                    '{ped[4]}', --email
+                                    '{ped[5]}', --tell
+                                    '{ped[6]}', --cpf_cnpj
+                                    '{ped[7]}', -- Data do pedido
+                                    '{ped[8]}', -- Bonificado (ajustar conforme necessário)
+                                    'S', -- Ativo
+                                    {ped[9]}, -- ID da campanha
+                                    'CC',
+                                    {numpedecf[1]}
+                                )
+                            ''')
+                            
+                            conexao_postgre.commit()
+                    else:
+                        print('venda não gerou cupom!')
             
                 conexao_postgre.close()
         else:
