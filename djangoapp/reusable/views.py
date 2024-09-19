@@ -123,6 +123,40 @@ def exist_client(cursor, codcli):
     ''')
     return cursor.fetchone()
 
+def exist_client_cpf_email(cursor, email, cpf_cnpj):
+    cursor.execute(f'''
+        SELECT 
+            CODCLI, 
+            COALESCE(CLIENTE, 'Sem nome cadastrado') AS CLIENTE, 
+            COALESCE(EMAIL, 'Sem email cadastrado') AS EMAIL, 
+            COALESCE(CGCENT, 'Sem cpf ou cnpj cadastrado') AS CGCENT
+        FROM 
+            PCCLIENT
+        WHERE 
+            (
+                UPPER(EMAIL) = UPPER('{email}') OR 
+                REGEXP_REPLACE(CGCENT, '[^0-9]', '') = REGEXP_REPLACE('{cpf_cnpj}', '[^0-9]', '')
+            )
+    ''')
+    return cursor.fetchone()
+
+def obter_prox_client(cursor, email, cpf_cnpj):
+    cursor.execute(f'''
+        SELECT 
+            CODCLI, 
+            COALESCE(CLIENTE, 'Sem nome cadastrado') AS CLIENTE, 
+            COALESCE(EMAIL, 'Sem email cadastrado') AS EMAIL, 
+            COALESCE(CGCENT, 'Sem cpf ou cnpj cadastrado') AS CGCENT
+        FROM 
+            PCCLIENT
+        WHERE 
+            (
+                UPPER(EMAIL) = UPPER('{email}') OR 
+                REGEXP_REPLACE(CGCENT, '[^0-9]', '') = REGEXP_REPLACE('{cpf_cnpj}', '[^0-9]', '')
+            )
+    ''')
+    return cursor.fetchone()
+
 def exist_fornec(cursor, codfornec):
     cursor.execute(f'''
         SELECT 

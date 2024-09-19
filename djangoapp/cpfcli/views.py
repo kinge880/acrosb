@@ -12,17 +12,16 @@ from reusable.models import *
 from .forms import *
 from django.db import transaction
 from io import BytesIO
-from django.views.decorators.http import require_http_methods
 from .models import *
 from django.apps import apps
-from django.contrib.contenttypes.models import ContentType
 from django.core.serializers import serialize
-from django.db.models import OuterRef, Subquery
-from django.contrib.postgres.aggregates import ArrayAgg
 from project.conexao_postgresql import *
 from django.utils import timezone
 from datetime import timedelta
 from .models import Cuponagem, Campanha
+from acounts.models import Profile 
+from acounts.models import empresa 
+from django.contrib.auth.models import User
 
 def staff_required(view_func):
     @wraps(view_func)
@@ -978,14 +977,63 @@ def campanhasidclientnumped(request, idcampanha, idclient, numped):
     getTable()
     return render(request, 'campanhas/campanhaItems.html', context)
 
+@transaction.atomic
 def cadastro_cliente(request):
+    
     if request.method == 'POST':
         form = ClienteForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('success_page')  # Substitua com a URL para uma página de sucesso ou outra ação desejada
+        
+        # Validações básicas
+        if not form.is_valid():
+            messages.error(request, "Por favor, corrija os erros.")
+            return render(request, 'clientes/cadastro.html', {'form': form})
+        
+        try:
+            # Verifique se o e-mail já está em uso
+            if User.objects.filter(email=form.cleaned_data['email']).exists():
+                messages.error(request, "Este e-mail já está cadastrado.")
+                return render(request, 'clientes/cadastro.html', {'form': form})
+            
+            # Verifique se o CPF/CNPJ já está em uso
+            if Cliente.objects.filter(cnpf_cnpj=form.cleaned_data['cnpf_cnpj']).exists():
+                messages.error(request, "Este CPF/CNPJ já está cadastrado.")
+                return render(request, 'clientes/cadastro.html', {'form': form})
+            
+            # Salvar o cliente (mas não o commit ainda, pois vamos adicionar mais lógica)
+            cliente = form.save(commit=False)
+            
+            # Criação do usuário Django
+            user = User.objects.create_user(
+                username=form.cleaned_data['email'],  # Usando e-mail como username
+                email=form.cleaned_data['email'],
+                first_name=form.cleaned_data['nome'].split()[0],  # Primeiro nome
+                last_name=" ".join(form.cleaned_data['nome'].split()[1:])  # Último nome ou sobrenomes
+            )
+            
+            # Configura a senha com hash (segurança)
+            user.set_password(form.cleaned_data['senha'])  # Senha com hash seguro
+            user.save()
+            
+            # Criação do perfil associado ao User
+            empresa = empresa.objects.get(pk=1)  # Ajuste conforme a lógica de sua aplicação
+            Profile.objects.create(user=user, idempresa=empresa)
+            
+            # Agora finalize o cliente e associe se necessário
+            cliente.save()  # Agora salvamos o cliente
+            
+            messages.success(request, "Cadastro realizado com sucesso!")
+            return redirect('success_page')  # Redireciona após o sucesso
+
+        except IntegrityError as e:
+            # Se qualquer erro ocorrer durante a transação, faça rollback
+            transaction.rollback()
+            messages.error(request, f"Ocorreu um erro ao realizar o seu cadastro: {str(e)}")
+        except Exception as e:
+            # Mensagem genérica para outros erros
+            messages.error(request, f"Ocorreu um erro inesperado: {str(e)}")
     else:
         form = ClienteForm()
+
     return render(request, 'clientes/cadastro.html', {'form': form})
 
 @login_required(login_url="/accounts/login/")

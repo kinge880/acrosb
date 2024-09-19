@@ -11,7 +11,7 @@ from instanciapastas import imprimir_cupom
 
 # URL do servidor principal onde o agente enviará os dados
 SERVER_URL = 'http://172.16.21.145:8000/'
-service_version = '0.112092024'
+service_version = '1.1.18092024'
 restart = datetime.now().isoformat()
 local_timezone = pytz.timezone('America/Sao_Paulo')
         

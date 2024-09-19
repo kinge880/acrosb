@@ -27,9 +27,17 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
+                <a class="nav-link" href="/clientes/cadastro/">Cadastro de cliente</a>
                 {% if request.user.username %} 
                     {% if request.user.is_staff or request.user.is_superuser %}
-                        <a class="nav-link disabled" href="/clientes/cadastro/">Cadastro de cliente</a>
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                Gerenciamento de agentes
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="/gerenciamento/agentes/">Painel de agentes</a></li>
+                            </ul>
+                        </div>
                         {% comment %} <a class="nav-link" href="/relatorios/menu">Relatórios</a> {% endcomment %}
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -42,11 +50,10 @@
                                 <li><a class="dropdown-item" href="/fornecs">Clusters de fornecedores</a></li>
                                 <li><a class="dropdown-item" href="/marcas">Clusters de marcas</a></li>
                                 <li><a class="dropdown-item" href="/blacklist">Clusters de clientes</a></li>
-                                <li><a class="dropdown-item" href="/gerenciamento/agentes/">Gerenciamento de agentes</a></li>
                             </ul>
                         </div>
                         {% if request.user.is_superuser %}
-                            <a href="/admin/" class="nav-link">Painel administrativo</a>
+                            <a href="/admin/" class="nav-link">Administrativo</a>
                         {% endif %}
                     {% endif %}
                     <div class="dropdown">

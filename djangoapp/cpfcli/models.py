@@ -47,9 +47,11 @@ class Cliente(models.Model):
     data_nascimento = models.DateField()
     genero = models.CharField(max_length=1, choices=GENERO_CHOICES)
     senha = models.CharField(max_length=100)  # Note: For security reasons, passwords should be hashed.
+    codcli =  models.BigIntegerField(null=True, blank=True)
 
     def __str__(self):
-        return self.nome
+        return str(self.nome)
+
 
 class Campanha(models.Model):
     idcampanha = models.AutoField(primary_key=True)
