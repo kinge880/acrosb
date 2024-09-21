@@ -5,6 +5,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 import os
 from django.core.files.storage import default_storage
+from cpfcli.models import Cliente
 
 class empresa(models.Model):
     empresa = models.TextField(max_length=255, blank=True, null=True)
@@ -17,6 +18,7 @@ class empresa(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    client = models.OneToOneField(Cliente, on_delete=models.CASCADE, blank=True, null=True)
     idempresa = models.ForeignKey(empresa, on_delete=models.CASCADE)
 
     def __str__(self) :

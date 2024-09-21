@@ -20,8 +20,9 @@ class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
         fields = [
-            'nome', 'tipo_pessoa', 'cnpf_cnpj', 'telefone', 'email', 'cep', 'cidade',
-            'estado', 'bairro', 'rua', 'numero', 'data_nascimento', 'genero', 'senha'
+            'aceita_comunicacao', 'concordo_regulamento', 'nome', 'tipo_pessoa', 'cnpf_cnpj', 'telefone', 'email', 'cep', 'cidade',
+            'estado', 'bairro', 'rua', 'numero', 'data_nascimento', 'genero', 'senha', 
+            'ibge'
         ]
         
         TIPO_PESSOA_CHOICES = [
@@ -29,20 +30,8 @@ class ClienteForm(forms.ModelForm):
             ('J', 'Jurídica'),
         ]
         widgets = {
-            'nome': forms.TextInput(
-                attrs={
-                    'required': True, 
-                    'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 
-                    'classdiv': 'col-12 mb-3', 
-                    'autocomplete': 'off'
-                }),
-            'tipo_pessoa': forms.Select(
-                attrs={
-                    'required': True, 
-                    'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 
-                    'classdiv': 'col-12 col-md-6 mb-3', 
-                    'autocomplete': 'off'
-                }),
+            'nome': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
+            'tipo_pessoa': forms.Select(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off' }),
             'cnpf_cnpj': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
             'telefone': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
             'email': forms.EmailInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
@@ -54,13 +43,10 @@ class ClienteForm(forms.ModelForm):
             'numero': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
             'genero': forms.Select(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
             'data_nascimento': forms.DateInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-6 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
-            'senha': forms.PasswordInput(
-                attrs={
-                    'required': True, 
-                    'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 
-                    'classdiv': 'col-12 col-md-6 mb-3',
-                    'autocomplete': 'off'
-                }),
+            'senha': forms.PasswordInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3','autocomplete': 'off'}),
+            'ibge': forms.HiddenInput(attrs={'class': 'form-control d-none col-12', 'classdiv': 'd-none'}),
+            'aceita_comunicacao': forms.HiddenInput(attrs={'class': 'form-control col-12', 'classdiv': 'd-none'}),
+            'concordo_regulamento': forms.HiddenInput(attrs={'class': 'form-control col-12', 'classdiv': 'd-none'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -92,6 +78,7 @@ class ClienteForm(forms.ModelForm):
         
         self.fields['senha'].label = 'Senha'
         self.fields['confirmar_senha'].label = 'Confirmar Senha'
+        self.fields['ibge'].label = ''
     
     def clean_cnpf_cnpj(self):
         cpf_cnpj = self.cleaned_data.get('cnpf_cnpj')

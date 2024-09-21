@@ -28,30 +28,33 @@ class Cliente(models.Model):
     
     GENERO_CHOICES = [
         ('M', 'Masculino'),
-        ('F', 'Feminino'),
-        ('O', 'Outro'),
+        ('F', 'Feminino')
     ]
     
-    nome = models.CharField(max_length=100)
-    cnpf_cnpj = models.CharField(max_length=18, unique=True)
-    telefone = models.CharField(max_length=11)
-    email = models.EmailField()
-    endereco = models.CharField(max_length=255)
-    cidade = models.CharField(max_length=100)
-    estado = models.CharField(max_length=2)
-    bairro = models.CharField(max_length=150)
-    rua = models.CharField(max_length=150)
-    numero = models.CharField(max_length=8)
-    cep = models.CharField(max_length=10)
-    tipo_pessoa = models.CharField(max_length=1, choices=TIPO_PESSOA_CHOICES)
-    data_nascimento = models.DateField()
-    genero = models.CharField(max_length=1, choices=GENERO_CHOICES)
-    senha = models.CharField(max_length=100)  # Note: For security reasons, passwords should be hashed.
+    nome = models.CharField(max_length=60)
+    cnpf_cnpj = models.CharField(max_length=9, unique=True, null=True, blank=True)
+    telefone = models.CharField(max_length=13, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    endereco = models.CharField(max_length=40, null=True, blank=True)
+    cidade = models.CharField(max_length=15, null=True, blank=True)
+    estado = models.CharField(max_length=2, null=True, blank=True)
+    bairro = models.CharField(max_length=40, null=True, blank=True)
+    rua = models.CharField(max_length=40, null=True, blank=True)
+    numero = models.CharField(max_length=6, null=True, blank=True)
+    cep = models.CharField(max_length=9, null=True, blank=True)
+    tipo_pessoa = models.CharField(max_length=1, choices=TIPO_PESSOA_CHOICES, null=True, blank=True)
+    data_nascimento = models.DateField(null=True, blank=True)
+    genero = models.CharField(max_length=1, choices=GENERO_CHOICES, null=True, blank=True)
+    senha = models.CharField(max_length=100, null=True, blank=True)  # Note: For security reasons, passwords should be hashed.'
     codcli =  models.BigIntegerField(null=True, blank=True)
-
+    ieent = models.CharField(max_length=15, null=True, blank=True)
+    codativ = models.IntegerField(null=True, blank=True)
+    ibge = models.IntegerField(null=True, blank=True)
+    aceita_comunicacao = models.BooleanField(default=True)
+    concordo_regulamento = models.BooleanField(default=True)
+    
     def __str__(self):
         return str(self.nome)
-
 
 class Campanha(models.Model):
     idcampanha = models.AutoField(primary_key=True)

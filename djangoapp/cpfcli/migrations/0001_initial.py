@@ -77,20 +77,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('nome', models.CharField(max_length=100)),
-                ('cnpf_cnpj', models.CharField(max_length=18, unique=True)),
                 ('telefone', models.CharField(max_length=11)),
                 ('email', models.EmailField(max_length=254)),
                 ('endereco', models.CharField(max_length=255)),
                 ('cidade', models.CharField(max_length=100)),
                 ('estado', models.CharField(max_length=2)),
-                ('bairro', models.CharField(max_length=150)),
-                ('rua', models.CharField(max_length=150)),
-                ('numero', models.CharField(max_length=8)),
-                ('cep', models.CharField(max_length=10)),
-                ('tipo_pessoa', models.CharField(choices=[('F', 'Física'), ('J', 'Jurídica')], max_length=1)),
-                ('data_nascimento', models.DateField()),
-                ('genero', models.CharField(choices=[('M', 'Masculino'), ('F', 'Feminino'), ('O', 'Outro')], max_length=1)),
-                ('senha', models.CharField(max_length=100)),
+                ('cep', models.CharField(max_length=10))
             ],
         ),
         migrations.CreateModel(

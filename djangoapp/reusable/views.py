@@ -140,21 +140,24 @@ def exist_client_cpf_email(cursor, email, cpf_cnpj):
     ''')
     return cursor.fetchone()
 
-def obter_prox_client(cursor, email, cpf_cnpj):
+def obter_cod_client(cursor, email, cpf_cnpj, conexao):
     cursor.execute(f'''
-        SELECT 
-            CODCLI, 
-            COALESCE(CLIENTE, 'Sem nome cadastrado') AS CLIENTE, 
-            COALESCE(EMAIL, 'Sem email cadastrado') AS EMAIL, 
-            COALESCE(CGCENT, 'Sem cpf ou cnpj cadastrado') AS CGCENT
-        FROM 
-            PCCLIENT
-        WHERE 
-            (
-                UPPER(EMAIL) = UPPER('{email}') OR 
-                REGEXP_REPLACE(CGCENT, '[^0-9]', '') = REGEXP_REPLACE('{cpf_cnpj}', '[^0-9]', '')
-            )
+        SELECT PROXNUMCLI FROM PCCONSUM
     ''')
+    numcli = cursor.fetchone()
+    
+    cursor.execute(f'''
+        UPDATE PCCONSUM SET PROXNUMCLI = PROXNUMCLI + 1
+    ''')
+    conexao.commit()
+    
+    return numcli
+
+def obter_praca(cursor, cidade):
+    cursor.execute(f'''
+        SELECT CODPRACA, PRACA FROM PCPRACA WHERE UPPER(PRACA) LIKE UPPER('%{cidade}%')
+    ''')
+
     return cursor.fetchone()
 
 def exist_fornec(cursor, codfornec):
