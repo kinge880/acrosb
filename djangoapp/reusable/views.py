@@ -16,6 +16,39 @@ from project.oracle import *
 from datetime import datetime
 from django.core import serializers
 
+def divide_chunks(lst, chunk_size):
+    """Divide a lista em pedaços menores de tamanho máximo chunk_size."""
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i:i + chunk_size]
+
+def build_clause(field, values, in_or_not):
+    """Constrói a cláusula NOT IN, incluindo divisão em chunks."""
+    # Se houver apenas um item, retornar !=
+    if len(values) == 1:
+        if in_or_not == 'NOT':
+            return f"{field} != {values[0]}"
+        else:
+            return f"{field} = {values[0]}"
+    
+    # Caso tenha mais de um item, dividir em chunks e construir várias cláusulas NOT IN
+    clauses = []
+    chunks = list(divide_chunks(values, 999))
+    
+    for chunk in chunks:
+        if len(chunk) == 1:
+            if in_or_not == 'NOT':
+                clauses.append(f"{field} != {chunk[0]}")
+            else:
+                clauses.append(f"{field} = {chunk[0]}")
+        else:
+            if in_or_not == 'NOT':
+                clauses.append(f"{field} NOT IN ({', '.join(map(str, chunk))})")
+            else:
+                clauses.append(f"{field} IN ({', '.join(map(str, chunk))})")
+    
+    # Unir todas as cláusulas com ' AND '
+    return ' '.join(clauses)
+
 def translate_column_name(column_name):
     column_translation_dict = {
         'enviaemail': 'Enviar Email',

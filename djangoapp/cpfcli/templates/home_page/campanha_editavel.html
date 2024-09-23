@@ -6,13 +6,31 @@
     <style>
         #fundo {
             position: relative;
-            background: url(/media/{{ campanha.logo_campanha }}) no-repeat center center;
+            background: url(/media/{{ campanha.logo_campanha }})  center center;
         }
+        
+        h1 {
+            font-size: 2.4em;
+            color: #444;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            color: #2c3e50;
+            margin-top: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
     </style>
     <div id="fundo" class="container-fluid vh-75 d-flex flex-start flex-wrap">
         {% if encerrado == 'S' %}
             <div class="container-fluid vh-100 align-content-center">
-                {% include 'partials/message.html' %}
                 <div class="card mb-5 mt-5 text-bg-primary pb-5 pt-5">
                     <div class="card-body text-center p-5">
                         <p class="card-text h2">A CAMPANHA {{campanha.descricao}} ESTÁ ENCERRADA!</p>
@@ -27,7 +45,54 @@
                     </div>
                     <div class="card-body p-4 text-center d-flex justify-content-center flex-wrap">
                         <p class="card-text h6 mb-3 col-12">Aproveite nossas ofertas exclusivas e aumente suas chances de ser o grande vencedor!</p>
-                        <a href="#" class="text-white">Confira o regulamento da campanha aqui</a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#regulamentoModal" class="text-white a_underline">Confira o regulamento da campanha aqui</a>
+                        <!-- Modal Bootstrap 5 -->
+                        <div class="modal fade" id="regulamentoModal" tabindex="-1" aria-labelledby="cupomModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content text-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="cupomModalLabel">Regulamento da Campanha Promocional</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h2>1. Disposições Gerais</h2>
+                                        <p>
+                                            Lorem ipsum dolor sit amet, <strong>consectetur adipiscing elit</strong>. Nulla facilisi. Donec vehicula felis et dui interdum, at fermentum urna facilisis. Suspendisse potenti. Praesent vehicula risus at ligula pharetra, et varius ex vestibulum. Aenean sit amet felis massa.
+                                        </p>
+
+                                        <h2>2. Período da Promoção</h2>
+                                        <p>
+                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed cursus, nunc ac interdum scelerisque, nisi lectus tincidunt lorem, non interdum mauris nisl a justo. A promoção terá início no dia <strong>[data de início]</strong> e término no dia <strong>[data de término]</strong>.
+                                        </p>
+
+                                        <h2>3. Produtos Participantes</h2>
+                                        <p>
+                                            Aliquam non diam in tortor egestas hendrerit nec id risus. Morbi vehicula lacus nec nulla interdum, at varius justo laoreet. Aenean ullamcorper mauris non gravida blandit. Sed in turpis at enim molestie rhoncus a eget leo. Ut ut lectus sed nisl finibus dictum a id arcu.
+                                        </p>
+
+                                        <h2>4. Participação</h2>
+                                        <p>
+                                            Curabitur venenatis accumsan elit, sed pretium ligula dictum a. Para participar, o cliente deverá adquirir qualquer um dos produtos participantes descritos no item anterior, no período de vigência da promoção.
+                                        </p>
+
+                                        <h2>5. Sorteios e Prêmios</h2>
+                                        <p>
+                                            Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi eget nisi vel lorem condimentum auctor. Aenean et dolor sed turpis ullamcorper porttitor. Os sorteios serão realizados semanalmente, nas seguintes datas: <strong>[inserir datas dos sorteios]</strong>. Os prêmios incluem <strong>[descrever prêmios]</strong>.
+                                        </p>
+
+                                        <h2>6. Condições para Recebimento do Prêmio</h2>
+                                        <p>
+                                            Vivamus auctor malesuada massa, nec suscipit urna fermentum in. Para receber o prêmio, o participante sorteado deverá apresentar o comprovante de compra dos produtos participantes e um documento de identificação válido.
+                                        </p>
+
+                                        <h2>7. Disposições Finais</h2>
+                                        <p>
+                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas commodo est ac lorem sollicitudin, vitae volutpat risus auctor. A participação nesta promoção implica na aceitação total e irrestrita de todos os termos deste regulamento.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -57,7 +122,48 @@
                     <div class="card-body p-4 text-center d-flex justify-content-center flex-wrap">
                         <p class="card-text h6 mb-3 col-12">Comprou antes de fazer parte do clube? Não tem problema!</p>
                         {% if request.user.is_authenticated %}
-                            <a href="#" class="text-white">Registre seu cupom fiscal aqui</a>
+                            <!-- Link para abrir o modal -->
+                            <a href="#" class="text-white a_underline" data-bs-toggle="modal" data-bs-target="#cupomModal">Registre seu cupom fiscal aqui</a>
+
+                            <!-- Modal Bootstrap 5 -->
+                            <div class="modal fade" id="cupomModal" tabindex="-1" aria-labelledby="cupomModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content text-dark">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="cupomModalLabel">Registrar Cupom Fiscal</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <!-- Formulário dentro do modal -->
+                                            <form method="POST" class="needs-validation" novalidate>
+                                                {% csrf_token %}
+                                                <div class="row flex-wrap">
+                                                    <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                        <input type="number" class="form-control input-cosmic-cascade-tetra-49m7" id="numeroCupom" name="numeroCupom" required>
+                                                        <label for="numeroCupom" class="form-label user-label-cosmic-cascade-tetra-49m7">Número do Cupom</label>
+                                                    </div>
+                                                    <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                        <input type="number" class="form-control input-cosmic-cascade-tetra-49m7" id="numeroCaixa" name="numeroCaixa" required>
+                                                        <label for="numeroCaixa" class="form-label user-label-cosmic-cascade-tetra-49m7">Número do Caixa</label>
+                                                    </div>
+                                                    <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                        <input type="date" class="form-control input-cosmic-cascade-tetra-49m7" id="dataCompra" name="dataCompra" required>
+                                                        <label for="dataCompra" class="form-label user-label-cosmic-cascade-tetra-49m7 user-label-date-cosmic-cascade-tetra-49m7">Data da Compra</label>
+                                                    </div>
+                                                    <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                        <input type="number" class="form-control input-cosmic-cascade-tetra-49m7" id="valorCupom" name="valorCupom" required step="any">
+                                                        <label for="valorCupom" class="form-label user-label-cosmic-cascade-tetra-49m7">Valor do Cupom</label>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="modal-footer d-flex justify-content-between">
+                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                                            <button type="submit" class="btn btn-primary btn-sm">Registrar</button>
+                                        </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         {% else %}
                             <a href="/accounts/clientes/cadastro/" class="text-white">Registre seu cupom fiscal aqui</a>
                         {% endif %}
@@ -67,6 +173,7 @@
         {% endif %}
         
         <div class="container">
+            {% include 'partials/message.html' %}
             {% if request.user.is_authenticated %}
                 <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5">
                     <div class="jumbotron jumbotron-fluid">
@@ -127,24 +234,28 @@
                         <tr>
                             <th class="text-start">Nome</th>
                             <th class="text-start">Data do sorteio</th>
-                            {% if campanha.usa_numero_da_sorte == 'S' %}
-                                Número da sorte
-                            {% else %}
-                                Cupom
-                            {% endif %}
+                            <th class="text-start">
+                                {% if campanha.usa_numero_da_sorte == 'S' %}
+                                    Número da sorte
+                                {% else %}
+                                    Cupom
+                                {% endif %}
+                            </th>
                             <th class="text-start">Número do sorteio</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for dado in dados %}
                             <tr>
-                                <td class="text-start">{{dado.nomecli}}</td>
+                                <td class="text-start">{{dado.numsorte.nomecli}}</td>
                                 <td class="text-start">{{dado.dtsorteio}}</td>
-                                {% if campanha.usa_numero_da_sorte == 'S' %}
-                                    {{dado.numsorte}}
-                                {% else %}
-                                    {{dado.numpedecf}}
-                                {% endif %}
+                                <td class="text-start">
+                                    {% if campanha.usa_numero_da_sorte == 'S' %}
+                                        {{dado.numsorte}}
+                                    {% else %}
+                                        {{dado.numpedecf}}
+                                    {% endif %}
+                                </td>
                                 <td class="text-start">{{dado.numsorteio}}</td>
                             </tr>
                         {% endfor %}

@@ -76,6 +76,7 @@ class CampanhaProcessados(models.Model):
     codcli = models.IntegerField(null=True, blank=True)
     geroucupom = models.TextField(max_length=1, null=True, blank=True)
     geroubonus = models.TextField(max_length=1, null=True, blank=True)
+    tipoprocessamento = models.CharField(max_length=1, default='A')
     
     def save(self, *args, **kwargs):     
         self.dtmov = timezone.now()

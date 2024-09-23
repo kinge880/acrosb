@@ -103,7 +103,6 @@ def get_client_ip(request):
 
 class AccessLogMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        print('oie')
         if request.path.startswith('/static/') or  request.path.startswith('/media/') or request.path.startswith('/baton/') or request.path.startswith('/reusables/') or request.path.startswith('/admin/') or request.path.startswith('/admin_tools_stats/') or request.path.startswith('/admin_tools_stats/'):
             return
         # Apenas logar requisições GET e POST

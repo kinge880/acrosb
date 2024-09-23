@@ -1389,3 +1389,13 @@
     text-overflow: ellipsis;
     white-space: normal; /* Impede que o texto seja uma única linha contínua */
 }
+
+.a_underline {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.a_underline:hover {
+    text-decoration: underline;
+}
