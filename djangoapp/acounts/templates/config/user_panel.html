@@ -1,169 +1,158 @@
 {% extends 'index.html' %}
 {% load static %}
-{% block title %}{{title}}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 {% block content %}
 <div class="container vh-75 d-flex flex-start flex-wrap">
     <div class="container">
-        <h1 class="text-center mb-4 mt-3">Configurações da tela de pesquisa</h1>
+        <h1 class="text-center mb-4 mt-3">Configurações da Tela de Pesquisa</h1>
         {% include 'partials/message.html' %}
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <div class=" p-3 row flex-wrap">
+            <div class="p-3 row flex-wrap">
                 <!-- Configurações para Desktop -->
                 <div class="form-group mb-3 col-6">
                     <label for="background_type">Tipo de Fundo (Desktop):</label>
                     <select class="form-select" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
-                        <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo da página em cor sólida</option>
-                        <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo da página utilizando uma imagem</option>
-                        <option value="colorf" {% if variaveis_globais.background_type == 'colorf' %}selected{% endif %}>3 - Fundo da página em cor sólida com filtro</option>
-                        <option value="urlf" {% if variaveis_globais.background_type == 'urlf' %}selected{% endif %}>4 - Fundo da página utilizando uma imagem com filtro</option>
+                        <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
+                        <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
+                        <option value="colorf" {% if variaveis_globais.background_type == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
+                        <option value="urlf" {% if variaveis_globais.background_type == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
                     </select>
                 </div>
 
                 <div class="form-group mb-3 col-6">
                     <label for="background_type_mobile">Tipo de Fundo (Mobile):</label>
                     <select class="form-select" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
-                        <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo da página em cor sólida</option>
-                        <option value="url" {% if variaveis_globais.background_type_mobile == 'url' %}selected{% endif %}>2 - Fundo da página utilizando uma imagem</option>
-                        <option value="colorf" {% if variaveis_globais.background_type_mobile == 'colorf' %}selected{% endif %}>3 - Fundo da página em cor sólida com filtro</option>
-                        <option value="urlf" {% if variaveis_globais.background_type_mobile == 'urlf' %}selected{% endif %}>4 - Fundo da página utilizando uma imagem com filtro</option>
+                        <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
+                        <option value="url" {% if variaveis_globais.background_type_mobile == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
+                        <option value="colorf" {% if variaveis_globais.background_type_mobile == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
+                        <option value="urlf" {% if variaveis_globais.background_type_mobile == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
                     </select>
                 </div>
 
                 <div class="d-flex justify-content-between flex-wrap col-6">
                     <div id="color_field" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type in 'color,colorf' %}block{% else %}none{% endif %};">
                         <label for="background_color">Cor de Fundo (Desktop)</label>
-                        <input type="color" class="form-control form-control-color w-100" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
+                        <input type="color" class="form-control" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
                     </div>
 
                     <div id="background_image_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type in 'url,urlf' %}block{% else %}none{% endif %};">
                         <label for="background_image">Imagem de Fundo (Desktop)</label>
-                        
-                        <div class="mb-3">
-                            <div id="background_container" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;"
-                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                data-bs-custom-class="custom-tooltip"
-                                data-bs-title="A imagem deve seguir no tamanho 1920 x 1080">
+                        <div class="mb-3" onclick="document.getElementById('background_image').click();">
+                            <div id="background_container" style=" border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
                                 {% if variaveis_globais.background_url %}
-                                    <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
                                 {% else %}
-                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                                    <span class="text-muted d-flex align-items-center justify-content-center h-100">Nenhuma Imagem</span>
                                 {% endif %}
                             </div>
                         </div>
-                        
                         <input type="file" class="form-control-file" id="background_image" name="background_url" style="display: none;" onchange="previewBackgroundImage(event)">
                     </div>
 
                     <div id="filter_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type in 'urlf,colorf' %}block{% else %}none{% endif %};">
                         <label for="filter_color">Cor do Filtro (Desktop)</label>
-                        <input type="color" class="form-control form-control-color w-100" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}" placeholder="#000000">
+                        <input type="color" class="form-control" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}">
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-between flex-wrap col-6">
                     <div id="color_field_mobile" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type_mobile in 'color,colorf' %}block{% else %}none{% endif %};">
                         <label for="background_color_mobile">Cor de Fundo (Mobile)</label>
-                        <input type="color" class="form-control form-control-color w-100" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
+                        <input type="color" class="form-control" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
                     </div>
 
                     <div id="background_image_group_mobile" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type_mobile in 'url,urlf' %}block{% else %}none{% endif %};">
                         <label for="background_image_mobile">Imagem de Fundo (Mobile)</label>
-                        
-                        <div class="mb-3">
-                            <div id="background_container_mobile" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;"
-                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                data-bs-custom-class="custom-tooltip"
-                                data-bs-title="A imagem deve seguir em tamanho mobile">
+                        <div class="mb-3" onclick="document.getElementById('background_image_mobile').click();">
+                            <div id="background_container_mobile" style="border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
                                 {% if variaveis_globais.background_url_mobile %}
-                                    <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
                                 {% else %}
-                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                                    <span class="text-muted d-flex align-items-center justify-content-center h-100">Nenhuma Imagem</span>
                                 {% endif %}
                             </div>
                         </div>
-                        
                         <input type="file" class="form-control-file" id="background_image_mobile" name="background_url_mobile" style="display: none;" onchange="previewBackgroundImageMobile(event)">
                     </div>
 
                     <div id="filter_group_mobile" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.background_type_mobile in 'urlf,colorf' %}block{% else %}none{% endif %};">
                         <label for="filter_color_mobile">Cor do Filtro (Mobile)</label>
-                        <input type="color" class="form-control form-control-color w-100" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}" placeholder="#000000">
+                        <input type="color" class="form-control" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}">
                     </div>
                 </div>
 
                 <div class="form-group mb-3 col-12">
-                    <label for="initial_text">Texto Inicial apresentado em cima das caixas de pesquisa:</label>
+                    <label for="initial_text">Texto Inicial nas Caixas de Pesquisa:</label>
                     <textarea class="form-control" id="initial_text" name="initial_text" rows="1">{{ variaveis_globais.initial_text }}</textarea>
                 </div>
             </div>
 
-
             <div class="p-3 row flex-wrap">
-                
                 <!-- Configuração da Logo para Desktop -->
                 <div class="row flex-wrap col-12">
                     <div class="form-group mb-3 col-6">
-                        <label for="logo_type">Tipo de Logo utilizada na barra superior:</label>
+                        <label for="logo_type">Tipo de Logo na Barra Superior:</label>
                         <select class="form-select" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
-                            <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo no formato de texto</option>
-                            <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo no formato de imagem</option>
+                            <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo em texto</option>
+                            <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
                         </select>
                     </div>
 
                     <div class="form-group mb-3 col-6">
-                        <label for="logo_type_mobile">Tipo de Logo utilizada na barra superior (Mobile):</label>
+                        <label for="logo_type_mobile">Tipo de Logo (Mobile):</label>
                         <select class="form-select" id="logo_type_mobile" name="logo_type_mobile" onchange="toggleMobileLogoFields()">
-                            <option value="text" {% if variaveis_globais.logo_type_mobile == 'text' %}selected{% endif %}>1 - Logo no formato de texto</option>
-                            <option value="image" {% if variaveis_globais.logo_type_mobile == 'image' %}selected{% endif %}>2 - Logo no formato de imagem</option>
+                            <option value="text" {% if variaveis_globais.logo_type_mobile == 'text' %}selected{% endif %}>1 - Logo em texto</option>
+                            <option value="image" {% if variaveis_globais.logo_type_mobile == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
                         </select>
                     </div>
-                    
+                </div>
+
+                <div class="row flex-wrap col-12">
                     <div id="logo_text_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type == 'text' %}block{% else %}none{% endif %};">
-                        <label for="logo_text">Texto do Logo:</label>
+                        <label for="logo_text">Texto do Logo (Desktop):</label>
                         <input type="text" class="form-control" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
-                    </div>
-            
-                    <div id="logo_image_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
-                        <label for="logo_image_url">Imagem do Logo:</label>
-                        <div class="mb-3">
-                            <div id="logo_container" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
-                                {% if variaveis_globais.logo_image %}
-                                    <img src="/media/{{ variaveis_globais.logo_image }}" alt="Imagem do Logo Atual" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
-                                {% else %}
-                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <input type="file" class="form-control-file" id="logo_image" name="logo_image" style="display: none;" onchange="previewImage(event)">
                     </div>
 
                     <div id="logo_text_mobile_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type_mobile == 'text' %}block{% else %}none{% endif %};">
                         <label for="logo_text_mobile">Texto do Logo (Mobile):</label>
                         <input type="text" class="form-control" id="logo_text_mobile" name="logo_text_mobile" value="{{ variaveis_globais.logo_text_mobile }}">
                     </div>
-            
-                    <div id="logo_image_mobile_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type_mobile == 'image' %}block{% else %}none{% endif %};">
-                        <label for="logo_image_mobile_url">Imagem do Logo (Mobile):</label>
-                        <div class="mb-3">
-                            <div id="logo_container_mobile" style="height: 50px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
-                                {% if variaveis_globais.logo_image_mobile %}
-                                    <img src="/media/{{ variaveis_globais.logo_image_mobile }}" alt="Imagem do Logo Atual (Mobile)" class="img-thumbnail img-responsive" style="width: 100%; height: 100%; object-fit: cover;">
+
+                    <div id="logo_image_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
+                        <label for="logo_image">Imagem do Logo (Desktop):</label>
+                        <div class="mb-3" onclick="document.getElementById('logo_image').click();">
+                            <div id="logo_container" style=" border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
+                                {% if variaveis_globais.logo_url %}
+                                    <img src="/media/{{ variaveis_globais.logo_url }}" alt="Logo Atual" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
                                 {% else %}
-                                    <span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>
+                                    <span class="text-muted d-flex align-items-center justify-content-center h-100">Nenhuma Imagem</span>
                                 {% endif %}
                             </div>
                         </div>
-                        <input type="file" class="form-control-file" id="logo_image_mobile" name="logo_image_mobile" style="display: none;" onchange="previewMobileImage(event)">
+                        <input type="file" class="form-control-file" id="logo_image" name="logo_url" style="display: none;" onchange="previewLogoImage(event)">
+                    </div>
+
+                    <div id="logo_image_mobile_group" class="form-group mb-3 col-6" style="display: {% if variaveis_globais.logo_type_mobile == 'image' %}block{% else %}none{% endif %};">
+                        <label for="logo_image_mobile">Imagem do Logo (Mobile):</label>
+                        <div class="mb-3" onclick="document.getElementById('logo_image_mobile').click();">
+                            <div id="logo_container_mobile" style=" border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer;">
+                                {% if variaveis_globais.logo_url_mobile %}
+                                    <img src="/media/{{ variaveis_globais.logo_url_mobile }}" alt="Logo Atual (Mobile)" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <span class="text-muted d-flex align-items-center justify-content-center h-100">Nenhuma Imagem</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <input type="file" class="form-control-file" id="logo_image_mobile" name="logo_url_mobile" style="display: none;" onchange="previewLogoImageMobile(event)">
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-center mb-3 mt-3 col-12 ">
-                <button type="submit" class="btn btn-primary">Salvar</button>
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn btn-success mb-3">Salvar Configurações</button>
             </div>
-            
         </form>
     </div>
 </div>
@@ -171,166 +160,76 @@
 <script>
     function toggleBackgroundFields() {
         const backgroundType = document.getElementById('background_type').value;
-        const colorField = document.getElementById('color_field');
-        const urlField = document.getElementById('background_image_group');
-        const filterField = document.getElementById('filter_group');
-
-        if (backgroundType === 'color') {
-            colorField.style.display = 'block';
-            urlField.style.display = 'none';
-            filterField.style.display = 'none';
-        } else if (backgroundType === 'url') {
-            colorField.style.display = 'none';
-            urlField.style.display = 'block';
-            filterField.style.display = 'none';
-        } else if (backgroundType === 'urlf') {
-            colorField.style.display = 'none';
-            urlField.style.display = 'block';
-            filterField.style.display = 'block';
-        } else if (backgroundType === 'colorf') {
-            colorField.style.display = 'block';
-            urlField.style.display = 'none';
-            filterField.style.display = 'block';
-        }
+        document.getElementById('color_field').style.display = (backgroundType === 'color' || backgroundType === 'colorf') ? 'block' : 'none';
+        document.getElementById('background_image_group').style.display = (backgroundType === 'url' || backgroundType === 'urlf') ? 'block' : 'none';
+        document.getElementById('filter_group').style.display = (backgroundType === 'colorf' || backgroundType === 'urlf') ? 'block' : 'none';
     }
 
     function toggleBackgroundFieldsMobile() {
         const backgroundTypeMobile = document.getElementById('background_type_mobile').value;
-        const colorFieldMobile = document.getElementById('color_field_mobile');
-        const urlFieldMobile = document.getElementById('background_image_group_mobile');
-        const filterFieldMobile = document.getElementById('filter_group_mobile');
-
-        if (backgroundTypeMobile === 'color') {
-            colorFieldMobile.style.display = 'block';
-            urlFieldMobile.style.display = 'none';
-            filterFieldMobile.style.display = 'none';
-        } else if (backgroundTypeMobile === 'url') {
-            colorFieldMobile.style.display = 'none';
-            urlFieldMobile.style.display = 'block';
-            filterFieldMobile.style.display = 'none';
-        } else if (backgroundTypeMobile === 'urlf') {
-            colorFieldMobile.style.display = 'none';
-            urlFieldMobile.style.display = 'block';
-            filterFieldMobile.style.display = 'block';
-        } else if (backgroundTypeMobile === 'colorf') {
-            colorFieldMobile.style.display = 'block';
-            urlFieldMobile.style.display = 'none';
-            filterFieldMobile.style.display = 'block';
-        }
-    }
-
-    function toggleMobileLogoFields() {
-        const logoTypeMobile = document.getElementById('logo_type_mobile').value;
-        const logoTextMobileGroup = document.getElementById('logo_text_mobile_group');
-        const logoImageMobileGroup = document.getElementById('logo_image_mobile_group');
-    
-        if (logoTypeMobile === 'text') {
-            logoTextMobileGroup.style.display = 'block';
-            logoImageMobileGroup.style.display = 'none';
-        } else if (logoTypeMobile === 'image') {
-            logoTextMobileGroup.style.display = 'none';
-            logoImageMobileGroup.style.display = 'block';
-        }
+        document.getElementById('color_field_mobile').style.display = (backgroundTypeMobile === 'color' || backgroundTypeMobile === 'colorf') ? 'block' : 'none';
+        document.getElementById('background_image_group_mobile').style.display = (backgroundTypeMobile === 'url' || backgroundTypeMobile === 'urlf') ? 'block' : 'none';
+        document.getElementById('filter_group_mobile').style.display = (backgroundTypeMobile === 'colorf' || backgroundTypeMobile === 'urlf') ? 'block' : 'none';
     }
 
     function toggleLogoFields() {
         const logoType = document.getElementById('logo_type').value;
-        const logoTextGroup = document.getElementById('logo_text_group');
-        const logoImageGroup = document.getElementById('logo_image_group');
-
-        if (logoType === 'text') {
-            logoTextGroup.style.display = 'block';
-            logoImageGroup.style.display = 'none';
-        } else if (logoType === 'image') {
-            logoTextGroup.style.display = 'none';
-            logoImageGroup.style.display = 'block';
-        }
+        document.getElementById('logo_text_group').style.display = (logoType === 'text') ? 'block' : 'none';
+        document.getElementById('logo_image_group').style.display = (logoType === 'image') ? 'block' : 'none';
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        toggleBackgroundFields();
-        toggleBackgroundFieldsMobile();
-        toggleLogoFields();
-        toggleMobileLogoFields();
-    });
-
-    function previewImage(event) {
-        var input = event.target;
-        var container = document.getElementById('logo_container');
-        
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            
-            reader.onload = function(e) {
-                container.innerHTML = '<img src="' + e.target.result + '" alt="Imagem do Logo Atual" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">';
-            }
-            
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function previewMobileImage(event) {
-        var input = event.target;
-        var container = document.getElementById('logo_container_mobile');
-        
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            
-            reader.onload = function(e) {
-                container.innerHTML = '<img src="' + e.target.result + '" alt="Imagem do Logo Atual (Mobile)" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;">';
-            }
-            
-            reader.readAsDataURL(input.files[0]);
-        }
+    function toggleMobileLogoFields() {
+        const logoTypeMobile = document.getElementById('logo_type_mobile').value;
+        document.getElementById('logo_text_mobile_group').style.display = (logoTypeMobile === 'text') ? 'block' : 'none';
+        document.getElementById('logo_image_mobile_group').style.display = (logoTypeMobile === 'image') ? 'block' : 'none';
     }
 
     function previewBackgroundImage(event) {
-        const container = document.getElementById('background_container');
+        const imageContainer = document.getElementById('background_container');
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
-                container.innerHTML = ''; // Clear previous content
-                container.appendChild(img);
+                imageContainer.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
             };
             reader.readAsDataURL(file);
-        } else {
-            container.innerHTML = '<span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>';
+        }
+    }
+
+    function previewLogoImage(event) {
+        const logoContainer = document.getElementById('logo_container');
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoContainer.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+            };
+            reader.readAsDataURL(file);
         }
     }
 
     function previewBackgroundImageMobile(event) {
-        const container = document.getElementById('background_container_mobile');
+        const imageContainer = document.getElementById('background_container_mobile');
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
-                container.innerHTML = ''; // Clear previous content
-                container.appendChild(img);
+                imageContainer.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
             };
             reader.readAsDataURL(file);
-        } else {
-            container.innerHTML = '<span style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6c757d;">Nenhuma Imagem</span>';
+        }
+    }
+
+    function previewLogoImageMobile(event) {
+        const logoContainer = document.getElementById('logo_container_mobile');
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoContainer.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+            };
+            reader.readAsDataURL(file);
         }
     }
 </script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-      var tooltipList = [...tooltipTriggerList].map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-      });
-    });
-  </script>
 {% endblock %}

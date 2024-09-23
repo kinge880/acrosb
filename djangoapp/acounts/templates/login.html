@@ -1,4 +1,6 @@
 {% extends 'indexlogin.html' %}
+{% load static %}
+{% block title %}Login{% endblock %}
 
 {% block content %}
     <div class="container-fluid vh-100">
@@ -17,13 +19,10 @@
                                 <span class="input-group-text form-agroup" id="password-addon"><i class="fas fa-lock"></i></span>
                                 <input required type="password" class="form-control form-agroup" id="password" name="password" placeholder="Senha" aria-describedby="password-addon">
                             </div>
-                            {% if messages %}
-                                {% for message in messages %}
-                                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} mt-3 col-12 text-center" role="alert">{{ message }}</div>
-                                {% endfor %}
-                            {% endif %}
+                            {% include 'partials/message.html' %}
                             <!-- Add other fields as needed -->
                             <button type="submit" class="btn btn-primary btn-big-alternative col-12 text-center">Logar</button>
+                            <Label class="mt-1 text-center w-100">Ainda não tem sua conta? <a href="/accounts/clientes/cadastro/">Vamos criar!</a></Label>
                             <Label class="mt-1 text-center w-100">Não quer logar? Vamos <a href="/">voltar a tela inicial</a></Label>
                         </form>
                     </div>

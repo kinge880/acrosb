@@ -3,7 +3,7 @@
 <!-- Modal de inserção e edição -->
 <div class="modal fade" id="insertEditModal" data-bs-keyboard="false" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <form novalidate class="modal-content needs-validation" method="POST">
+        <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle">{{ tituloInsere }}</h5>
@@ -12,16 +12,23 @@
             <div class="modal-body modal-body1 row flex-wrap" id="bodyinsere">
                 <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
                 {% for field in form %}
-                    <div class="input-group-cosmic-cascade-tetra-49m7 {{ field.field.widget.attrs.classdiv }}">
-                        {% if field.field.widget.attrs.select2Label %}
-                            <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {% endif %}
-                        {{ field }}
-                        {% if not field.field.widget.attrs.select2Label %}
-                            <label class="user-label-cosmic-cascade-tetra-49m7 {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {% if field.field.widget.input_type == "file" %} file-input-container d-flex flex-column text-center {% endif %} {{ field.field.widget.attrs.classdiv }}">
+                        {% if field.field.widget.input_type == "file" %}
+                            <label for="preview_{{ field.name }}" class="{{ field.field.widget.attrs.classlabel }}">{{ field.label }}</label>
+                            <input type="file" id="{{ field.id_for_label }}" name="{{ field.name }}" class="d-none" onchange="previewImage(this)" accept="image/*">
+                            <img id="preview_{{ field.name }}" class="img-thumbnail {{ field.field.widget.attrs.class }}" src="{% if field.value %}{{ field.value }}{% else %}https://via.placeholder.com/1920x1080{% endif %}" alt="Preview Image" style="cursor: pointer" onclick="document.getElementById('{{ field.id_for_label }}').click();">
+                            
+                        {% else %}
+                            {% if field.field.widget.attrs.select2Label %}
+                                <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% endif %}
+                            {{ field }}
+                            {% if not field.field.widget.attrs.select2Label %}
+                                <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                            {% endif %}
                         {% endif %}
                         {% if field.errors %}
-                            <div class="invalid-feedback">
+                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
                                 {% for error in field.errors %}
                                     <p>{{ error }}</p>
                                 {% endfor %}
@@ -38,6 +45,7 @@
         </form>
     </div>
 </div>
+
 
 <!-- Modal de inserção -->
 <div class="modal fade" id="insertModalPlanilha" data-bs-keyboard="false" aria-labelledby="insertModalPlanilhaLabel" aria-hidden="true">
@@ -62,7 +70,20 @@
         </form>
     </div>
 </div>
-
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function (e) {
+                const previewId = 'preview_' + input.name;
+                document.getElementById(previewId).src = e.target.result;
+            }
+            
+            reader.readAsDataURL(input.files[0]); // converte o arquivo para URL de dados base64
+        }
+    }
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var insertEditModal = document.getElementById('insertEditModal');
@@ -83,65 +104,64 @@
             url: '/get_data/', // Endpoint que retorna os dados da campanha
             method: 'GET',
             data: { 
-                    id: id,
-                    app_name: '{{appname}}',
-                    model_name: '{{modelname}}',
-                    id_name: '{{primarykey}}',
-                    transation: 'N'
-                },
+                id: id,
+                app_name: '{{appname}}',
+                model_name: '{{modelname}}',
+                id_name: '{{primarykey}}',
+                transation: 'N'
+            },
             success: function(data) {
-                // Seleciona o modal específico pelo ID
                 var modal = $('#insertEditModal');
                 var form = modal.find('form');
                 form[0].reset();
                 modal.find(".select2").val('').trigger('change');
                 form.removeClass('was-validated');
     
-                // Itera sobre todos os campos do formulário dentro do modal
                 modal.find('input, select, textarea').each(function() {
                     var input = $(this);
                     var fieldName = input.attr('name'); // Obtém o nome do campo
-    
+                
                     if (fieldName && data[fieldName] !== undefined) {
                         var value = data[fieldName];
-                        
+                
                         // Verifica se o campo é do tipo date ou datetime-local
                         if (input.is('input[type="date"]')) {
-                            // Verifica se o valor é uma data válida
                             if (value) {
                                 var date = new Date(value);
                                 value = date.toISOString().split('T')[0];
                                 input.val(value);
                             }
                         } else if (input.is('input[type="datetime-local"]')) {
-                            // Verifica se o valor é uma data válida
                             if (value) {
                                 var date = new Date(value);
                                 value = date.toISOString().slice(0, 16);
                                 input.val(value);
                             }
+                        } else if (input.is('input[type="file"]')) {
+                            // Para arquivos, apenas defina a URL da imagem de pré-visualização
+                            const previewId = 'preview_' + input.attr('name');
+                            if (value) {
+                                document.getElementById(previewId).src = value;
+                            } else {
+                                document.getElementById(previewId).src = 'https://via.placeholder.com/150';
+                            }
                         } else if (input.is('select')) {
-                            // Se 'value' for uma lista, usa todos os valores, senão transforma em uma lista de um único item
                             var values = Array.isArray(value) ? value : [value];
                             var validValues = [];
-                        
-                            // Verifica cada valor no select
                             for (let i = 0; i < values.length; i++) {
                                 let currentValue = values[i];
                                 var optionExists = input.find('option[value="' + currentValue + '"]').length > 0;
-                        
                                 if (optionExists) {
-                                    validValues.push(currentValue); // Adiciona os valores válidos ao array
+                                    validValues.push(currentValue);
                                 } else {
                                     console.warn('Valor não encontrado nas opções do select: ' + fieldName + ' = ' + currentValue);
                                 }
                             }
-                        
                             if (validValues.length > 0) {
                                 if (input.hasClass('select2')) {
-                                    input.val(validValues).trigger('change'); // Define todos os valores válidos no select2
+                                    input.val(validValues).trigger('change');
                                 } else {
-                                    input.val(validValues); // Define todos os valores válidos no select normal
+                                    input.val(validValues);
                                 }
                             }
                         } else {
@@ -150,11 +170,9 @@
                     }
                 });
         
-                // Ajusta o modal para edição
                 modal.find('#modalTitle').html('{{tituloEdit}} ' + data.descricao);
                 modal.find('#modalSubmitButton').attr('name', 'edit').text('Editar');
                 
-                // Exibe o modal
                 modal.modal('show');
             }
         });

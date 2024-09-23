@@ -31,6 +31,8 @@
                             modal.find('input').val('');
                             modal.find('textarea').val('');
                             
+                            // Resetar a pré-visualização da imagem
+                            modal.find('img.img-thumbnail').attr('src', 'https://via.placeholder.com/1920x1080');
                             modal.find(".select2").val('').trigger('change');
 
                             // Resetar selects para a primeira opção
@@ -125,6 +127,21 @@
                 initComplete: function (settings, json) {
                     $(".btnDataTable").removeClass("btn-secondary");
                 }
+            });
+
+            $('.table_not_search').DataTable({
+                // Desativa os botões de pesquisa, menu de tamanho de página, etc.
+                "language": {
+                    "url": "{% static 'css/dataTables/ptbr10_19.json' %}",
+                },
+                language: {
+                    emptyTable: "{{empyTable}}"
+                },
+                paging: true,
+                searching: false,
+                info: false,
+                lengthChange: false,
+                pageLength: 10
             });
 
 

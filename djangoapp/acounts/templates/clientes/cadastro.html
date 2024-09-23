@@ -1,0 +1,104 @@
+{% extends 'indexlogin.html' %}
+{% load static %}
+{% load form_filters %}
+{% block title %}Cadastro de Cliente{% endblock %}
+
+{% block content %}
+<div class="container-fluid vh-100 d-flex justify-content-center">
+    <div class="col-md-10 col-12">
+        {% comment %} {% include 'partials/message.html' %} {% endcomment %}
+        <h2 id='title' class="card-title text-center mt-3 mb-3">{{variaveis_globais.client_title}}</h2>
+        <p class="card-title text-center mb-4 h6">{{variaveis_globais.client_subtitle}}</p>
+        {% include 'partials/message.html' %}
+        <form method="post" autocomplete="off" action="{% url 'cadastro_cliente' %}" class="row flex-wrap col-12 needs-validation" novalidate>
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classdiv }}">
+                    {# Usa o filtro para adicionar 'is-invalid' se houver erros #}
+                    {% if field.errors %}
+                        {{ field|add_class_invalid }}
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                    <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                    {% if field.errors %}
+                        <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
+                            {% for error in field.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        
+            <div class="text-center col-12">
+                <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
+            </div>
+            <Label class="mt-1 text-center w-100 mb-3">Já tem uma conta? <a href="/accounts/login/">Vamos logar!</a></Label>
+
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript" src="{% static 'js/jquery.correios.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/validation.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cpfInput = document.querySelector('input[name="cnpf_cnpj"]');
+        const tipoPessoaSelect = document.querySelector('select[name="tipo_pessoa"]');
+    
+        if (cpfInput && tipoPessoaSelect) {
+            let cleave = new Cleave(cpfInput, {
+                blocks: [3, 3, 3, 2],
+                delimiters: ['.', '.', '-'],
+                numericOnly: true
+            });
+    
+            tipoPessoaSelect.addEventListener('change', function () {
+                cleave.destroy();
+                if (this.value === 'F') {
+                    cleave = new Cleave(cpfInput, {
+                        blocks: [3, 3, 3, 2],
+                        delimiters: ['.', '.', '-'],
+                        numericOnly: true
+                    });
+                } else if (this.value === 'J') {
+                    cleave = new Cleave(cpfInput, {
+                        blocks: [2, 3, 3, 4],
+                        delimiters: ['.', '.', '/', '-'],
+                        numericOnly: true
+                    });
+                }
+            });
+        }
+    });
+
+    
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Seleciona todos os campos de entrada dentro do formulário
+        const formFields = document.querySelectorAll('form input, form select, form textarea');
+
+        formFields.forEach(field => {
+            // Adiciona um ouvinte de evento para o evento 'input' ou 'change'
+            field.addEventListener('input', function () {
+                // Remove a classe 'is-invalid' do input
+                this.classList.remove('is-invalid');
+
+                // Remove o feedback de erro
+                const parentDiv = this.closest('.input-group-cosmic-cascade-tetra-49m7');
+                if (parentDiv) {
+                    const errorDiv = parentDiv.querySelector('.invalid-feedback');
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

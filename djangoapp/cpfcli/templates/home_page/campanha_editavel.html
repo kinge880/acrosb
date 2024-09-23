@@ -1,0 +1,157 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+    <style>
+        #fundo {
+            position: relative;
+            background: url(/media/{{ campanha.logo_campanha }}) no-repeat center center;
+        }
+    </style>
+    <div id="fundo" class="container-fluid vh-75 d-flex flex-start flex-wrap">
+        {% if encerrado == 'S' %}
+            <div class="container-fluid vh-100 align-content-center">
+                {% include 'partials/message.html' %}
+                <div class="card mb-5 mt-5 text-bg-primary pb-5 pt-5">
+                    <div class="card-body text-center p-5">
+                        <p class="card-text h2">A CAMPANHA {{campanha.descricao}} ESTÁ ENCERRADA!</p>
+                    </div>
+                </div>  
+            </div>
+        {% else %}
+            <div class="container d-flex justify-content-start">
+                <div class="card mb-5 mt-5 text-bg-primary col-12 col-md-4 border-5">
+                    <div class="card-header text-center">
+                        <h5 class="card-title col-12">VÁ AS COMPRAS</h5>
+                    </div>
+                    <div class="card-body p-4 text-center d-flex justify-content-center flex-wrap">
+                        <p class="card-text h6 mb-3 col-12">Aproveite nossas ofertas exclusivas e aumente suas chances de ser o grande vencedor!</p>
+                        <a href="#" class="text-white">Confira o regulamento da campanha aqui</a>
+                    </div>
+                </div>
+                
+                {% if not request.user.is_authenticated %}
+                    <div class="card mb-5 mt-5 text-bg-light col-12 col-md-4 border-5">
+                        <div class="card-header text-center">
+                            <h5 class="card-title col-12">PARTICIPE DO CLUBE</h5>
+                        </div>
+                        <div class="card-body p-4 text-center d-flex justify-content-center flex-wrap">
+                            <p class="card-text h6 mb-3 col-12">Cadastre-se rapidamente e esteja pronto para concorrer a prêmios incríveis!</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card mb-5 mt-5 text-bg-light col-12 col-md-4 border-5">
+                        <div class="card-header text-center">
+                            <h5 class="card-title col-12">APROVEITE O CLUBE</h5>
+                        </div>
+                        <div class="card-body p-4 text-center d-flex justify-content-center flex-wrap">
+                            <p class="card-text h6 mb-3 col-12">Seu cadastro te permite a oportunidade de receber prêmios incríveis!</p>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="card mb-5 mt-5 text-bg-primary col-12 col-md-4 border-5">
+                    <div class="card-header text-center">
+                        <h5 class="card-title col-12">CONCORRA</h5>
+                    </div>
+                    <div class="card-body p-4 text-center d-flex justify-content-center flex-wrap">
+                        <p class="card-text h6 mb-3 col-12">Comprou antes de fazer parte do clube? Não tem problema!</p>
+                        {% if request.user.is_authenticated %}
+                            <a href="#" class="text-white">Registre seu cupom fiscal aqui</a>
+                        {% else %}
+                            <a href="/accounts/clientes/cadastro/" class="text-white">Registre seu cupom fiscal aqui</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="container">
+            {% if request.user.is_authenticated %}
+                <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5">
+                    <div class="jumbotron jumbotron-fluid">
+                        <div class="container">
+                            <p class="h5 mt-3 text-center">Minha participação na campanha</p>
+                        </div>
+                    </div>
+                    <table class="table table-bordered table_not_search table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th class="text-start">
+                                    {% if campanha.usa_numero_da_sorte == 'S' %}
+                                        Número da sorte
+                                    {% else %}
+                                        Cupom
+                                    {% endif %}
+                                </th>
+                                <th class="text-start">Data da compra</th>
+                                <th class="text-start">Data de geração</th>
+                                <th class="text-start">Bonificado?</th>
+                                <th class="text-start">Tipo de geração</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dado in meus_dados %}
+                                <tr>
+                                    <td class="text-start">
+                                        {% if campanha.usa_numero_da_sorte == 'S' %}
+                                            {{dado.numsorte}}
+                                        {% else %}
+                                            {{dado.numpedecf}}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-start">{{dado.dataped}}</td>
+                                    <td class="text-start">{{dado.dtmov}}</td>
+                                    <td class="text-start">{{dado.bonificado}}</td>
+                                    <td class="text-start">
+                                        {% if dado.tipogeracao == 'A' %}
+                                            Automatica
+                                        {% else %}
+                                            Importação
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+            <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5">
+                <div class="jumbotron jumbotron-fluid">
+                    <div class="container">
+                        <p class="h5 mt-3 text-center">Lista de vencedores</p>
+                    </div>
+                </div>
+                <table class="table table-bordered table_not_search table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-start">Nome</th>
+                            <th class="text-start">Data do sorteio</th>
+                            {% if campanha.usa_numero_da_sorte == 'S' %}
+                                Número da sorte
+                            {% else %}
+                                Cupom
+                            {% endif %}
+                            <th class="text-start">Número do sorteio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dado in dados %}
+                            <tr>
+                                <td class="text-start">{{dado.nomecli}}</td>
+                                <td class="text-start">{{dado.dtsorteio}}</td>
+                                {% if campanha.usa_numero_da_sorte == 'S' %}
+                                    {{dado.numsorte}}
+                                {% else %}
+                                    {{dado.numpedecf}}
+                                {% endif %}
+                                <td class="text-start">{{dado.numsorteio}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> 
+
+{% endblock %}

@@ -17,7 +17,7 @@
     left: 15px;
     color: #4c3d30;
     pointer-events: none;
-    transform: translateY(1rem);
+    transform: translateY(0.5rem);
     transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -52,7 +52,7 @@
 .form-control {
     display: inline;
     width: 100%;
-    padding: 1rem;
+    padding: 0.5rem;
     font-size: 1rem;
     font-weight: 400;
     line-height: 1.5;
@@ -69,6 +69,8 @@
 
 .form-select {
     display: inline;
+    padding: 0.5rem;
+    font-size: 1rem;
 }
 
 

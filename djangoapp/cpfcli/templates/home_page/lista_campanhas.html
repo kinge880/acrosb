@@ -1,0 +1,43 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block title %}Clube de promoções{% endblock %}
+
+{% block content %}
+
+<header class="masthead">
+    <div class="container-fluid position-relative">
+        <div class="row mb-3">
+            {% for campanha in listacampanhas %}
+                <div class="col-md-4 col-12 mb-4">
+                    <a href="campanha/{{ campanha.IDCAMPANHA }}/" class="card text-center text-decoration-none ">
+                        <img src="media/{{ campanha.logo_campanha }}" class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <p class="card-title w-100 text-center h5 text-truncate-2-lines" title="{{ campanha.DESCRICAO }}">
+                                {{ campanha.DESCRICAO }}
+                            </p>
+                            <p class="card-subtitle text-muted w-100 h6 text-center">
+                                {% if campanha.days_remaining <= 1 %}
+                                    {{ campanha.days_remaining }} dia restante
+                                {% else %}
+                                    {{ campanha.days_remaining }} dias restantes
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <small class="card-text">
+                                {% if campanha.count_cli > 1 %} 
+                                    {{ campanha.count_cli }} Participantes na campanha
+                                {% elif campanha.count_cli == 1 %}
+                                    {{ campanha.count_cli }} Participante na campanha
+                                {% else %}
+                                    Nenhum Participante na campanha
+                                {% endif %}
+                            </small>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</header>
+{% endblock %}

@@ -5,8 +5,8 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-    path('', views.base, name='paginicial'),
-    path('clientes/cadastro/', views.cadastro_cliente, name='cadastro_cliente'),
+    path('', views.home, name='home'),
+    path('campanha/<int:idcampanha>/', views.home_campanha, name='home_campanha'),
     path('produtos/', views.produtos, name='produtos'),
     path('blacklist/', views.blacklist, name='blacklist'),
     path('gerenciamento/agentes/', views.agent_manager, name='agent_manager'),

@@ -1381,29 +1381,11 @@
     opacity: 0.5; /* Opcional: para dar uma aparência de desabilitado */
 }
 
-.password-meter {
-    display: flex;
-    height: 5px;
-    margin-top: 10px;
-}
-
-.meter-section {
-    flex: 1;
-    background-color: #ddd;
-}
-
-.weak {
-    background-color: #ff4d4d;
-}
-
-.medium {
-    background-color: #ffd633;
-}
-
-.strong {
-    background-color: #00b300;
-}
-
-.very-strong {
-    background-color: #009900;
+.text-truncate-2-lines {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2; /* Limita a 2 linhas */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal; /* Impede que o texto seja uma única linha contínua */
 }

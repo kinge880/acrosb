@@ -20,42 +20,6 @@ class BlackList(models.Model):
     def __str__(self):
         return str(self.IDCAMPANHA) + ' - ' + str(self.CODCLI)
 
-class Cliente(models.Model):
-    TIPO_PESSOA_CHOICES = [
-        ('F', 'Física'),
-        ('J', 'Jurídica'),
-    ]
-    
-    GENERO_CHOICES = [
-        ('M', 'Masculino'),
-        ('F', 'Feminino')
-    ]
-    
-    nome = models.CharField(max_length=60)
-    cnpf_cnpj = models.CharField(max_length=9, unique=True, null=True, blank=True)
-    telefone = models.CharField(max_length=13, null=True, blank=True)
-    email = models.EmailField(null=True, blank=True)
-    endereco = models.CharField(max_length=40, null=True, blank=True)
-    cidade = models.CharField(max_length=15, null=True, blank=True)
-    estado = models.CharField(max_length=2, null=True, blank=True)
-    bairro = models.CharField(max_length=40, null=True, blank=True)
-    rua = models.CharField(max_length=40, null=True, blank=True)
-    numero = models.CharField(max_length=6, null=True, blank=True)
-    cep = models.CharField(max_length=9, null=True, blank=True)
-    tipo_pessoa = models.CharField(max_length=1, choices=TIPO_PESSOA_CHOICES, null=True, blank=True)
-    data_nascimento = models.DateField(null=True, blank=True)
-    genero = models.CharField(max_length=1, choices=GENERO_CHOICES, null=True, blank=True)
-    senha = models.CharField(max_length=100, null=True, blank=True)  # Note: For security reasons, passwords should be hashed.'
-    codcli =  models.BigIntegerField(null=True, blank=True)
-    ieent = models.CharField(max_length=15, null=True, blank=True)
-    codativ = models.IntegerField(null=True, blank=True)
-    ibge = models.IntegerField(null=True, blank=True)
-    aceita_comunicacao = models.BooleanField(default=True)
-    concordo_regulamento = models.BooleanField(default=True)
-    
-    def __str__(self):
-        return str(self.nome)
-
 class Campanha(models.Model):
     idcampanha = models.AutoField(primary_key=True)
     descricao = models.CharField(max_length=100)
@@ -91,6 +55,7 @@ class Campanha(models.Model):
     usa_numero_da_sorte = models.CharField(max_length=1, default='S')
     tipo_cluster_cliente = models.CharField(max_length=1, default='S')
     acumula_intensificadores = models.CharField(max_length=1, default='N')
+    logo_campanha = models.ImageField(upload_to='campanha/', blank=True, null=True)
     
     def save(self, *args, **kwargs):     
         self.dtultalt = timezone.now()
@@ -133,7 +98,8 @@ class Cuponagem(models.Model):
     telcli = models.TextField(null=True, blank=True)
     cpf_cnpj = models.TextField(null=True, blank=True)
     dataped = models.DateField()  # Data do pedido
-    bonificado = models.CharField(max_length=1, default='N')  # Bonificado com padrão 'N'
+    bonificado = models.CharField(max_length=1, default='N')
+    tipogeracao = models.CharField(max_length=1, default='A')
     idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')  # ID da campanha
     ativo = models.CharField(max_length=1, default='S')  # Ativo com padrão 'S'
     

@@ -33,10 +33,10 @@ $(document).ready(function () {
                         
                         // Preenche os campos com os dados recebidos
                         $('input[name="ibge"]').val(data.ibge).prop('readonly', false);
-                        $('input[name="bairro"]').val(data.bairro).prop('readonly', true);
-                        $('input[name="rua"]').val(data.logradouro).prop('readonly', true);
-                        $('input[name="cidade"]').val(data.localidade).prop('readonly', true);
-                        $('input[name="estado"]').val(data.uf).prop('readonly', true);
+                        $('input[name="bairro"]').val(data.bairro).prop('readonly', false);
+                        $('input[name="rua"]').val(data.logradouro).prop('readonly', false);
+                        $('input[name="cidade"]').val(data.localidade).prop('readonly', false);
+                        $('input[name="estado"]').val(data.uf).prop('readonly', false);
                         $('input[name="numero"]').val('').prop('readonly', false); // Permite ao usuário adicionar o número
                     }
                 },

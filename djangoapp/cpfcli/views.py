@@ -3,25 +3,25 @@ from django.core.exceptions import PermissionDenied
 from functools import wraps
 from django.contrib import messages
 from project.oracle import *
-from datetime import datetime
+from datetime import datetime, date
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.timezone import now
 import pandas as pd
 from reusable.views import *
 from reusable.models import *
 from .forms import *
+from acounts.models import *
 from django.db import transaction
 from io import BytesIO
 from .models import *
 from django.apps import apps
-from django.core.serializers import serialize
 from project.conexao_postgresql import *
 from django.utils import timezone
 from datetime import timedelta
 from .models import Cuponagem, Campanha
-from acounts.models import Profile 
-from acounts.models import empresa 
-from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.db import models
+
 
 def staff_required(view_func):
     @wraps(view_func)
@@ -96,50 +96,119 @@ def validacpf(cpf):
 
     return True
 
-def base(request):
+def home(request):
     context = {}
-    context['tableOnlyView'] = 'SIM'
-    
-    if request.method == 'POST':
-        context['postmethod'] = True
-        currenttime = datetime.now()
-        context['currenttime'] = currenttime
-        context['parametroValor'] = '100'
-        cpf = request.POST.get('cpf')
-        email = request.POST.get('email').strip()
+
+    def getTable():
+        print(date.today())
+        # Obter campanhas que não foram excluídas (onde dtexclusao é None)
+        campaigns = Campanha.objects.filter(
+            dtexclusao__isnull=True,
+            dtfim__gte=date.today(),
+            dtinit__lte=date.today()
+        ).annotate(
+            count_cupons=models.Count('cuponagem__codcli', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=True)),
+            count_cupomcx=models.Count('cuponagem__codcli', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=False))
+        ).exclude(ativo='N')
         
-        # Limpando o CPF para remover caracteres não numéricos
-        cpf_cleaned = ''.join(filter(str.isdigit, cpf))
+        print(campaigns)
+
+        today = now().date()  # Data atual
+        processed_campaigns = []
         
-        # Verifica se o CPF e email estão na base de clientes (simulação de PCCLIENT via ORM)
-        cpf_exist = Cuponagem.objects.filter(
-            cpf_cnpj=cpf_cleaned, 
-            emailcli__iexact=email
-        ).values('codcli', 'nomecli', 'emailcli').first()
-
-        if cpf_exist is None:
-            messages.error(request, "O CPF/CNPJ ou email informados não foram encontrados")
-            context['postmethod'] = False
-            return render(request, 'pesquisacpf.html', context)
-
-        # Busca por campanhas ativas
-        campanha_ativa = Campanha.objects.filter(ativo='S').values('idcampanha').first()
-
-        if campanha_ativa is None:
-            messages.warning(request, "Atualmente não existe nenhuma campanha promocional ativa no sistema")
-            context['postmethod'] = False
-            return render(request, 'pesquisacpf.html', context)
-
-        # Buscando cupons do cliente na campanha ativa
-        num_da_sorte = Cuponagem.objects.filter(
-            codcli=cpf_exist['codcli'],
-            idcampanha=campanha_ativa['idcampanha']
-        ).values('numsorte', 'idcampanha__descricao', 'idcampanha__valor', 'dataped')
-
-        context['num_da_sorte'] = num_da_sorte
-        context['cpf_exist'] = cpf_exist
+        for campanha in campaigns:
+            if campanha.dtfim and campanha.dtfim <= datetime.today().date() and campanha.count_cupons and campanha.count_cupons > 0 and campanha.usa_numero_da_sorte == 'S':
+                # O dia atual é superior à data de término da campanha
+                permite_sorteio = 'S'
+            else:
+                # A campanha ainda está ativa
+                permite_sorteio = 'N'
             
-    return render(request, 'pesquisacpf.html', context)
+            if campanha.usa_numero_da_sorte == 'S':
+                count_cli = campanha.count_cupons
+            else:
+                count_cli = campanha.count_cupomcx
+                
+            # Criar dicionário para cada campanha
+            campanha_dict = {
+                'IDCAMPANHA': campanha.idcampanha,
+                'DESCRICAO': campanha.descricao,
+                'dtinit': campanha.dtinit,
+                'dtfim': campanha.dtfim,
+                'VALOR': campanha.valor,
+                'MULTIPLICADOR': campanha.multiplicador,
+                'USAFORNEC': campanha.usafornec,
+                'USAPROD': campanha.usaprod,
+                'ATIVO': campanha.ativo,
+                'count_cli': count_cli,  # Contagem de cupons
+                'permite_sorteio': permite_sorteio,
+                'usa_numero_da_sorte': campanha.usa_numero_da_sorte,
+                'logo_campanha': campanha.logo_campanha
+            }
+
+            # Calcular total de dias e dias restantes
+            total_days = (campanha.dtfim - campanha.dtinit).days
+            days_remaining = (campanha.dtfim - today).days
+            # Calcular progresso
+            if total_days > 0 and days_remaining > 0:
+                progress = 100.0 - (days_remaining / total_days * 100)
+            else:
+                progress = 100.0
+
+            # Adicionar dados calculados ao dicionário
+            campanha_dict['total_days'] = total_days
+            campanha_dict['days_remaining'] = days_remaining
+            campanha_dict['progress'] = progress
+
+            # Adicionar dicionário à lista de campanhas processadas
+            processed_campaigns.append(campanha_dict)
+
+        context['listacampanhas'] = processed_campaigns
+        return render(request, 'home_page/lista_campanhas.html', context)
+
+    getTable()
+    return render(request, 'home_page/lista_campanhas.html', context)
+
+def home_campanha(request, idcampanha):
+    context = {}
+    client = None
+    meusnumeros = []
+    context['tableOnlyView'] = True
+    context['empyTable'] = 'Nenhum vencedor encontrado.'
+    context['title'] = f'Lista de números da sorte na campanha {idcampanha}'
+    
+    # Verificando se a campanha existe e se não foi excluída
+    try:
+        campanha = Campanha.objects.get(idcampanha=idcampanha)
+        context['campanha'] = campanha
+
+        if campanha.dtexclusao is not None:
+            messages.error(request, f'Campanha {idcampanha} não encontrada')
+    except Campanha.DoesNotExist:
+        messages.error(request, f'Campanha {idcampanha} não encontrada')
+        return redirect('campanha')
+
+    if campanha.dtfim and campanha.dtfim >= datetime.today().date() and campanha.ativo == 'S':
+        context['encerrado'] = 'N'
+    else:
+        context['encerrado'] = 'S'
+                
+    if campanha.usa_numero_da_sorte == 'S':
+        # Buscando a lista de vencedores da campanha usando ORM
+        vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=False).select_related('numsorte', 'idcampanha')
+        if request.user.is_authenticated:
+            profile = Profile.objects.get(user=request.user)
+            meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=False, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
+    else:
+        vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=True).select_related('numsorte', 'idcampanha')
+        if request.user.is_authenticated:
+            profile = Profile.objects.get(user=request.user)
+            meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=True, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
+
+    context['dados'] = vencedores
+    context['meus_dados'] = meusnumeros
+
+    return render(request, 'home_page/campanha_editavel.html', context)
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -171,6 +240,10 @@ def get_data(request):
             related_object = getattr(response, field.name)
             field_value = related_object.pk if related_object else None
         
+        # Se o campo for do tipo ImageField ou FileField, converte para URL
+        elif isinstance(field, models.ImageField) or isinstance(field, models.FileField):
+            field_value = field_value.url if field_value else None
+        
         # Traduz o valor se necessário
         if transation == 'S':
             translated_value = translate_value(field.name, field_value)  # Aplica a tradução
@@ -179,7 +252,6 @@ def get_data(request):
             response_data[field.name] = field_value
     
     return JsonResponse(response_data)
-
 
 @login_required(login_url="/accounts/login/")
 @staff_required
@@ -256,7 +328,8 @@ def campanhas(request):
 
     if request.method == 'POST':
         # Form data from the request
-        form = MscuponagemCampanhaForm(request.POST)
+        form = MscuponagemCampanhaForm(request.POST, request.FILES)
+        print(request.FILES)
         filial = request.POST.getlist('filial')
         idcampanha = request.POST.get('idcampanha')
         
@@ -976,227 +1049,6 @@ def campanhasidclientnumped(request, idcampanha, idclient, numped):
 
     getTable()
     return render(request, 'campanhas/campanhaItems.html', context)
-
-@transaction.atomic
-def cadastro_cliente(request):
-    
-    if request.method == 'POST':
-        form = ClienteForm(request.POST)
-        
-        # Validações básicas
-        if not form.is_valid():
-            messages.error(request, "Por favor, corrija os erros.")
-            return render(request, 'clientes/cadastro.html', {'form': form})
-        
-        try:
-            #valido no banco se existe email ou cnpj
-            if User.objects.filter(email=form.cleaned_data['email']).exists():
-                messages.error(request, "Este e-mail já está cadastrado.")
-                return render(request, 'clientes/cadastro.html', {'form': form})
-            
-            if Cliente.objects.filter(cnpf_cnpj=form.cleaned_data['cnpf_cnpj']).exists():
-                messages.error(request, "Este CPF/CNPJ já está cadastrado.")
-                return render(request, 'clientes/cadastro.html', {'form': form})
-            
-            cliente = form.save(commit=False)
-                
-            # Criação do usuário Django
-            user = User.objects.create_user(
-                username=form.cleaned_data['email'],  # Usando e-mail como username
-                email=form.cleaned_data['email'],
-                first_name=form.cleaned_data['nome'].split()[0],  # Primeiro nome
-                last_name=" ".join(form.cleaned_data['nome'].split()[1:])  # Último nome ou sobrenomes
-            )
-            
-            # Configura a senha com hash (segurança)
-            user.set_password(form.cleaned_data['senha'])  # Senha com hash seguro
-            user.save()
-            
-            # Criação do perfil associado ao User
-            empresa = empresa.objects.get(pk=1)  # Ajuste conforme a lógica de sua aplicação
-            Profile.objects.create(user=user, idempresa=empresa)
-            
-            #valido no winthor se existe
-            conexao = conexao_oracle()
-            cursor = conexao.cursor()
-            
-            client_winthor = exist_client_cpf_email(cursor, form.cleaned_data['email'], form.cleaned_data['cnpf_cnpj'])
-            
-            if client_winthor:
-                cliente.codcli = client_winthor[0]
-            else:
-                codcli_winthor = obter_cod_client(cursor, form.cleaned_data['email'], form.cleaned_data['cnpf_cnpj'], conexao)
-                if cliente.tipo_pessoa == 'F':
-                    ieent = 'ISENTO'
-                    codativ = 32
-                    cliente.codativ = 32
-                else:
-                    ieent = form.cleaned_data['ieent']
-                    cliente.ieent = form.cleaned_data['ieent']
-                    codativ = form.cleaned_data['codativ']
-                    cliente.codativ = form.cleaned_data['codativ']
-                
-                praca = obter_praca(cursor, cliente.cidade)
-                if praca:
-                    codpraca = praca[0]
-                else:
-                    codpraca = '1'
-                    
-                cursor.execute(f'''
-                    INSERT INTO PCCLIENT (
-                        CODCLI,         -- Código do cliente (substitua por um valor único para o teste)
-                        CLIENTE,        -- Razão social do cliente
-                        ENDERCOB,       -- Endereço de cobrança
-                        NUMEROCOB,      -- Número do endereço de cobrança
-                        BAIRROCOB,      -- Bairro de cobrança
-                        TELCOB,         -- Telefone de cobrança
-                        MUNICCOB,       -- Município de cobrança
-                        ESTCOB,         -- UF de cobrança
-                        CEPCOB,         -- Cep de cobrança
-                        ENDERENT,       -- Endereço comercial
-                        NUMEROENT,      -- Número do endereço de entrega
-                        BAIRROENT,      -- Bairro de entrega
-                        TELENT,         -- Telefone de entrega
-                        MUNICENT,       -- Município de entrega
-                        ESTENT,         -- UF de entrega
-                        CEPENT,         -- Cep de entrega
-                        CGCENT,         -- CGC ou CPF do cliente
-                        IEENT,          -- Inscrição estadual
-                        DTULTCOMP,      -- Data da última compra
-                        CODATV1,        -- Código do ramo de atividade
-                        BLOQUEIO,       -- Indica se cliente está bloqueado
-                        CODUSUR1,       -- Código do vendedor que atende
-                        CODUSUR2,       -- Código do segundo vendedor
-                        FAXCLI,         -- Fax do cliente
-                        LIMCRED,        -- Limite de crédito
-                        OBS,            -- Motivo do bloqueio
-                        DTPRIMCOMPRA,   -- Data da primeira compra
-                        CODCOB,         -- Forma de pagamento
-                        DTBLOQ,         -- Data do bloqueio
-                        DTCADASTRO,     -- Data do cadastro
-                        CODPRACA,       -- Código da praça
-                        FANTASIA,       -- Nome fantasia do cliente
-                        OBS2,           -- Observação adicional
-                        PONTOREFER,     -- Ponto de referência
-                        OBSCREDITO,     -- Observação sobre limite de crédito
-                        TIPOFJ,         -- Tipo de pessoa
-                        TELENT1,        -- Telefone adicional
-                        EMAIL,          -- Email do cliente
-                        CODPLPAG,       -- Código do prazo de pagamento
-                        OBS3,           -- Observação adicional
-                        OBS4,           -- Observação adicional
-                        NUMSEQ,         -- Sequência de atendimento
-                        OBSENTREGA1,    -- Observações sobre entrega
-                        OBSENTREGA2,    -- Observações sobre entrega
-                        OBSENTREGA3,    -- Observações sobre entrega
-                        OBSGERENCIAL1,  -- Observação gerencial
-                        OBSGERENCIAL2,  -- Observação gerencial
-                        OBSGERENCIAL3,  -- Observação gerencial
-                        OBSERVACAO,     -- Observações adicionais
-                        OBS_ADIC,       -- Observações gerais
-                        RG,             -- Documento de identidade
-                        CODFILIALNF,    -- Filial de faturamento
-                        EMITEDUP,       -- Emite duplicata mercantil
-                        CODMUNICIPIO,   -- Código do município no IBGE
-                        ENDERCOM,       -- Endereço de entrega
-                        NUMEROCOM,      -- Número de entrega
-                        BAIRROCOM,      -- Bairro de entrega
-                        TELCOM,         -- Telefone comercial
-                        MUNICCOM,       -- Município de entrega
-                        ESTCOM,         -- UF de entrega
-                        CEPCOM,         -- CEP de entrega
-                        CONSUMIDORFINAL,-- Consumidor final
-                        CONTRIBUINTE,   -- Contribuinte
-                        CLIENTPROTESTO, -- Cliente passível de protesto
-                        CLIATACADO -- cliente atacado
-                    ) VALUES (
-                        {codcli_winthor}, -- CODCLI (substitua com um valor único)
-                        '{cliente.nome}', -- CLIENTE
-                        '{cliente.rua}', -- ENDERCOB
-                        '{cliente.numero}', -- NUMEROCOB
-                        '{cliente.bairro}', -- BAIRROCOB
-                        '{cliente.telefone}', -- TELCOB
-                        '{cliente.cidade}',    -- MUNICCOB
-                        '{cliente.estado}', -- ESTCOB
-                        '{cliente.cep}',     -- CEPCOB
-                        '{cliente.rua}', -- ENDERENT
-                        '{cliente.numero}',           -- NUMEROENT
-                        '{cliente.bairro}',        -- BAIRROENT
-                        '{cliente.telefone}',    -- TELENT
-                        '{cliente.cidade}',    -- MUNICENT
-                        '{cliente.estado}',            -- ESTENT
-                        '{cliente.cep}',     -- CEPENT
-                        '{cliente.cnpf_cnpj}', -- CGCENT
-                        '{ieent}',     -- IEENT
-                        TRUNC(SYSDATE), -- DTULTCOMP
-                        {codativ},           -- CODATV1
-                        'N',             -- BLOQUEIO
-                        '1',             -- CODUSUR1
-                        NULL,             -- CODUSUR2
-                        NULL,    -- FAXCLI
-                        0,  -- LIMCRED
-                        NULL, -- OBS
-                        TRUNC(SYSDATE), -- DTPRIMCOMPRA
-                        'COBS',            -- CODCOB
-                        NULL,            -- DTBLOQ (nulo se não bloqueado)
-                        SYSDATE, -- DTCADASTRO
-                        {codpraca},  -- CODPRACA
-                        '{cliente.nome}',     -- FANTASIA
-                        NULL, -- OBS2
-                        NULL, -- PONTOREFER
-                        NULL, -- OBSCREDITO
-                        '{cliente.tipo_pessoa}',             -- TIPOFJ (F para física)
-                        '{cliente.telefone}',    -- TELENT1
-                        '{cliente.email}', -- EMAIL
-                        '1',            -- CODPLPAG
-                        NULL, -- OBS3
-                        NULL, -- OBS4
-                        NULL,           -- NUMSEQ
-                        NULL, -- OBSENTREGA1
-                        NULL, -- OBSENTREGA2
-                        NULL, -- OBSENTREGA3
-                        NULL,   -- OBSGERENCIAL1
-                        NULL, -- OBSGERENCIAL2
-                        NULL, -- OBSGERENCIAL3
-                        'CADASTRADO PELO SYSP', -- OBSERVACAO
-                        NULL, -- OBS_ADIC
-                        NULL,     -- RG
-                        NULL,            -- CODFILIALNF
-                        'N',             -- EMITEDUP
-                        {cliente.ibge},       -- CODMUNICIPIO (Rio Branco)
-                        '{cliente.rua}', -- ENDERCOM
-                        '{cliente.numero}',           -- NUMEROCOM
-                        '{cliente.bairro}', -- BAIRROCOM
-                        '{cliente.telefone}',    -- TELCOM
-                        '{cliente.cidade}',    -- MUNICCOM
-                        '{cliente.estado}',            -- ESTCOM
-                        '{cliente.cep}',     -- CEPCOM
-                        'S',             -- CONSUMIDORFINAL
-                        'N',             -- CONTRIBUINTE
-                        'S',-- CLIENTPROTESTO
-                        'S' -- CLIATACADO
-                    )
-                ''')
-                conexao.commit()
-                
-                cliente.codcli = client_winthor[0]
-            
-            cliente.save()  # Agora salvamos o cliente
-            
-            messages.success(request, "Cadastro realizado com sucesso!")
-            return redirect('login') 
-
-        except IntegrityError as e:
-            # Se qualquer erro ocorrer durante a transação, faça rollback
-            transaction.rollback()
-            messages.error(request, f"Ocorreu um erro ao realizar o seu cadastro: {str(e)}")
-        except Exception as e:
-            # Mensagem genérica para outros erros
-            messages.error(request, f"Ocorreu um erro inesperado: {str(e)}")
-    else:
-        form = ClienteForm()
-
-    return render(request, 'clientes/cadastro.html', {'form': form})
 
 @login_required(login_url="/accounts/login/")
 @staff_required
