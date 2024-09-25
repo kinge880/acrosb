@@ -1,8 +1,10 @@
 {% load static %}
 {% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+
 <!-- Modal de inserção e edição -->
 <div class="modal fade" id="insertEditModal" data-bs-keyboard="false" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="modal-header">
@@ -17,7 +19,7 @@
                             <label for="preview_{{ field.name }}" class="{{ field.field.widget.attrs.classlabel }}">{{ field.label }}</label>
                             <input type="file" id="{{ field.id_for_label }}" name="{{ field.name }}" class="d-none" onchange="previewImage(this)" accept="image/*">
                             <img id="preview_{{ field.name }}" class="img-thumbnail {{ field.field.widget.attrs.class }}" src="{% if field.value %}{{ field.value }}{% else %}https://via.placeholder.com/1920x1080{% endif %}" alt="Preview Image" style="cursor: pointer" onclick="document.getElementById('{{ field.id_for_label }}').click();">
-                            
+                        
                         {% else %}
                             {% if field.field.widget.attrs.select2Label %}
                                 <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -70,6 +72,31 @@
         </form>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+
+    $('#insertEditModal').on('shown.bs.modal', function () {
+        $('.summernote').summernote({
+            height: 300,  // Altura da caixa de texto do editor
+            toolbar: [
+                ['style', ['bold', 'italic', 'underline', 'clear']],
+                ['font', ['strikethrough', 'superscript', 'subscript']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']]
+            ]
+        });
+        $('.dropdown-toggle').dropdown();
+    });
+</script>
 <script>
     function previewImage(input) {
         if (input.files && input.files[0]) {
@@ -115,6 +142,7 @@
                 var form = modal.find('form');
                 form[0].reset();
                 modal.find(".select2").val('').trigger('change');
+                $('.summernote').summernote('destroy');
                 form.removeClass('was-validated');
     
                 modal.find('input, select, textarea').each(function() {

@@ -10,8 +10,8 @@ import os
 from instanciapastas import imprimir_cupom
 
 # URL do servidor principal onde o agente enviará os dados
-SERVER_URL = 'http://172.16.21.145:8000/'
-service_version = '1.1.18092024'
+SERVER_URL = 'http://172.16.16.3:8000/'
+service_version = '1.2.24092024'
 restart = datetime.now().isoformat()
 local_timezone = pytz.timezone('America/Sao_Paulo')
         
@@ -62,13 +62,14 @@ def main():
         send_agent_status()
         numpedecf = pegaUltimaVenda()            
         ultnumped = get_last_coupon()
-        print(numpedecf)
+        print(numpedecf[0])
         print(ultnumped)
-        if ultnumped != numpedecf[0]:
-            pedidos = processacupom(numpedecf[0])
+        
+        if ultnumped != 68223:
+            update_last_coupon(numpedecf[0])
+            pedidos = processacupom(68223)
             
             if pedidos and len(pedidos) > 0:
-                update_last_coupon(numpedecf[0])
                 
                 conexao_postgre = conectar_banco()
                 cursor_postgre = conexao_postgre.cursor()
@@ -77,14 +78,13 @@ def main():
                     if ped and len(ped) > 0:
                         for i in range(ped[11]):
                             criar_cupom(
-                                ped[3], ped[0],  numpedecf[2],  numpedecf[3], numpedecf[3], '68 99207-0446',
-                                ped[2], ped[3], ped[5], ped[6], ped[10]
+                                ped[0],  numpedecf[2],  numpedecf[3], numpedecf[4], '68 99207-0446',
+                                ped[2], ped[3], ped[5], ped[6], ped[10], ped[12], ped[13], ped[14]
                             )
                             
                             imprimir_cupom(ped[0])
                             
-                            # Inserção em cpfcli_cuponagem
-                            cursor_postgre.execute(f'''
+                            print(f'''
                                 INSERT INTO cpfcli_cuponagem
                                 (
                                     id, dtmov, numpedecf, valor, codcli, nomecli, emailcli, telcli, cpf_cnpj, 
@@ -106,6 +106,32 @@ def main():
                                     {ped[9]}, -- ID da campanha
                                     'CC',
                                     {numpedecf[1]}
+                                )
+                            ''')
+                            # Inserção em cpfcli_cuponagem
+                            cursor_postgre.execute(f'''
+                                INSERT INTO cpfcli_cuponagem
+                                (
+                                    id, dtmov, numpedecf, valor, codcli, nomecli, emailcli, telcli, cpf_cnpj, 
+                                    dataped, bonificado, ativo, idcampanha, tipo, numcaixa, tipogeracao
+                                )
+                                VALUES (
+                                    DEFAULT, 
+                                    NOW(), 
+                                    {ped[0]},  -- Número do pedido
+                                    {ped[1]},  -- Valor total
+                                    {ped[2]},  -- Código do cliente
+                                    '{ped[3]}', -- nomecli
+                                    '{ped[4]}', --email
+                                    '{ped[5]}', --tell
+                                    '{ped[6]}', --cpf_cnpj
+                                    '{ped[7]}', -- Data do pedido
+                                    '{ped[8]}', -- Bonificado (ajustar conforme necessário)
+                                    'S', -- Ativo
+                                    {ped[9]}, -- ID da campanha
+                                    'CC',
+                                    {numpedecf[1]},
+                                    'A'
                                 )
                             ''')
                             

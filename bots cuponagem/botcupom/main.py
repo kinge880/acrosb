@@ -312,7 +312,7 @@ def processacupom():
                 INNER JOIN PCPRODUT ON (PCPEDI.CODPROD = PCPRODUT.CODPROD)
                 INNER JOIN PCCLIENT ON (PCPEDC.CODCLI = PCCLIENT.CODCLI)
             WHERE 
-                PCPEDC."DATA" BETWEEN to_date('2024-09-17', 'yyyy-mm-dd') AND to_date('2024-09-18', 'yyyy-mm-dd') AND
+                PCPEDC."DATA" BETWEEN to_date('{dt_inicial}', 'yyyy-mm-dd') AND to_date('{dt_final}', 'yyyy-mm-dd') AND
                 PCPEDC.POSICAO = 'F' AND 
                 PCPEDC.ORIGEMPED IN ('F', 'T', 'R', 'B', 'A') AND
                 PCPEDC.CONDVENDA != 10 AND 

@@ -10,87 +10,247 @@ class MscuponagemCampanhaForm(forms.ModelForm):
         choices=obter_choices_filiais(),
         required=True,
         label='Lista de filiais',
-        widget=forms.SelectMultiple(attrs={'class': 'form-select select2', 'classdiv': 'col-12  mb-3', 'autocomplete': 'off', 'select2Label': 'select'})
+        widget=forms.SelectMultiple(attrs={'class': 'form-select select2', 'classdiv': 'col-12  mb-3', 'autocomplete': 'off', 'select2Label': 'select', 'data-bs-toggle': 'tooltip'})
     )
     class Meta:
         model = Campanha
         fields = [
             'idcampanha',  'descricao', 'filial', 'usa_numero_da_sorte', 'tipo_cluster_cliente', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
             'restringe_fornec', 'restringe_marca', 'restringe_prod',
-            'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor', 'acumula_intensificadores',
-            'logo_campanha',
+            'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor', 'acumula_intensificadores', 'limite_intensificadores',
+            'logo_campanha', 'autorizacao_campanha', 'regulamento'
         ]
         widgets = {
             'idcampanha': forms.HiddenInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
-            'descricao': forms.TextInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-12 mb-3', 'autocomplete': 'off'}),
+            'descricao': forms.TextInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 
+                'classdiv': 'col-12 col-md-12 mb-3', 
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'O nome, título a apresentação da sua campanha, esse campo vai ser mostrado no cartão da campanha na tela principal do clube'
+            }),
             'usa_numero_da_sorte': forms.Select(choices=[
                 ('S', '1 - Deve utilizar números da sorte'),
                 ('N', '2 - Deve utilizar cuponagem física no caixa')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 
+                'classdiv': 'col-12 col-md-6 mb-3', 
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'O tipo de processamento da campanha, escolha se deseja utilizar número da sorte digital ou cuponagem no caixa'
+            }),
             'tipo_cluster_cliente': forms.Select(choices=[
                 ('N', '1 - Não utiliza Cluster por cliente'),
                 ('B', '2 - Deve utilizar BlackList'),
                 ('W', '3 - Deve utilizar WhiteList')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'dtinit': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
-            'dtfim': forms.DateInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-4 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 
+                'classdiv': 'col-12 col-md-6 mb-3', 
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Black list faz a campanha ignorar todos os clientes cadastrados como Black List no cluster de clientes, White list limita a campanha apenas aos clientes cadastrados como White List'
+            }),
+            'dtinit': forms.DateInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'type': 'date',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Data inicial da campanha'
+            }),
+            'dtfim': forms.DateInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'type': 'date',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Data final da campanha'
+            }),
             'enviaemail': forms.Select(choices=[
                 ('N', '1 - Não enviar email'),
-                ('S', '2 - Enviar email ao cliente informando os números da sorte obtidos')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+                ('S', '2 - Enviar email com números da sorte')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Define se um email será enviado ao cliente após a geração de um número da sorte, o email contabiliza todos os números acumulados do cliente ate aquele momento'
+            }),
             'acumulativo': forms.Select(choices=[
-                ('N', '1 - Não acumular saldo entre vendas'),
-                ('S', '2 - Somente acumular saldo entre vendas com o valor total superior ao número da sorte'),
-                ('T', '3 - Acumular saldo entre todas as vendas')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
-            'valor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+                ('N', '1 - Não acumular saldo'),
+                ('S', '2 - Acumular apenas saldo acima do valor'),
+                ('T', '3 - Acumular saldo em todas as vendas')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-8 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Acumular saldo significa que a sobra da venda é salva em uma carteira digital por cliente e utilizada em compras futuras'
+            }),
+            'valor': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'min': '1',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Valor de cada cupom'
+            }),
             'restringe_fornec': forms.Select(choices=[
                 ('N', '1 - Não utilizar restrição por fornecedor'),
-                ('C', '2 - Restrição por fornecedor cadastrado'),
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+                ('C', '2 - Restrição por fornecedor cadastrado')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Define que a campanha só deve levar em consideração o valor dos produtos de fornecedores especificos na venda'
+            }),
             'restringe_marca': forms.Select(choices=[
                 ('N', '1 - Não utilizar restrição por marca'),
-                ('C', '2 - Restrição por marca cadastrada'),
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+                ('C', '2 - Restrição por marca cadastrada')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Define que a campanha só deve levar em consideração o valor dos produtos de marca especificas na venda'
+            }),
             'restringe_prod': forms.Select(choices=[
                 ('N', '1 - Não utilizar restrição por produto'),
-                ('C', '2 - Restrição por produto cadastrado'),
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off'}),
+                ('C', '2 - Restrição por produto cadastrado')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Define que a campanha só deve levar em consideração o valor dos produtos de produtos especificos na venda'
+            }),
             'tipointensificador': forms.Select(choices=[
                 ('N', '1 - Não utilizar intensificador'),
                 ('M', '2 - Multiplicação'),
                 ('S', '3 - Soma')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
-            'multiplicador': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-8 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Qual a forma de calculo final do intensificador, multiplicando o bonus pelo numero de cupom gerado na venda ou somando'
+            }),
+            'multiplicador': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'min': '1',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Qual o valor por intensificador obtido'
+            }),
             'usamarca': forms.Select(choices=[
                 ('N', '1 - Não utilizar intensificador por marca'),
                 ('C', '2 - Intensificador por marca cadastrada'),
-                ('M', '3 - Intensificador por marca multipla')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
-            'marcavalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+                ('M', '3 - Intensificador por marca múltipla')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-8 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Intensificador por marca para a campanha'
+            }),
+            'marcavalor': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'min': '1',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Valor do intensificador por marca'
+            }),
             'usafornec': forms.Select(choices=[
                 ('N', '1 - Não utilizar intensificador por fornecedor'),
                 ('C', '2 - Intensificador por fornecedor cadastrado'),
-                ('M', '3 - Intensificador por fornecedor multiplo')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
-            'fornecvalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+                ('M', '3 - Intensificador por fornecedor múltiplo')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-8 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Intensificador por fornecedor para a campanha'
+            }),
+            'fornecvalor': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'min': '1',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Valor do intensificador por fornecedor'
+            }),
             'usaprod': forms.Select(choices=[
                 ('N', '1 - Não utilizar intensificador por produto'),
-                ('C', '2 - Utilizar intensificador por produto cadastrado'),
-                ('M', '3 - Utilizar intensificador por produto multiplo')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
-            'prodvalor': forms.NumberInput(attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-4 mb-3', 'autocomplete': 'off', 'min': '1'}),
+                ('C', '2 - Intensificador por produto cadastrado'),
+                ('M', '3 - Intensificador por produto múltiplo')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-8 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Intensificador por produto para a campanha'
+            }),
+            'prodvalor': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'min': '1',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Valor do intensificador por produto'
+            }),
             'acumula_intensificadores': forms.Select(choices=[
                 ('N', '1 - Não acumular intensificadores'),
-                ('A', '2 - Acumular intensificadores')
-            ], attrs={'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-8 mb-3', 'autocomplete': 'off'}),
-            'logo_campanha': forms.FileInput(attrs={'class': 'form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-
+                ('S', '2 - Acumular intensificadores')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-8 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Defina se os intensificadores serão acumulados'
+            }),
+            'limite_intensificadores': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-4 mb-3',
+                'autocomplete': 'off',
+                'min': '1',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Limite de intensificadores acumulados'
+            }),
+            'logo_campanha': forms.ClearableFileInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Logo da campanha'
+            }),
+            'autorizacao_campanha': forms.Textarea(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12  mb-3',
+                'autocomplete': 'off',
+                'rows': 1,
+                'data-bs-toggle': 'tooltip',
+                'title': 'Autorização da campanha'
+            }),
+            'regulamento': forms.Textarea(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 summernote',
+                'classdiv': 'col-12 mb-3',
+                'rows': 1,
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'title': 'Regulamento da campanha'
+            })
         }
         
         labels = {
             'idcampanha': 'Código interno',
             'descricao': 'Descrição da campanha',
+            'regulamento': 'Regulamento completo da campanha',
+            'autorizacao_campanha': 'Certificado de autorização federal',
             'dtinit': 'Data inicial',
             'dtfim': 'Data final',
             'enviaemail': 'Envia email',
@@ -109,27 +269,12 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'prodvalor': 'Valor de produtos',
             'tipo_cluster_cliente': 'Qual o tipo de cluster dos clientes',
             'acumula_intensificadores': 'Acumulação de intensificadores',
+            'limite_intensificadores': 'Limite de intensificadores',
             'logo_campanha': 'Logo da campanha'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    
-    def save(self, commit=True):
-        # Primeiro, salve o registro da campanha como antes
-        campanha = super().save(commit)
-
-        # Obtenha as filiais selecionadas
-        codfiliais = self.cleaned_data.get('filial')
-
-        if codfiliais:
-            # Crie registros de CuponagemCampanhaFilial para cada filial selecionada
-            CampanhaFilial.objects.bulk_create(
-                CampanhaFilial(idcampanha=campanha.idcampanha, codfilial=codfilial)
-                for codfilial in codfiliais
-            )
-
-        return campanha
     
 class AgentForm(forms.Form):
     codfilial = forms.CharField(

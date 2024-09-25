@@ -55,6 +55,9 @@ class Campanha(models.Model):
     usa_numero_da_sorte = models.CharField(max_length=1, default='S')
     tipo_cluster_cliente = models.CharField(max_length=1, default='S')
     acumula_intensificadores = models.CharField(max_length=1, default='N')
+    limite_intensificadores = models.IntegerField(default = 999)
+    regulamento = models.TextField(max_length = 30000, blank=True, null=True)
+    autorizacao_campanha = models.TextField(max_length = 1000, blank=True, null=True)
     logo_campanha = models.ImageField(upload_to='campanha/', blank=True, null=True)
     
     def save(self, *args, **kwargs):     

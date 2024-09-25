@@ -127,12 +127,7 @@ def dynamic_html(request):
     return css_vars
 
 def exist_campanha(cursor, idcampanha):
-    cursor.execute(f'''
-        SELECT IDCAMPANHA, DESCRICAO 
-        FROM MSCUPONAGEMCAMPANHA 
-        WHERE IDCAMPANHA = {idcampanha}
-    ''')
-    return cursor.fetchone()
+    return Campanha.objects.filter(idcampanha = idcampanha).first()
 
 def exist_marca(cursor, codmarca):
     cursor.execute(f'''

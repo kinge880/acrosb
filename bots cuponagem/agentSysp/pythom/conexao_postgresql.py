@@ -7,6 +7,6 @@ def conectar_banco():
         dbname='acrosbd',
         user='acrosbookuser',
         password='acrsdosbodkuser23457645f',
-        host='172.16.21.145',
+        host='172.16.16.3',
         port='54320'
     )

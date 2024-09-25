@@ -55,40 +55,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <h2>1. Disposições Gerais</h2>
-                                        <p>
-                                            Lorem ipsum dolor sit amet, <strong>consectetur adipiscing elit</strong>. Nulla facilisi. Donec vehicula felis et dui interdum, at fermentum urna facilisis. Suspendisse potenti. Praesent vehicula risus at ligula pharetra, et varius ex vestibulum. Aenean sit amet felis massa.
-                                        </p>
-
-                                        <h2>2. Período da Promoção</h2>
-                                        <p>
-                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed cursus, nunc ac interdum scelerisque, nisi lectus tincidunt lorem, non interdum mauris nisl a justo. A promoção terá início no dia <strong>[data de início]</strong> e término no dia <strong>[data de término]</strong>.
-                                        </p>
-
-                                        <h2>3. Produtos Participantes</h2>
-                                        <p>
-                                            Aliquam non diam in tortor egestas hendrerit nec id risus. Morbi vehicula lacus nec nulla interdum, at varius justo laoreet. Aenean ullamcorper mauris non gravida blandit. Sed in turpis at enim molestie rhoncus a eget leo. Ut ut lectus sed nisl finibus dictum a id arcu.
-                                        </p>
-
-                                        <h2>4. Participação</h2>
-                                        <p>
-                                            Curabitur venenatis accumsan elit, sed pretium ligula dictum a. Para participar, o cliente deverá adquirir qualquer um dos produtos participantes descritos no item anterior, no período de vigência da promoção.
-                                        </p>
-
-                                        <h2>5. Sorteios e Prêmios</h2>
-                                        <p>
-                                            Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi eget nisi vel lorem condimentum auctor. Aenean et dolor sed turpis ullamcorper porttitor. Os sorteios serão realizados semanalmente, nas seguintes datas: <strong>[inserir datas dos sorteios]</strong>. Os prêmios incluem <strong>[descrever prêmios]</strong>.
-                                        </p>
-
-                                        <h2>6. Condições para Recebimento do Prêmio</h2>
-                                        <p>
-                                            Vivamus auctor malesuada massa, nec suscipit urna fermentum in. Para receber o prêmio, o participante sorteado deverá apresentar o comprovante de compra dos produtos participantes e um documento de identificação válido.
-                                        </p>
-
-                                        <h2>7. Disposições Finais</h2>
-                                        <p>
-                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas commodo est ac lorem sollicitudin, vitae volutpat risus auctor. A participação nesta promoção implica na aceitação total e irrestrita de todos os termos deste regulamento.
-                                        </p>
+                                        {{campanha.regulamento | safe}}
                                     </div>
                                 </div>
                             </div>

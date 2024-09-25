@@ -30,6 +30,7 @@
                             // Resetar os valores dos inputs e textareas
                             modal.find('input').val('');
                             modal.find('textarea').val('');
+                            $('.summernote').summernote('destroy');
                             
                             // Resetar a pré-visualização da imagem
                             modal.find('img.img-thumbnail').attr('src', 'https://via.placeholder.com/1920x1080');
