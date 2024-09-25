@@ -39,7 +39,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:1337',  # ajuste conforme seu uso local
     'http://172.16.20.150:1337',
     'http://192.168.253.111:1337',
-    'http://187.87.33.18:1337'
+    'http://187.87.33.18:1337',
+    'http://172.16.20.106:1337'
 ]
 
 
