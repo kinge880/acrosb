@@ -87,6 +87,10 @@
     border-color: #606162;
 }
 
+.custom-tooltip {
+    --bs-tooltip-bg: var(--bs-primary);
+}
+
 /* .btn.btn-primary.btn-big-alternative:hover {
     box-shadow: inset 0 0 0 300px var(--bs-light) !important;
     color: var(--bs-primary) !important;

@@ -27,6 +27,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-12 mb-3', 
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'O nome, título a apresentação da sua campanha, esse campo vai ser mostrado no cartão da campanha na tela principal do clube'
             }),
             'usa_numero_da_sorte': forms.Select(choices=[
@@ -37,6 +39,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-6 mb-3', 
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'O tipo de processamento da campanha, escolha se deseja utilizar número da sorte digital ou cuponagem no caixa'
             }),
             'tipo_cluster_cliente': forms.Select(choices=[
@@ -48,6 +52,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-6 mb-3', 
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Black list faz a campanha ignorar todos os clientes cadastrados como Black List no cluster de clientes, White list limita a campanha apenas aos clientes cadastrados como White List'
             }),
             'dtinit': forms.DateInput(attrs={
@@ -57,6 +63,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Data inicial da campanha'
             }),
             'dtfim': forms.DateInput(attrs={
@@ -66,6 +74,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Data final da campanha'
             }),
             'enviaemail': forms.Select(choices=[
@@ -76,6 +86,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Define se um email será enviado ao cliente após a geração de um número da sorte, o email contabiliza todos os números acumulados do cliente ate aquele momento'
             }),
             'acumulativo': forms.Select(choices=[
@@ -87,6 +99,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Acumular saldo significa que a sobra da venda é salva em uma carteira digital por cliente e utilizada em compras futuras'
             }),
             'valor': forms.NumberInput(attrs={
@@ -95,6 +109,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Valor de cada cupom'
             }),
             'restringe_fornec': forms.Select(choices=[
@@ -105,6 +121,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Define que a campanha só deve levar em consideração o valor dos produtos de fornecedores especificos na venda'
             }),
             'restringe_marca': forms.Select(choices=[
@@ -115,6 +133,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Define que a campanha só deve levar em consideração o valor dos produtos de marca especificas na venda'
             }),
             'restringe_prod': forms.Select(choices=[
@@ -125,6 +145,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Define que a campanha só deve levar em consideração o valor dos produtos de produtos especificos na venda'
             }),
             'tipointensificador': forms.Select(choices=[
@@ -136,6 +158,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Qual a forma de calculo final do intensificador, multiplicando o bonus pelo numero de cupom gerado na venda ou somando'
             }),
             'multiplicador': forms.NumberInput(attrs={
@@ -144,6 +168,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Qual o valor por intensificador obtido'
             }),
             'usamarca': forms.Select(choices=[
@@ -155,6 +181,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Intensificador por marca para a campanha'
             }),
             'marcavalor': forms.NumberInput(attrs={
@@ -163,6 +191,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Valor do intensificador por marca'
             }),
             'usafornec': forms.Select(choices=[
@@ -174,6 +204,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Intensificador por fornecedor para a campanha'
             }),
             'fornecvalor': forms.NumberInput(attrs={
@@ -182,6 +214,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Valor do intensificador por fornecedor'
             }),
             'usaprod': forms.Select(choices=[
@@ -193,6 +227,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Intensificador por produto para a campanha'
             }),
             'prodvalor': forms.NumberInput(attrs={
@@ -201,6 +237,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Valor do intensificador por produto'
             }),
             'acumula_intensificadores': forms.Select(choices=[
@@ -211,6 +249,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Defina se os intensificadores serão acumulados'
             }),
             'limite_intensificadores': forms.NumberInput(attrs={
@@ -219,6 +259,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Limite de intensificadores acumulados'
             }),
             'logo_campanha': forms.ClearableFileInput(attrs={
@@ -226,6 +268,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'classdiv': 'col-12 col-md-6 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Logo da campanha'
             }),
             'autorizacao_campanha': forms.Textarea(attrs={
@@ -234,6 +278,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'autocomplete': 'off',
                 'rows': 1,
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Autorização da campanha'
             }),
             'regulamento': forms.Textarea(attrs={
@@ -242,6 +288,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'rows': 1,
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
                 'title': 'Regulamento da campanha'
             })
         }
