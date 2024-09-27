@@ -92,6 +92,7 @@ class Cuponagem(models.Model):
     dtmov = models.DateField()  # Data do movimento
     numped = models.BigIntegerField(null=True, blank=True)  # Número do pedido
     numpedecf = models.IntegerField(null=True, blank=True)
+    numcupom = models.IntegerField(null=True, blank=True)
     numcaixa = models.IntegerField(null=True, blank=True)
     tipo = models.CharField(max_length=2, default='NS')
     valor = models.DecimalField(max_digits=50, decimal_places=12)  # Valor com até 38 dígitos e 12 casas decimais
@@ -104,6 +105,7 @@ class Cuponagem(models.Model):
     dataped = models.DateField()  # Data do pedido
     bonificado = models.CharField(max_length=1, default='N')
     tipogeracao = models.CharField(max_length=1, default='A')
+    qtcupons = models.IntegerField(null=True, blank=True)
     idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')  # ID da campanha
     ativo = models.CharField(max_length=1, default='S')  # Ativo com padrão 'S'
     

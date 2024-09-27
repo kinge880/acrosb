@@ -227,7 +227,10 @@ def home_campanha(request, idcampanha):
                 restringe_prod,
                 (SELECT COUNT(codfilial) FROM cpfcli_campanhafilial WHERE idcampanha = cpfcli_campanha.idcampanha) AS total_filiais,
                 tipo_cluster_cliente,
-                acumula_intensificadores
+                acumula_intensificadores,
+                autorizacao_campanha,
+                regulamento,
+                limite_intensificadores
             FROM 
                 cpfcli_campanha
             WHERE 
@@ -329,6 +332,9 @@ def home_campanha(request, idcampanha):
         filiais = campanha_id[18]
         cluster_cli = campanha_id[19]
         acumula_intensificador = campanha_id[20]
+        autorizacao_campanha = campanha[21]
+        regulamento = campanha[22]
+        limite_intensificadores = campanha[23]
         
         listprods_restringe_where = ''
         marcas_restringe_Where = ''
@@ -347,12 +353,11 @@ def home_campanha(request, idcampanha):
             marcas = cursor_postgre.fetchall()
 
             if marcas and len(marcas) > 0:
-                marcas_list = [str(item[0]) for item in marcas]
+                marcas_list = [int(item[0]) for item in marcas]
                 marcas_restringe_Where = build_clause("AND PCPRODUT.CODMARCA", marcas_list, 'IN')
             else:
                 marcas_restringe_Where = ''
-                
-        #------------------------------------------------ RESTRIÇÃO POR PRODUTO --------------------------------
+        #------------------------------------------------ INTENSIFICADOR POR PRODUTO --------------------------------
         if restringe_prod and restringe_prod == 'C':
             cursor_postgre.execute(f'''
                 SELECT codprod 
@@ -362,11 +367,10 @@ def home_campanha(request, idcampanha):
             produtos = cursor_postgre.fetchall()
 
             if produtos and len(produtos) > 0:
-                listaprods = [str(item[0]) for item in produtos]
+                listaprods = [int(item[0]) for item in produtos]
                 listprods_restringe_where = build_clause("AND PCPRODUT.CODPROD", listaprods, 'IN')
             else:
                 listprods_restringe_where = ''
-        
         #------------------------------------------------ RESTRIÇÃO POR FORNECEDOR --------------------------------
         if restringe_fornec and restringe_fornec == 'C':
             cursor_postgre.execute(f'''
@@ -375,9 +379,9 @@ def home_campanha(request, idcampanha):
                 where idcampanha  = {idcampanha} AND tipo IN ('T', 'R')
             ''')
             fornecedores = cursor_postgre.fetchall()
-            
+
             if fornecedores and len(fornecedores) > 0:
-                listfornecs = [str(item[0]) for item in fornecedores]
+                listfornecs = [int(item[0]) for item in fornecedores]
                 fornec_restringe_Where = build_clause("AND PCPRODUT.CODFORNEC", listfornecs, 'IN')
             else:
                 fornec_restringe_Where = ''
@@ -397,7 +401,7 @@ def home_campanha(request, idcampanha):
             filiais = cursor_postgre.fetchall()
             
             if filiais and len(filiais) > 0:
-                lista_filiais = [str(item[0]) for item in filiais]
+                lista_filiais = [int(item[0]) for item in filiais]
                 filial_restringe_Where = build_clause("AND PCPEDC.CODFILIAL", lista_filiais, 'IN')
             else:
                 filial_restringe_Where = ''
@@ -410,7 +414,7 @@ def home_campanha(request, idcampanha):
             black_list = cursor_postgre.fetchall()
             
             if black_list and len(black_list) > 0:
-                cpflist = [str(item[0]) for item in black_list]
+                cpflist = [int(item[0]) for item in black_list]
                 blacklistWhere = build_clause("AND PCPEDC.CODCLI", cpflist, 'NOT')
             else:
                 blacklistWhere = ''
@@ -422,7 +426,7 @@ def home_campanha(request, idcampanha):
             black_list = cursor_postgre.fetchall()
             
             if black_list and len(black_list) > 0:
-                cpflist = [str(item[0]) for item in black_list]
+                cpflist = [int(item[0]) for item in black_list]
                 blacklistWhere = build_clause("AND PCPEDC.CODCLI", cpflist, 'IN')
             else:
                 blacklistWhere = ''
@@ -539,36 +543,46 @@ def home_campanha(request, idcampanha):
         #----------------------------CALCULA INTENSIFICAÇÃO POR FORNECEDOR CADASTRADO ----------------------------
         if usa_fornec == 'C':
             print('Calculando se bonifica fornecedor cadastrado...')
-            cursor.execute(f'''
-                SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), PCPRODUT.CODFORNEC
-                FROM PCPEDI
-                    INNER JOIN PCPRODUT ON PCPEDI.CODPROD = PCPRODUT.CODPROD
-                WHERE 
-                    PCPEDI.NUMPED = {ped[0]}
-                GROUP BY PCPRODUT.CODFORNEC
+            cursor_postgre.execute(f'''
+                SELECT codfornec 
+                FROM cpfcli_fornecedor 
+                where idcampanha  = {idcampanha} AND tipo IN ('I')
             ''')
-            valorfornecs = cursor.fetchall()
+            fornecedores = cursor_postgre.fetchall()
+            
+            if fornecedores and len(fornecedores) > 0:
+                listfornecsIntensifica = [int(item[0]) for item in fornecedores]
+                    
+                cursor.execute(f'''
+                    SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), PCPRODUT.CODFORNEC
+                    FROM PCPEDI
+                        INNER JOIN PCPRODUT ON PCPEDI.CODPROD = PCPRODUT.CODPROD
+                    WHERE 
+                        PCPEDI.NUMPED = {ped[0]}
+                    GROUP BY PCPRODUT.CODFORNEC
+                ''')
+                valorfornecs = cursor.fetchall()
 
-            cont = 0
-            valor_acumulado = 0
-            if acumula_intensificador == 'A':
-                for fornecvalue in valorfornecs:
-                    if fornecvalue[1] in list(listfornecs):
-                        valor_acumulado += fornecvalue[0]
+                cont = 0
+                valor_acumulado = 0
+                if acumula_intensificador == 'A':
+                    for fornecvalue in valorfornecs:
+                        if fornecvalue[1] in list(listfornecsIntensifica):
+                            valor_acumulado += fornecvalue[0]
+                    
+                    if valor_acumulado >= valor_fornecedor:
+                        qtbonus = int(math.floor(valor_acumulado / valor_fornecedor))
+                        valor_bonus += (multiplicador_cupom * qtbonus)
+                        cont += multiplicador_cupom
+                else:
+                    for fornecvalue in valorfornecs:
+                        if fornecvalue[1] in list(listfornecsIntensifica):
+                            if fornecvalue[0] >= valor_fornecedor:
+                                valor_bonus += multiplicador_cupom
+                                cont += multiplicador_cupom
                 
-                if valor_acumulado >= valor_fornecedor:
-                    qtbonus = int(math.floor(valor_acumulado / valor_fornecedor))
-                    valor_bonus += (multiplicador_cupom * qtbonus)
-                    cont += multiplicador_cupom
-            else:
-                for fornecvalue in valorfornecs:
-                    if fornecvalue[1] in list(listfornecs):
-                        if fornecvalue[0] >= valor_fornecedor:
-                            valor_bonus += multiplicador_cupom
-                            cont += multiplicador_cupom
-            
-            
-            histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor cadastrado em {cont}'
+                
+                histgeracao += f'$$$2 - Aumentou o bônus de números da sorte baseado no fornecedor cadastrado em {cont}'
         
         #----------------------------CALCULA INTENSIFICAÇÃO POR FORNECEDOR MULTIPLO ----------------------------
         elif usa_fornec == 'M':
@@ -596,35 +610,45 @@ def home_campanha(request, idcampanha):
             #----------------------------CALCULA INTENSIFICAÇÃO POR MARCA CADASTRADA ----------------------------
         if usa_marca == 'C':
             print('Calculando se bonifica MARCA cadastrado...')
-            cursor.execute(f'''
-                SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), PCPRODUT.CODMARCA
-                FROM PCPEDI
-                    INNER JOIN PCPRODUT ON PCPEDI.CODPROD = PCPRODUT.CODPROD
-                WHERE 
-                    PCPEDI.NUMPED = {ped[0]}
-                GROUP BY PCPRODUT.CODMARCA
+            cursor_postgre.execute(f'''
+                select codmarca  
+                from cpfcli_marcas 
+                where idcampanha  = {idcampanha} AND tipo IN ('I')
             ''')
-            valor_marcas = cursor.fetchall()
+            marcas = cursor_postgre.fetchall()
 
-            cont = 0
-            valor_acumulado = 0
-            if acumula_intensificador == 'A':
-                for valor in valor_marcas:
-                    if valor[1] in marcas_list:  # Ajuste aqui, removendo list()
-                        valor_acumulado += valor[0]
+            if marcas and len(marcas) > 0:
+                marcas_list_intensifica = [int(item[0]) for item in marcas]
+                    
+                cursor.execute(f'''
+                    SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), PCPRODUT.CODMARCA
+                    FROM PCPEDI
+                        INNER JOIN PCPRODUT ON PCPEDI.CODPROD = PCPRODUT.CODPROD
+                    WHERE 
+                        PCPEDI.NUMPED = {ped[0]}
+                    GROUP BY PCPRODUT.CODMARCA
+                ''')
+                valor_marcas = cursor.fetchall()
+
+                cont = 0
+                valor_acumulado = 0
+                if acumula_intensificador == 'A':
+                    for valor in valor_marcas:
+                        if valor[1] in marcas_list_intensifica:  # Ajuste aqui, removendo list()
+                            valor_acumulado += valor[0]
+                    
+                    if valor_acumulado >= marca_valor:
+                        qtbonus = int(math.floor(valor_acumulado / marca_valor))
+                        valor_bonus += (multiplicador_cupom * qtbonus)
+                        cont += multiplicador_cupom
+                else:
+                    for valor in valor_marcas:
+                        if valor[1] in marcas_list_intensifica:  # Certifique-se de que marcas_list é uma lista
+                            if valor[0] >= marca_valor:
+                                valor_bonus += multiplicador_cupom
+                                cont += multiplicador_cupom
                 
-                if valor_acumulado >= marca_valor:
-                    qtbonus = int(math.floor(valor_acumulado / marca_valor))
-                    valor_bonus += (multiplicador_cupom * qtbonus)
-                    cont += multiplicador_cupom
-            else:
-                for valor in valor_marcas:
-                    if valor[1] in marcas_list:  # Certifique-se de que marcas_list é uma lista
-                        if valor[0] >= marca_valor:
-                            valor_bonus += multiplicador_cupom
-                            cont += multiplicador_cupom
-            
-            histgeracao += f'$$$3 - Aumentou o bônus de números da sorte baseado na marca cadastrada em {cont}'
+                histgeracao += f'$$$3 - Aumentou o bônus de números da sorte baseado na marca cadastrada em {cont}'
         
         #----------------------------CALCULA INTENSIFICAÇÃO POR MARCA MULTIPLA ----------------------------
         elif usa_marca == 'M':
@@ -652,33 +676,44 @@ def home_campanha(request, idcampanha):
         #----------------------------CALCULA INTENSIFICAÇÃO POR PRODUTO CADASTRADO ----------------------------
         if usa_prod == 'C':
             print('Calculando se bonifica produto cadastrado...')
-            cursor.execute(f'''123377
-                SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), CODPROD
-                FROM PCPEDI
-                WHERE PCPEDI.NUMPED = {ped[0]}
-                GROUP BY CODPROD
+            cursor_postgre.execute(f'''
+                SELECT codprod 
+                FROM cpfcli_produtos 
+                where idcampanha  = {idcampanha} AND tipo IN ('I')
             ''')
-            prodfornecs = cursor.fetchall()
-            
-            cont = 0
-            valor_acumulado = 0
-            if acumula_intensificador == 'A':
-                for prodvalue in prodfornecs:
-                    if prodvalue[1] in listaprods:
-                        valor_acumulado += prodvalue[0]
-                
-                if valor_acumulado >= valor_prod:
-                    qtbonus = int(math.floor(valor_acumulado / valor_prod))
-                    valor_bonus += (multiplicador_cupom * qtbonus)
-                    cont += multiplicador_cupom
-            else:
-                for prodvalue in prodfornecs:
-                    if prodvalue[1] in listaprods:
-                        if prodvalue[0] >= valor_prod:
-                            valor_bonus += multiplicador_cupom
-                            cont += multiplicador_cupom
+            produtos = cursor_postgre.fetchall()
 
-            histgeracao += f'$$$4 - Aumentou o bônus de números da sorte baseado no produto cadastrado em {cont}'
+            if produtos and len(produtos) > 0:
+                list_prods_intensifica = [int(item[0]) for item in produtos]
+                cursor.execute(f'''
+                    SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT), CODPROD
+                    FROM PCPEDI
+                    WHERE PCPEDI.NUMPED = {ped[0]}
+                    GROUP BY CODPROD
+                ''')
+                prodfornecs = cursor.fetchall()
+                
+                cont = 0
+                valor_acumulado = 0
+                if acumula_intensificador == 'A':
+                    for prodvalue in prodfornecs:
+                        if prodvalue[1] in list_prods_intensifica:
+                            valor_acumulado += prodvalue[0]
+                    
+                    if valor_acumulado >= valor_prod:
+                        qtbonus = int(math.floor(valor_acumulado / valor_prod))
+                        valor_bonus += (multiplicador_cupom * qtbonus)
+                        cont += multiplicador_cupom
+                else:
+                    for prodvalue in prodfornecs:
+                        print(prodvalue)
+                        print(list_prods_intensifica)
+                        if prodvalue[1] in list_prods_intensifica:
+                            if prodvalue[0] >= valor_prod:
+                                valor_bonus += multiplicador_cupom
+                                cont += multiplicador_cupom
+
+                histgeracao += f'$$$4 - Aumentou o bônus de números da sorte baseado no produto cadastrado em {cont}'
             
         #----------------------------CALCULA INTENSIFICAÇÃO POR PRODUTO MULTIPLO ----------------------------
         elif usa_prod == 'M':
@@ -707,11 +742,11 @@ def home_campanha(request, idcampanha):
             
             if tipo_intensificador == 'M':
                 oldqtd = qtcupons
-                qtcupons = qtcupons * multiplicador_cupom
+                qtcupons = qtcupons * (multiplicador_cupom * valor_bonus)
                 histgeracao += f'$$$5 - Multiplicou os números da sorte originais {oldqtd} números, por {multiplicador_cupom} intensificadores bonus, resultando em {qtcupons} números'
             elif tipo_intensificador == 'S':
                 oldqtd = qtcupons
-                qtcupons = qtcupons + multiplicador_cupom
+                qtcupons = qtcupons + (multiplicador_cupom * valor_bonus)
                 histgeracao += f'$$$5 - Somou os números da sorte originais {oldqtd} números, com {multiplicador_cupom} intensificadores bonus, resultando em {qtcupons} números'
             else:
                 bonificadoWhere = 'N'
@@ -769,7 +804,7 @@ def home_campanha(request, idcampanha):
                     {idcampanha},  -- ID da campanha
                     {codcli},      -- Código do cliente
                     NOW(),         -- Data de movimento
-                    '{histgeracao}',  -- Histórico
+                    'S',  -- Histórico
                     {ped[0]},       -- Número do pedido
                     'S',
                     '{bonificadoWhere}',
@@ -785,7 +820,7 @@ def home_campanha(request, idcampanha):
                     {ped[0]},           -- Número do pedido
                     {idcampanha},       -- ID da campanha
                     SYSDATE,              -- Data de movimento
-                    '{histgeracao}',    -- Histórico de geração
+                    'S',    -- Histórico de geração
                     {codcli},           -- Código do cliente
                     'S',                -- Gerou cupom (Sim)
                     '{bonificadoWhere}', -- Gerou bônus (Depende da condição)
@@ -809,7 +844,7 @@ def home_campanha(request, idcampanha):
                     {idcampanha},  -- ID da campanha
                     {codcli},      -- Código do cliente
                     NOW(),         -- Data de movimento
-                    '{histgeracao}',  -- Histórico
+                    'S',  -- Histórico
                     {ped[0]},       -- Número do pedido
                     'N',
                     '{bonificadoWhere}',
@@ -825,7 +860,7 @@ def home_campanha(request, idcampanha):
                     {ped[0]},           -- Número do pedido
                     {idcampanha},       -- ID da campanha
                     SYSDATE,              -- Data de movimento
-                    '{histgeracao}',    -- Histórico de geração
+                    'S',    -- Histórico de geração
                     {codcli},           -- Código do cliente
                     'N',                -- Gerou cupom (Não)
                     '{bonificadoWhere}', -- Gerou bônus (Condição)
@@ -836,8 +871,8 @@ def home_campanha(request, idcampanha):
             printresult = f'Poxa! Infelizmente seu cupon não conseguiu alcançar o valor necessário para gerar um número da sorte! Para mais informações por favor verifique o  regulamento da campanha'
             messages.error(request, printresult)
         
-        #conexao.commit()
-        #conexao_postgre.commit()
+        conexao.commit()
+        conexao_postgre.commit()
         conexao.close() 
         conexao_postgre.close()
     
@@ -1001,13 +1036,10 @@ def campanhas(request):
         
         elif 'active' in request.POST and idcampanha:
             print('entrou active')
-            if not Campanha.objects.filter(ativo='S').exists():
-                campanha = get_object_or_404(Campanha, pk=idcampanha)
-                campanha.ativo = 'S'
-                campanha.save()
-                messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} ativada com sucesso")
-            else:
-                messages.error(request, "Já existe uma campanha ativa, somente uma pode estar ativa por vez.")
+            campanha = get_object_or_404(Campanha, pk=idcampanha)
+            campanha.ativo = 'S'
+            campanha.save()
+            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} ativada com sucesso")
         
         elif 'insert' in request.POST:
             if form.is_valid():
@@ -1017,7 +1049,7 @@ def campanhas(request):
                     messages.error(request, "Erro ao inserir campanha, filial não informada!") 
                 else:
                     nova_campanha = form.save(commit=False)
-                    nova_campanha.ativo = 'S' if not Campanha.objects.filter(ativo='S').exists() else 'N'
+                    nova_campanha.ativo = 'S'
                     nova_campanha.dtultalt = timezone.now()
                     nova_campanha.save()
 
@@ -1359,12 +1391,12 @@ def blacklist(request):
                     DTMOV = datetime.now(),
                     TIPO = tipo
                 )
-                messages.success(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} inserido com sucesso na blacklist da campanha {idcampanha}")
+                messages.success(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} inserido com sucesso na blacklist da campanha {exist_test.descricao}")
             else:
                 if tipo == 'B':
-                    messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na BlackList da campanha {idcampanha}") 
+                    messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na BlackList da campanha {exist_test.descricao}") 
                 else:
-                    messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na WhiteList da campanha {idcampanha}") 
+                    messages.error(request, f"Cliente {exist_cli[0]} - {exist_cli[1]} já cadastrado na WhiteList da campanha {exist_test.descricao}") 
             
         elif 'insertp' in request.POST:
             file = request.FILES.get("planilhas")
@@ -1587,14 +1619,14 @@ def campanhasid(request, idcampanha):
     if campanha.dtexclusao:
         messages.error(request, f'Campanha {idcampanha} FOI EXCLUÍDA')
     
-    context['campanha'] = campanha.descricao
+    context['campanha'] = campanha
     
     def getTable():
         # Consulta usando ORM do Django
         dados = Cuponagem.objects.filter(
             idcampanha=campanha, 
             ativo='S'
-        ).values('idcampanha', 'codcli', 'nomecli').annotate(total_numsorte=Count('numsorte'))
+        ).values('idcampanha', 'codcli', 'nomecli').annotate(total_numsorte=Count('codcli'))
         
         context['dados'] = dados
 
@@ -1621,7 +1653,7 @@ def campanhasidclient(request, idcampanha, idclient):
     context['primarykey'] = 'id'
     context['appname'] = 'cpfcli'
     context['modelname'] = 'Cuponagem'
-    context['nomecolum'] = 'numsorte'
+    context['nomecolum'] = 'nomecli'
     context['transation'] = 'N'
     
     def getTable():
@@ -1645,7 +1677,7 @@ def campanhasidclient(request, idcampanha, idclient):
         messages.error(request, f'Não existe nenhum cupom registrado para o cliente {idclient} na campanha {idcampanha}')
         return redirect(f'/campanhas/{idcampanha}/')
     
-    context['campanha'] = campanha.descricao
+    context['campanha'] = campanha
     context['cliente'] = f'o cliente {idclient}'
     
     if request.method == 'POST':
