@@ -1061,7 +1061,8 @@ def campanhas(request):
     
                 messages.success(request, "Campanha inserida com sucesso")
             else:
-                messages.error(request, "Erro ao inserir campanha") 
+                error_messages = "; ".join([f"{field}: {error}" for field, errors in form.errors.items() for error in errors])
+                messages.error(request, f"Erro ao editar campanha: {error_messages}")
             
         elif 'edit' in request.POST and idcampanha:
             campanha = get_object_or_404(Campanha, pk=idcampanha)
