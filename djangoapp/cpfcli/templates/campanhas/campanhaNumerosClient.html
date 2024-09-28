@@ -19,7 +19,7 @@
                             <th class="text-start">Código do cliente</th>
                             <th class="text-start">Nome do cliente</th>
                             {% if campanha.usa_numero_da_sorte == 'N' %}
-                                <th class="text-start">Numped</th>
+                                <th class="text-start">NumpedECF</th>
                             {% else %}
                                 <th class="text-start">Numcupom</th>
                             {% endif %}
@@ -40,7 +40,7 @@
                                 <td class="text-start">{{ dado.codcli }}</td>
                                 <td class="text-start">{{ dado.nomecli }}</td>
                                 {% if campanha.usa_numero_da_sorte == 'N' %}
-                                    <td class="text-start">{{ dado.numcupom }}</td>
+                                    <td class="text-start">{{ dado.numpedecf }}</td>
                                 {% else %}
                                     <td class="text-start">{{ dado.numped }}</td>
                                 {% endif %}
@@ -52,7 +52,7 @@
                                 {% endif %}
                                 <td class="text-start">{{ dado.dataped }}</td>
                                 <td class="text-start d-flex justify-content-start">
-                                    <a href="{% if campanha.usa_numero_da_sorte == 'N' %} {{ dado.numcupom }}/ {% else %} {{ dado.numped }}/  {% endif %}" class="btn btn-info btn-sm">
+                                    <a href="{% if campanha.usa_numero_da_sorte == 'N' %} {{ dado.numpedecf }}/{{ dado.numcaixa }}/ {% else %} {{ dado.numped }}/  {% endif %}" class="btn btn-info btn-sm">
                                         <i class="fa-solid fa-door-open"></i>
                                     </a>
                                     <button type="button" class="btn btn-danger btn-sm" onclick="loadDataDelete({{ dado.id }})">

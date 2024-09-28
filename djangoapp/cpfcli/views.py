@@ -1698,7 +1698,7 @@ def campanhasidclient(request, idcampanha, idclient):
 
 @login_required(login_url="/accounts/login/")
 @staff_required
-def campanhasidclientnumped(request, idcampanha, idclient, numped):
+def campanhasidclientnumped(request, idcampanha, idclient, numped, numcaixa = ''):
     context = {}
     context['title'] = f'Lista de items no pedido {numped}'
     conexao = conexao_oracle()
@@ -1723,21 +1723,46 @@ def campanhasidclientnumped(request, idcampanha, idclient, numped):
     context['cliente'] = f'{idclient}'
     
     def getTable():
-        cursor.execute(f'''                
-            SELECT 
-                PCMOV.CODPROD, 
-                PCPRODUT.CODAUXILIAR,
-                PCMOV.CODFILIAL, 
-                PCPRODUT.DESCRICAO, 
-                PCMOV.PUNIT,
-                PCMOV.QT,
-                PCPRODUT.CODFORNEC,
-                PCFORNEC.FORNECEDOR
-            FROM PCMOV 
-                INNER JOIN PCPRODUT ON (PCPRODUT.CODPROD = PCMOV.CODPROD)
-                INNER JOIN PCFORNEC ON (pcprodut.codfornec = PCFORNEC.codfornec)
-            WHERE NUMPED = {numped}
-        ''')
+        if campanha.usa_numero_da_sorte == 'S':
+            cursor.execute(f'''                
+                SELECT 
+                    PCMOV.CODPROD, 
+                    PCPRODUT.CODAUXILIAR,
+                    PCMOV.CODFILIAL, 
+                    PCPRODUT.DESCRICAO, 
+                    PCMOV.PUNIT,
+                    PCMOV.QT,
+                    PCPRODUT.CODFORNEC,
+                    PCFORNEC.FORNECEDOR
+                FROM PCMOV 
+                    INNER JOIN PCPRODUT ON (PCPRODUT.CODPROD = PCMOV.CODPROD)
+                    INNER JOIN PCFORNEC ON (pcprodut.codfornec = PCFORNEC.codfornec)
+                WHERE NUMPED = {numped}
+            ''')
+        elif campanha.usa_numero_da_sorte == 'N' and numcaixa:
+            cursor.execute(f'''                
+                SELECT 
+                    PCPRODUT.CODPROD, 
+                    PCPRODUT.CODAUXILIAR,
+                    PCPEDIECF.CODFILIAL, 
+                    PCPRODUT.DESCRICAO, 
+                    PCPEDIECF.PVENDA,
+                    PCPEDIECF.QT,
+                    PCPRODUT.CODFORNEC,
+                    PCFORNEC.FORNECEDOR,
+                    PCPRODUT.CODMARCA,
+                    PCMARCA.MARCA
+                FROM PCPEDIECF 
+                    INNER JOIN PCPEDCECF ON (PCPEDIECF.NUMPEDECF = PCPEDCECF.NUMPEDECF)
+                    INNER JOIN PCPRODUT ON (PCPRODUT.CODPROD = PCPEDIECF.CODPROD)
+                    INNER JOIN PCFORNEC ON (pcprodut.codfornec = PCFORNEC.codfornec)
+                    INNER JOIN PCMARCA ON (pcprodut.CODMARCA  = PCFORNEC.CODFORNEC)
+                WHERE NUMPEDECF = {numped} AND PCPEDCECF.NUMCAIXA = {numcaixa}
+            ''')
+        else:
+            messages.error(request, f'Campanha utiliza números da sorte, não é possivel encontrar venda por cupom')
+            return redirect(f'/campanhas/{idcampanha}/')
+        
         context['dados'] = cursor.fetchall()
 
     getTable()

@@ -12,8 +12,10 @@ header.masthead {
     position: relative;
     {% if background_type == 'url' or background_type == 'urlf' %}
         background: url(/media/{{ background_url }}) no-repeat center center;
-    {% else %}
+    {% elif background_type == 'color' or background_type == 'colorf'  %}
         background-color: var(--background_color);
+    {% else %}
+        background: linear-gradient(112.1deg, rgb(32, 38, 57) 11.4%, rgb(63, 76, 119) 70.2%);
     {% endif %}
     background-size: cover;
     padding-top: 8rem;
