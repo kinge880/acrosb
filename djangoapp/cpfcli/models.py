@@ -96,6 +96,7 @@ class Cuponagem(models.Model):
     numcaixa = models.IntegerField(null=True, blank=True)
     tipo = models.CharField(max_length=2, default='NS')
     valor = models.DecimalField(max_digits=50, decimal_places=12)  # Valor com até 38 dígitos e 12 casas decimais
+    valor_total_venda_cupom = models.DecimalField(null=True, blank=True,max_digits=50, decimal_places=12)  # Valor com até 38 dígitos e 12 casas decimais
     numsorte = models.BigIntegerField(null=True, blank=True)  # Número da sorte
     codcli = models.IntegerField()  # Código do cliente
     nomecli = models.TextField()

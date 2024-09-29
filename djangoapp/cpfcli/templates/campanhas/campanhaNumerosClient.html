@@ -8,7 +8,13 @@
             {% include 'partials/message.html' %}
             <div class="jumbotron jumbotron-fluid">
                 <div class="container">
-                    <p class="h3 mt-3 mb-3 text-center">Lista de números gerados para {{cliente}} na {{campanha.descricao}}</p>
+                    <p class="h3 mt-3 mb-3 text-center">
+                        {% if campanha.usa_numero_da_sorte == 'S' %}
+                            Lista de números gerados para {{cliente}} na {{campanha.descricao}}
+                        {% else %}
+                            Lista de cupons gerados para {{cliente}} na {{campanha.descricao}}
+                        {% endif %}
+                    </p>
                 </div>
             </div>
             <div class="mt-3 table-responsive">
@@ -21,11 +27,12 @@
                             {% if campanha.usa_numero_da_sorte == 'N' %}
                                 <th class="text-start">NumpedECF</th>
                             {% else %}
-                                <th class="text-start">Numcupom</th>
+                                <th class="text-start">Numped</th>
                             {% endif %}
                             <th class="text-start">Valor Total</th>
-                            {% if campanha.usa_numero_da_sorte == 'N' %}
-                                <th class="text-start">Quantidade de números</th>
+                            <th class="text-start">Valor em produtos participantes</th>
+                            {% if campanha.usa_numero_da_sorte == 'S' %}
+                                <th class="text-start">Número da sorte</th>
                             {% else %}
                                 <th class="text-start">Quantidade de Cupons</th>
                             {% endif %}
@@ -41,13 +48,13 @@
                                 <td class="text-start">{{ dado.nomecli }}</td>
                                 {% if campanha.usa_numero_da_sorte == 'N' %}
                                     <td class="text-start">{{ dado.numpedecf }}</td>
-                                {% else %}
-                                    <td class="text-start">{{ dado.numped }}</td>
-                                {% endif %}
-                                <td class="text-start">{{ dado.valor|floatformat:2 }}</td>
-                                {% if campanha.usa_numero_da_sorte == 'N' %}
+                                    <td class="text-start">{{ dado.valor|floatformat:2 }}</td>
+                                    <td class="text-start">{{ dado.valor_total_venda_cupom|floatformat:2 }}</td>
                                     <td class="text-start">{{ dado.qtcupons }}</td>
                                 {% else %}
+                                    <td class="text-start">{{ dado.numped }}</td>
+                                    <td class="text-start">{{ dado.valor|floatformat:2 }}</td>
+                                    <td class="text-start">{{ dado.valor_total_venda_cupom|floatformat:2 }}</td>
                                     <td class="text-start">{{ dado.numsorte }}</td>
                                 {% endif %}
                                 <td class="text-start">{{ dado.dataped }}</td>

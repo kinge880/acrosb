@@ -7,20 +7,29 @@
         <div class="container-fluid">
             {% include 'partials/message.html' %}
             <div>
-                <p class="h3 mt-3 mb-3 text-center">Lista de produtos no pedido {{numped}} do cliente {{cliente}} na {{campanha}}</p>
+                <p class="h3 mt-3 mb-3 text-center">
+                    {% if campanha.usa_numero_da_sorte == 'S' %}
+                        Lista de produtos no pedido {{numped}} do cliente {{cliente}} na {{campanha.descricao}}
+                    {% else %}
+                        Lista de produtos no pedido {{venda.0}} do cliente {{cliente}} na {{campanha.descricao}}
+                    {% endif %}
+                </p>
             </div>
             <div class="mt-3 table-responsive">
                 <table class="table tableSearchButton table-primary table-hover table-striped">
                     <thead>
                         <tr>
-                            <th class="text-start">CODPROD</th>
-                            <th class="text-start">CODAUXILIAR</th>
-                            <th class="text-start">CODFILIAL</th>
-                            <th class="text-start">DESCRIÇÃO</th>
-                            <th class="text-start">PREÇO</th>
-                            <th class="text-start">QUANTIDADE</th>
-                            <th class="text-start">CODFORNEC</th>
-                            <th class="text-start">FORNECEDOR</th>
+                            <th class="text-start">CodProd</th>
+                            <th class="text-start">Ean13</th>
+                            <th class="text-start">Codfilial</th>
+                            <th class="text-start">Descrição</th>
+                            <th class="text-start">Preço</th>
+                            <th class="text-start">Quantidade</th>
+                            <th class="text-start">CodFornec</th>
+                            <th class="text-start">Forncedor</th>
+                            <th class="text-start">CodMarca</th>
+                            <th class="text-start">Marca</th>
+                            <th class="text-start">Data</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,6 +43,9 @@
                                 <td class="text-start">{{dado.5 |floatformat:3}}</td>
                                 <td class="text-start">{{dado.6}}</td>
                                 <td class="text-start">{{dado.7}}</td>
+                                <td class="text-start">{{dado.8}}</td>
+                                <td class="text-start">{{dado.9}}</td>
+                                <td class="text-start">{{dado.10}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

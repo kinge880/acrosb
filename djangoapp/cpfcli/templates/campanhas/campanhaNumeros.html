@@ -8,7 +8,13 @@
             {% include 'partials/message.html' %}
             <div class="jumbotron jumbotron-fluid">
                 <div class="container">
-                    <p class="h3 mt-3 mb-3 text-center">Lista de clientes com números da sorte na {{campanha.descricao}}</p>
+                    <p class="h3 mt-3 mb-3 text-center">
+                        {% if campanha.usa_numero_da_sorte == 'S' %}
+                            Lista de clientes com números da sorte na {{campanha.descricao}}
+                        {% else %}
+                            Lista de clientes com cupons gerados na {{campanha.descricao}}
+                        {% endif %}
+                    </p>
                 </div>
             </div>
             <div class="mt-3 table-responsive">
@@ -18,7 +24,7 @@
                             <th class="text-start">Cod campanha</th>
                             <th class="text-start">Código do cliente</th>
                             <th class="text-start">Nome do cliente</th>
-                            {% if campanha.usa_numero_da_sorte == 'N' %}
+                            {% if campanha.usa_numero_da_sorte == 'S' %}
                                 <th class="text-start">Quantidade de números</th>
                             {% else %}
                                 <th class="text-start">Quantidade de Cupons</th>
