@@ -107,8 +107,8 @@ def home(request):
             dtfim__gte=date.today(),
             dtinit__lte=date.today()
         ).annotate(
-            count_cupons=models.Count('cuponagem__codcli', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=True)),
-            count_cupomcx=models.Count('cuponagem__codcli', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=False))
+            count_cupons=models.Count('cuponagem__id', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=True)),
+            count_cupomcx=models.Count('cuponagem__id', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=False))
         ).exclude(ativo='N')
         
         print(campaigns)
