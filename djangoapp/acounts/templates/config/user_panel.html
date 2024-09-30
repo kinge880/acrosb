@@ -1,5 +1,6 @@
 {% extends 'index.html' %}
 {% load static %}
+{% load form_filters %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
 <div class="container vh-75">
@@ -9,77 +10,79 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <div class="row">
-        <!-- Configurações para Desktop -->
-        <div class="form-group col-12 mb-3">
-            <label for="background_type">Tipo de Fundo (Desktop):</label>
-            <select class="form-select" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
-                <option value="" {% if variaveis_globais.background_type == '' %}selected{% endif %}>Selecionar...</option>
-                <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
-                <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
-                <option value="colorf" {% if variaveis_globais.background_type == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
-                <option value="urlf" {% if variaveis_globais.background_type == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
-            </select>
-        </div>
+        <div class="col-12 row">
+            <div class="col-md-6 col-12 ">
+                <!-- Configurações para Desktop -->
+                <div class="form-group col-12 mb-3">
+                    <label for="background_type">Tipo de Fundo (Desktop):</label>
+                    <select class="form-select" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
+                        <option value="" {% if variaveis_globais.background_type == '' %}selected{% endif %}>0 - Sem background personalizado</option>
+                        <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
+                        <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
+                        <option value="colorf" {% if variaveis_globais.background_type == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
+                        <option value="urlf" {% if variaveis_globais.background_type == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
+                    </select>
+                </div>
 
-        <div class="row mb-3">
-            <!-- Campos de cor e imagem para Desktop -->
-            <div id="color_field" class="form-group col-12" style="display: {% if variaveis_globais.background_type in 'color,colorf' %}block{% else %}none{% endif %};">
-                <label for="background_color">Cor de Fundo (Desktop):</label>
-                <input type="color" class="form-control" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
-            </div>
+                <div class="row mb-3">
+                    <div id="filter_group" class="form-group col-12" style="display: {% if variaveis_globais.background_type|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
+                        <label for="filter_color">Cor do Filtro (Desktop):</label>
+                        <input type="color" class="form-control" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}">
+                    </div>
+                    <!-- Campos de cor e imagem para Desktop -->
+                    <div id="color_field" class="form-group col-12" style="display: {% if variaveis_globais.background_type|in_list:'color,colorf' %}block{% else %}none{% endif %};">
+                        <label for="background_color">Cor de Fundo (Desktop):</label>
+                        <input type="color" class="form-control" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
+                    </div>
 
-            <div id="background_image_group" class="form-group col-12" style="display: {% if variaveis_globais.background_type in 'url,urlf' %}block{% else %}none{% endif %};">
-                <label for="background_image">Imagem de Fundo (Desktop):</label>
-                <input type="file" class="form-control-file d-none" id="background_image" name="background_url" onchange="previewBackgroundImage(event)">
-                <div id="background_container" class="mt-2">
-                    {% if variaveis_globais.background_url %}
-                        <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail w-100" onclick="document.getElementById('background_image').click()">
-                    {% else %}
-                        <span class="text-muted">Nenhuma Imagem</span>
-                    {% endif %}
+                    <div id="background_image_group" class="form-group col-12" style="display: {% if variaveis_globais.background_type|in_list:'url,urlf' %}block{% else %}none{% endif %};">
+                        <label for="background_image">Imagem de Fundo (Desktop):</label>
+                        <input type="file" class="form-control-file d-none" id="background_image" name="background_url" onchange="previewBackgroundImage(event)">
+                        <div id="background_container" class="mt-2">
+                            {% if variaveis_globais.background_url %}
+                                <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail w-100" onclick="document.getElementById('background_image').click()">
+                            {% else %}
+                                <span class="text-muted">Nenhuma Imagem</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div id="filter_group" class="form-group col-md-6" style="display: {% if variaveis_globais.background_type in 'urlf,colorf' %}block{% else %}none{% endif %};">
-                <label for="filter_color">Cor do Filtro (Desktop):</label>
-                <input type="color" class="form-control" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}">
-            </div>
-        </div>
-
-        <div class="form-group col-12 mb-3">
-            <label for="background_type_mobile">Tipo de Fundo (Mobile):</label>
-            <select class="form-select" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
-                <option value="" {% if variaveis_globais.background_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
-                <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
-                <option value="url" {% if variaveis_globais.background_type_mobile == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
-                <option value="colorf" {% if variaveis_globais.background_type_mobile == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
-                <option value="urlf" {% if variaveis_globais.background_type_mobile == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
-            </select>
-        </div>
-
-        <div class="row mb-3">
-            <!-- Campos de cor e imagem para Mobile -->
-            <div id="color_field_mobile" class="form-group col-md-6" style="display: {% if variaveis_globais.background_type_mobile in 'color,colorf' %}block{% else %}none{% endif %};">
-                <label for="background_color_mobile">Cor de Fundo (Mobile):</label>
-                <input type="color" class="form-control" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
-            </div>
-
-            <div id="background_image_group_mobile" class="form-group col-md-6" style="display: {% if variaveis_globais.background_type_mobile in 'url,urlf' %}block{% else %}none{% endif %};">
-                <label for="background_image_mobile">Imagem de Fundo (Mobile):</label>
-                <input type="file" class="form-control-file d-none" id="background_image_mobile" name="background_url_mobile" onchange="previewBackgroundImageMobile(event)">
-                <div id="background_container_mobile" class="mt-2">
-                    {% if variaveis_globais.background_url_mobile %}
-                        <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="img-thumbnail w-100" onclick="document.getElementById('background_image_mobile').click()">
-                    {% else %}
-                        <span class="text-muted">Nenhuma Imagem</span>
-                    {% endif %}
+            <div class="col-md-6 col-12 ">
+                <div class="form-group col-12 mb-3">
+                    <label for="background_type_mobile">Tipo de Fundo (Mobile):</label>
+                    <select class="form-select" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
+                        <option value="" {% if variaveis_globais.background_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
+                        <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
+                        <option value="url" {% if variaveis_globais.background_type_mobile == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
+                        <option value="colorf" {% if variaveis_globais.background_type_mobile == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
+                        <option value="urlf" {% if variaveis_globais.background_type_mobile == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
+                    </select>
                 </div>
-            </div>
 
-            <div id="filter_group_mobile" class="form-group col-md-6" style="display: {% if variaveis_globais.background_type_mobile in 'urlf,colorf' %}block{% else %}none{% endif %};">
-                <label for="filter_color_mobile">Cor do Filtro (Mobile):</label>
-                <input type="color" class="form-control" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}">
+                <div class="row mb-3">
+                    <div id="filter_group_mobile" class="form-group col-12" style="display: {% if variaveis_globais.background_type_mobile|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
+                        <label for="filter_color_mobile">Cor do Filtro (Mobile):</label>
+                        <input type="color" class="form-control" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}">
+                    </div>
+                    <!-- Campos de cor e imagem para Mobile -->
+                    <div id="color_field_mobile" class="form-group col-12" style="display: {% if variaveis_globais.background_type_mobile|in_list:'color,colorf' %}block{% else %}none{% endif %};">
+                        <label for="background_color_mobile">Cor de Fundo (Mobile):</label>
+                        <input type="color" class="form-control" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
+                    </div>
+
+                    <div id="background_image_group_mobile" class="form-group col-12" style="display: {% if variaveis_globais.background_type_mobile|in_list:'url,urlf' %}block{% else %}none{% endif %};">
+                        <label for="background_image_mobile">Imagem de Fundo (Mobile):</label>
+                        <input type="file" class="form-control-file d-none" id="background_image_mobile" name="background_url_mobile" onchange="previewBackgroundImageMobile(event)">
+                        <div id="background_container_mobile" class="mt-2">
+                            {% if variaveis_globais.background_url_mobile %}
+                                <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="img-thumbnail w-100" onclick="document.getElementById('background_image_mobile').click()">
+                            {% else %}
+                                <span class="text-muted">Nenhuma Imagem</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

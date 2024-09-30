@@ -934,6 +934,11 @@ def get_data(request):
         else:
             response_data[field.name] = field_value
     
+    # Verifica se o modelo é Campanha e busca as filiais associadas
+    if model_name == 'Campanha':
+        filiais = CampanhaFilial.objects.filter(idcampanha=response.idcampanha)
+        response_data['filial'] = ', '.join(str(f.codfilial) for f in filiais)  # Inclui os códigos das filiais na resposta
+    
     return JsonResponse(response_data)
 
 @login_required(login_url="/accounts/login/")

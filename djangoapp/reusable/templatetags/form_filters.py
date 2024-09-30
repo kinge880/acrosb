@@ -22,3 +22,7 @@ def add_class_invalid(field):
         new_classes = existing_classes
     
     return field.as_widget(attrs={"class": new_classes})
+
+@register.filter
+def in_list(value, arg):
+    return value in arg.split(',')

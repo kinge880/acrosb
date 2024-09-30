@@ -87,6 +87,14 @@
     border-color: #606162;
 }
 
+.div_image_user_page{
+    min-height: 16rem;
+}
+
+.div_image_heigth{
+    height: 16rem;
+}
+
 .custom-tooltip {
     --bs-tooltip-bg: var(--bs-primary);
 }
