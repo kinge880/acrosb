@@ -78,7 +78,7 @@ class ClienteForm(forms.ModelForm):
         self.fields['senha'].label = 'Senha'
         self.fields['confirmar_senha'].label = 'Confirmar Senha'
         self.fields['ibge'].label = ''
-        self.fields['aceita_comunicacao'].label = 'Aceito receber comunicações do Cadastro meu Mercale'
+        self.fields['aceita_comunicacao'].label = 'Aceito receber comunicações do clube de ofertas'
         self.fields['concordo_regulamento'].label = 'Afirmo que todos os dados acima são verdadeiros e concordo com as <a href="/politicas-privacidade">políticas de privacidade</a>'
         
     def clean_cnpf_cnpj(self):

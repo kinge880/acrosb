@@ -91,7 +91,7 @@ def cadastro_cliente(request):
             
             client_winthor = exist_client_cpf_email(cursor, form.cleaned_data['email'], form.cleaned_data['cnpf_cnpj'])
             
-            if client_winthor:
+            if client_winthor and client_winthor[0]:
                 cliente.codcli = client_winthor[0]
             else:
                 codcli_winthor = obter_cod_client(cursor, form.cleaned_data['email'], form.cleaned_data['cnpf_cnpj'], conexao)
@@ -115,7 +115,7 @@ def cadastro_cliente(request):
                     codpraca = praca[0]
                 else:
                     codpraca = '1'
-                    
+                
                 cursor.execute(f'''
                     INSERT INTO PCCLIENT (
                         CODCLI,         -- Código do cliente (substitua por um valor único para o teste)
@@ -184,7 +184,7 @@ def cadastro_cliente(request):
                         CLIENTPROTESTO, -- Cliente passível de protesto
                         CLIATACADO -- cliente atacado
                     ) VALUES (
-                        {codcli_winthor}, -- CODCLI (substitua com um valor único)
+                        {codcli_winthor[0]}, -- CODCLI (substitua com um valor único)
                         '{cliente.nome}', -- CLIENTE
                         '{cliente.rua}', -- ENDERCOB
                         '{cliente.numero}', -- NUMEROCOB
@@ -211,8 +211,8 @@ def cadastro_cliente(request):
                         0,  -- LIMCRED
                         NULL, -- OBS
                         TRUNC(SYSDATE), -- DTPRIMCOMPRA
-                        'COBS',            -- CODCOB
-                        NULL,            -- DTBLOQ (nulo se não bloqueado)
+                        'COBS', -- CODCOB
+                        NULL, -- DTBLOQ (nulo se não bloqueado)
                         SYSDATE, -- DTCADASTRO
                         {codpraca},  -- CODPRACA
                         '{cliente.nome}',     -- FANTASIA
@@ -251,15 +251,15 @@ def cadastro_cliente(request):
                         'S' -- CLIATACADO
                     )
                 ''')
-                conexao.commit()
                 
                 cliente.codcli = client_winthor[0]
             
-            user.save()
-            cliente.save()  # Agora salvamos o cliente
-            profile = Profile.objects.create(user=user, idempresa=empress, client = cliente)
-            profile.save()
-            
+                user.save()
+                cliente.save()  # Agora salvamos o cliente
+                profile = Profile.objects.create(user=user, idempresa=empress, client = cliente)
+                profile.save()
+                conexao.commit()
+                
             messages.success(request, "Cadastro realizado com sucesso!")
             return redirect('login') 
 

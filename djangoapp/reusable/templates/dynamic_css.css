@@ -20,7 +20,7 @@ header.masthead {
     background-size: cover;
     padding-top: 8rem;
     padding-bottom: 8rem;
-    min-height: 100vh;
+    min-height: 82vh;
 }
 
 header.masthead:before {
@@ -43,7 +43,7 @@ header.masthead h1, header.masthead .h1 {
 {% if background_url_mobile or background_color_mobile %}
     @media (min-width: 768px) {
         header.masthead {
-            min-height: 100vh;
+            min-height: 82vh;
             {% comment %} padding-top: 12rem; {% endcomment %}
             {% comment %} padding-bottom: 12rem; {% endcomment %}
         }
@@ -55,7 +55,7 @@ header.masthead h1, header.masthead .h1 {
     /* Ajustes para dispositivos menores */
     @media (max-width: 768px) {
         header.masthead {
-            min-height: 100vh;
+            min-height: 82vh;
             padding-top: 4rem;
             padding-bottom: 4rem;
             background-position: center center;
@@ -81,7 +81,7 @@ header.masthead h1, header.masthead .h1 {
 
     @media (max-width: 480px) {
         header.masthead {
-            height: 100vh;
+            height: 82vh;
             padding-top: 2rem;
             padding-bottom: 2rem;
             background-size: contain;
