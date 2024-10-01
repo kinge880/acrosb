@@ -111,6 +111,15 @@
                 {% include 'partials/components/deleteModal.html' %}
                 {% include 'partials/components/activeDeactivdModal.html' %}
                 {% include 'partials/components/dynamicModalTable.html' %}
+                <script>
+                    $(document).ready(function () {
+                        $('.spawselect2').select2({
+                            language: "pt-BR",
+                            theme: 'bootstrap-5',
+                            width: '100%'
+                        });
+                    })
+                </script>  
             </div>
         </div>
     </div>

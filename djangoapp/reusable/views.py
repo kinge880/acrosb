@@ -303,3 +303,115 @@ def campanha_ativa(request):
 
         # Retornando as campanhas ativas em JSON
         return JsonResponse({'campanhas': campanhas_json}, safe=False, status=200)
+
+def pesquisar_marca(request):
+    term = request.GET.get('term')
+    
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    print(term)
+    if term:
+        try:
+            term = int(term)
+            termWhere = f"WHERE MARCA LIKE '%{term}%' OR CODMARCA LIKE '%{term}%'"
+        except (ValueError, TypeError):
+            termWhere = f"WHERE MARCA LIKE '%{term.upper()}%'"
+    else:
+        termWhere = ''
+        
+    cursor.execute(f'''
+        SELECT CODMARCA, MARCA FROM PCMARCA {termWhere}
+        ORDER BY MARCA ASC
+    ''')
+        
+    termsresult = cursor.fetchall()
+    conexao.close()
+    
+    formatted_termsresult = [{'id': item[0], 'text': f"{item[0]} - {item[1]}"} for item in termsresult]
+
+    import json
+    return HttpResponse(json.dumps({'data': formatted_termsresult}), content_type="application/json")
+
+def pesquisacodprodutoPCPRODUT(request):
+    term = request.GET.get('term').upper()
+    
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    
+    if term:
+        try:
+            term = int(term)
+            termWhere = f"WHERE DESCRICAO LIKE '%{term}%' OR CODPROD LIKE '%{term}%'"
+        except (ValueError, TypeError):
+            termWhere = f"WHERE DESCRICAO LIKE '%{term.upper()}%'"
+    else:
+        termWhere = ''
+        
+    cursor.execute(f'''
+        SELECT CODPROD, DESCRICAO FROM PCPRODUT 
+        {termWhere}
+        ORDER BY DESCRICAO
+    ''')
+        
+    codprod = cursor.fetchall()
+    conexao.close()
+    
+    formatted_codprod = [{'id': item[0], 'text': f"{item[0]} - {item[1]}"} for item in codprod]
+   
+    import json
+    return HttpResponse(json.dumps({'data': formatted_codprod}), content_type="application/json")
+
+def pesquisafornec(request):
+    term = request.GET.get('term')
+    
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    
+    if term:
+        try:
+            term = int(term)
+            fornecWhere = f"WHERE FORNECEDOR LIKE '%{term}%' OR CODFORNEC = '{term}'"
+        except (ValueError, TypeError):
+            fornecWhere = f"WHERE FORNECEDOR LIKE '%{term.upper()}%'"
+    else:
+        fornecWhere = ''
+    
+    cursor.execute(f'''
+        SELECT CODFORNEC, FORNECEDOR FROM PCFORNEC {fornecWhere} ORDER BY FORNECEDOR
+    ''')
+        
+    fornec = cursor.fetchall()
+    conexao.close()
+    
+    formatted_cat = [{'id': item[0], 'text': f"{item[0]} - {item[1]}"} for item in fornec]
+
+    import json
+    return HttpResponse(json.dumps({'data': formatted_cat}), content_type="application/json")
+
+
+def pesquisacli(request):
+    term = request.GET.get('term')
+    
+    conexao = conexao_oracle()
+    cursor = conexao.cursor()
+    
+    if term:
+        try:
+            term = int(term)
+            pesqWhere = f"WHERE CLIENTE LIKE '%{term}%' OR CODCLI = '{term}'"
+        except (ValueError, TypeError):
+            pesqWhere = f"WHERE CLIENTE LIKE '%{term.upper()}%'"
+    else:
+        pesqWhere = ''
+    
+    cursor.execute(f'''
+        SELECT CODCLI, CLIENTE || ' | CPF/CNPJ: ' || CGCENT FROM PCCLIENT {pesqWhere} ORDER BY CLIENTE
+    ''')
+        
+    fornec = cursor.fetchall()
+    conexao.close()
+    
+    formatted_cat = [{'id': item[0], 'text': f"{item[0]} - {item[1]}"} for item in fornec]
+
+    import json
+    return HttpResponse(json.dumps({'data': formatted_cat}), content_type="application/json")

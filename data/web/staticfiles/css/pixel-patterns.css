@@ -42,6 +42,7 @@
     background-color: #ffffff;
     padding: 0 .2em;
     color: var(--bs-info);
+    z-index: 10;
 }
 
 .loading-icon {
@@ -71,6 +72,13 @@
     display: inline;
     padding: 0.5rem;
     font-size: 1rem;
+}
+
+.select2-container--bootstrap-5 .select2-selection {
+    border: 1.5px solid #1a73e8 !important;
+    border-radius: 0.375rem !important;
+    min-height: calc(1.5em + 1rem + 2px) !important;
+    padding: 0.5rem !important;
 }
 
 

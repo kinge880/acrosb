@@ -1,0 +1,328 @@
+{% block Load%}
+{% load static %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
+<style>
+    .spanSelect2{
+        border: 1px solid #aaa;
+        border-radius: 4px;
+        cursor: default;
+        float: left;
+        margin-right: 5px;
+        padding: 0 5px;
+    }
+    
+</style>
+
+<script> 
+    $(document).ready(function() {
+        var deptValue = "{{departamento}}";
+        var secaoValue = "{{secao}}";
+        var categoriaValue = "{{categoria}}";
+        var SubcategoriaValue = "{{subcategoria}}";
+        var deptText = "{{descricaodepto}}";
+        var secaoText = "{{descricaosecao}}";
+        var categoriaText = "{{descricaocategoria}}";
+        var SubcategoriaText = "{{descricasubcat}}";
+
+        $('.marca').select2({
+            
+            dropdownParent: $('#insertEditModal'),
+            language: "pt-BR",
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Selecione uma marca', // Placeholder desejado
+            ajax: {
+                url: '/reusables/utils/pesquisarmarca/', // URL da sua view Django que faz a pesquisa no banco de dados
+                dataType: 'json',
+                delay: 250,
+                processResults: function(data) {
+                    return {
+                        results: data.data
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 0,
+            templateSelection: function(data) {
+                if (data.id === '') {
+                    return 'Selecione uma marca';
+                }
+                var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+                var $selection = $('<span class="text-dark"> ' + data.text + '</span>');
+                $removeIcon.on('click', function(e) {
+                    e.stopPropagation();
+                    $('.marca').val(null).trigger('change');
+                });
+                $selection.append($removeIcon);
+                return $selection;
+                }
+            });
+
+        
+        $('.codprod_select').select2({
+            dropdownParent: $('#insertEditModal'),
+            language: "pt-BR",
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Selecione um produto', // Placeholder desejado
+            ajax: {
+                url: '/reusables/utils/pesquisarcodprod/pcprodut/', // URL da sua view Django que faz a pesquisa no banco de dados
+                dataType: 'json',
+                delay: 250,
+                processResults: function(data) {
+                    return {
+                        results: data.data
+                    };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                templateSelection: function(data) {
+                if (data.id === '') {
+                    return 'Selecione um produto';
+                }
+                var $selection = $('<span> ' + data.text + '</span>');
+                var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+                $removeIcon.on('click', function(e) {
+                    e.stopPropagation();
+                    $('.codprod_select').val(null).trigger('change');
+                });
+                $selection.append($removeIcon);
+                return $selection;
+                }
+            });
+        
+        
+        $('#departamento').select2({
+            language: 'pt-BR',
+            placeholder: 'Selecione um departamento', // Placeholder desejado
+            ajax: {
+                url: '/reusables/utils/pesquisardepartamento/', // URL da sua view Django que faz a pesquisa no banco de dados
+                dataType: 'json',
+                delay: 250,
+                processResults: function(data) {
+                    return {
+                        results: data.data
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 0,
+            templateSelection: function(data) {
+                if (data.id === '') {
+                    return 'Selecione um departamento';
+                }
+                var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+                var $selection = $('<span class="text-dark"> ' + data.text + '</span>');
+                $removeIcon.on('click', function(e) {
+                    e.stopPropagation();
+                    $('#departamento').val(null).trigger('change');
+                    $('#secao').val(null).trigger('change');
+                    $('#categoria').val(null).trigger('change');
+                    $('#subcat').val(null).trigger('change');
+                });
+                $selection.append($removeIcon);
+                return $selection;
+                }
+            });
+
+        $('#secao').select2({
+        language: 'pt-BR',
+        placeholder: 'Selecione uma seção', // Placeholder desejado
+        ajax: {
+            url: '/reusables/utils/pesquisarsecoes/', // URL da sua view Django que faz a pesquisa no banco de dados
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    dept_id: $('#departamento').val(), // Captura o valor da seção selecionada
+                    term: params.term // Captura o termo de pesquisa digitado
+                };
+            },
+            processResults: function(data) {
+                return {
+                    results: data.data
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 0,
+        templateSelection: function(data) {
+            if (data.id === '') {
+                return 'Selecione uma seção';
+            }
+            var $selection = $('<span class="text-dark"> ' + data.text + '</span>');
+            var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+            $removeIcon.on('click', function(e) {
+                e.stopPropagation();
+                $('#secao').val(null).trigger('change');
+                $('#categoria').val(null).trigger('change');
+                $('#subcat').val(null).trigger('change');
+            });
+            $selection.append($removeIcon);
+            return $selection;
+            }
+        });
+
+        $('#categoria').select2({
+            language: 'pt-BR',
+            placeholder: 'Selecione uma categoria', // Placeholder desejado
+            ajax: {
+                url: '/reusables/utils/pesquisarcategorias/', // URL da sua view Django que faz a pesquisa no banco de dados
+                dataType: 'json',
+                delay: 250, 
+                data: function(params) {
+                    return {
+                        secao_id: $('#secao').val(), // Captura o valor da seção selecionada
+                        term: params.term // Captura o termo de pesquisa digitado
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.data
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 0,
+            templateSelection: function(data) {
+                if (data.id === '') {
+                    return 'Selecione uma categoria';
+                }
+                var $selection = $('<span class="text-dark"> ' + data.text + '</span>');
+                var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+                $removeIcon.on('click', function(e) {
+                    e.stopPropagation();
+                    $('#categoria').val(null).trigger('change');
+                    $('#subcat').val(null).trigger('change');
+                });
+                $selection.append($removeIcon);
+                return $selection;
+            }
+        });
+
+        $('#subcat').select2({
+            language: 'pt-BR',
+            placeholder: 'Selecione uma subcategoria', // Placeholder desejado
+            ajax: {
+                url: '/reusables/utils/pesquisasubcat/', // URL da sua view Django que faz a pesquisa no banco de dados
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        categoria_id: $('#categoria').val(), // Captura o valor da categoria selecionada
+                        term: params.term // Captura o termo de pesquisa digitado
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                    results: data.data
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 0,
+            templateSelection: function(data) {
+                if (data.id === '') {
+                    return 'Selecione uma subcategoria';
+                }
+                var $selection = $('<span class="text-dark"> ' + data.text + '</span>');
+                var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+                $removeIcon.on('click', function(e) {
+                    e.stopPropagation();
+                    $('#subcat').val(null).trigger('change');
+                });
+                $selection.append($removeIcon);
+                return $selection;
+            }
+        });
+
+        $('.fornec').select2({
+            dropdownParent: $('#insertEditModal'),
+            language: "pt-BR",
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Selecione um fornecedor', // Placeholder desejado
+            ajax: {
+                url: '/reusables/utils/pesquisafornec/', // URL da sua view Django que faz a pesquisa no banco de dados
+                dataType: 'json',
+                delay: 250,
+                processResults: function(data) {
+                    return {
+                        results: data.data
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 0,
+            templateSelection: function(data) {
+                if (data.id === '') {
+                    return 'Selecione um fornecedor';
+                }
+                var $selection = $('<span class="text-dark"> ' + data.text + '</span>');
+                var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+                $removeIcon.on('click', function(e) {
+                    e.stopPropagation();
+                    $('.fornec').val(null).trigger('change');
+                });
+                $selection.append($removeIcon);
+                return $selection;
+                }
+        });
+
+        $('.client_select').select2({
+            dropdownParent: $('#insertEditModal'),
+            language: "pt-BR",
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Selecione um cliente', // Placeholder desejado
+            ajax: {
+                url: '/reusables/utils/pesquisacli/', // URL da sua view Django que faz a pesquisa no banco de dados
+                dataType: 'json',
+                delay: 250,
+                processResults: function(data) {
+                    return {
+                        results: data.data
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 0,
+            templateSelection: function(data) {
+                if (data.id === '') {
+                    return 'Selecione um cliente';
+                }
+                var $selection = $('<span class="text-dark"> ' + data.text + '</span>');
+                var $removeIcon = $('<button type="button" class="remove-icon close" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+                $removeIcon.on('click', function(e) {
+                    e.stopPropagation();
+                    $('.client_select').val(null).trigger('change');
+                });
+                $selection.append($removeIcon);
+                return $selection;
+                }
+        });
+
+        $(document).ready(function() {
+            $('.spawselect2').select2();
+        });
+
+        {% comment %} $("#departamento").on('change', function(){
+            $('#categoria').val(null).trigger('change');
+            $('#secao').val(null).trigger('change');
+            $('#subcat').val(null).trigger('change');
+        });
+
+        $("#secao").on('change', function(){
+            $('#categoria').val(null).trigger('change');
+            $('#subcat').val(null).trigger('change');
+        });
+
+        $("#categoria").on('change', function(){
+            $('#subcat').val(null).trigger('change');
+        }); {% endcomment %}
+    });
+</script>
+{% endblock %}

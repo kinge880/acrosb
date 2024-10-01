@@ -4,22 +4,6 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator
 
-class BlackList(models.Model):
-    IDCAMPANHA = models.IntegerField(default=0)
-    NOMECLI = models.CharField(default='Sem nome cadastrado')
-    CODCLI = models.IntegerField(default=0)
-    EMAIL = models.CharField(default='Sem email cadastrado')
-    CPFCNPJ = models.CharField(default='Sem cpf ou cnpj cadastrado')
-    DTMOV = models.DateTimeField(null=True, blank=True)
-    TIPO = models.CharField(default='N')
-    
-    def save(self, *args, **kwargs):     
-        self.dtmov = timezone.now()
-        super().save(*args, **kwargs)
-        
-    def __str__(self):
-        return str(self.IDCAMPANHA) + ' - ' + str(self.CODCLI)
-
 class Campanha(models.Model):
     idcampanha = models.AutoField(primary_key=True)
     descricao = models.CharField(max_length=100)
@@ -63,6 +47,9 @@ class Campanha(models.Model):
     def save(self, *args, **kwargs):     
         self.dtultalt = timezone.now()
         super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return str(self.idcampanha) + ' - ' + str(self.descricao)
         
 class CampanhaFilial(models.Model):
     idcampanha = models.IntegerField(null=True, blank=True,)
@@ -152,8 +139,7 @@ class CuponagemVencedores(models.Model):
         return f"Campanha {self.idcampanha} - Cliente {self.codcli} - Número Sorteado {self.numsorte}"
     
 class Marcas(models.Model):
-    idcampanha = models.IntegerField(default=0)
-    #idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')
+    idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')
     nomemarca = models.CharField(default='Sem descrição cadastrada')
     codmarca = models.IntegerField(default=0)
     dtmov = models.DateTimeField(null=True, blank=True)
@@ -167,7 +153,7 @@ class Marcas(models.Model):
         return str(self.idcampanha) + ' - ' + str(self.nomemarca)
 
 class Produtos(models.Model):
-    idcampanha = models.IntegerField(default=0)  # Pode ser ForeignKey se houver um modelo de campanha
+    idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')
     nomeprod = models.CharField(default='Sem descrição cadastrada')
     codprod = models.IntegerField(default=0)
     dtmov = models.DateTimeField(null=True, blank=True)
@@ -181,7 +167,7 @@ class Produtos(models.Model):
         return f'{self.idcampanha} - {self.codprod}'
 
 class Fornecedor(models.Model):
-    idcampanha = models.IntegerField(default=0)  # Pode ser ForeignKey se houver um modelo de campanha
+    idcampanha = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')
     nomefornec = models.CharField(default='Sem descrição cadastrada')
     codfornec = models.IntegerField(default=0)
     dtmov = models.DateTimeField(null=True, blank=True)
@@ -193,3 +179,19 @@ class Fornecedor(models.Model):
     
     def __str__(self):
         return f'{self.idcampanha} - {self.codfornec}'
+
+class BlackList(models.Model):
+    IDCAMPANHA = models.ForeignKey(Campanha, models.CASCADE, db_column='idcampanha')
+    NOMECLI = models.CharField(default='Sem nome cadastrado')
+    CODCLI = models.IntegerField(default=0)
+    EMAIL = models.CharField(default='Sem email cadastrado')
+    CPFCNPJ = models.CharField(default='Sem cpf ou cnpj cadastrado')
+    DTMOV = models.DateTimeField(null=True, blank=True)
+    TIPO = models.CharField(default='N')
+    
+    def save(self, *args, **kwargs):     
+        self.dtmov = timezone.now()
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return str(self.IDCAMPANHA) + ' - ' + str(self.CODCLI)

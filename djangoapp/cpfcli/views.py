@@ -1139,7 +1139,7 @@ def produtos(request):
             
             if not Produtos.objects.filter(idcampanha=idcampanha, codprod=codprod).exists():
                 Produtos.objects.create(
-                    idcampanha=idcampanha,
+                    idcampanha=exist_test,
                     codprod=codprod,
                     tipo = tipo,
                     nomeprod=exist[1],
@@ -1190,7 +1190,7 @@ def produtos(request):
                         
                         if not Produtos.objects.filter(idcampanha=idcampanha, codprod=codprod).exists():
                             Produtos.objects.create(
-                                idcampanha=idcampanha,
+                                idcampanha=exist_test,
                                 codprod=codprod,
                                 tipo = tipo,
                                 nomeprod=exist[1],
@@ -1263,7 +1263,7 @@ def fornecedores(request):
             
             if not Fornecedor.objects.filter(idcampanha=idcampanha, codfornec=codfornec).exists():
                 Fornecedor.objects.create(
-                    idcampanha=idcampanha,
+                    idcampanha=exist_test,
                     codfornec=codfornec,
                     tipo=tipo,
                     nomefornec=exist[1],
@@ -1312,7 +1312,7 @@ def fornecedores(request):
             
                         if not Fornecedor.objects.filter(idcampanha=idcampanha, codfornec=codfornec).exists():
                             Fornecedor.objects.create(
-                                idcampanha=idcampanha,
+                                idcampanha=exist_test,
                                 codfornec=codfornec,
                                 tipo=tipo,
                                 nomefornec=exist[1],
@@ -1389,7 +1389,7 @@ def blacklist(request):
             
             if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli, TIPO = tipo).exists():
                 BlackList.objects.create(
-                    IDCAMPANHA=idcampanha, 
+                    IDCAMPANHA=exist_test, 
                     CODCLI = exist_cli[0], 
                     EMAIL = exist_cli[2],
                     CPFCNPJ = exist_cli[3],
@@ -1446,7 +1446,7 @@ def blacklist(request):
             
                         if not BlackList.objects.filter(IDCAMPANHA=idcampanha, CODCLI=codcli, TIPO = tipo).exists():
                             BlackList.objects.create(
-                                IDCAMPANHA=idcampanha, 
+                                IDCAMPANHA=exist_test, 
                                 CODCLI = exist_cli[0], 
                                 EMAIL = exist_cli[2],
                                 CPFCNPJ = exist_cli[3],
@@ -1525,7 +1525,7 @@ def marcas(request):
             
             if not Marcas.objects.filter(idcampanha=idcampanha, codmarca=codmarca).exists():
                 Marcas.objects.create(
-                    idcampanha=idcampanha, 
+                    idcampanha=exist_test, 
                     codmarca=codmarca,
                     tipo=tipo,
                     nomemarca = exist[1],

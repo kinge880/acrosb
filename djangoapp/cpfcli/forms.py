@@ -10,7 +10,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
         choices=obter_choices_filiais(),
         required=True,
         label='Lista de filiais',
-        widget=forms.SelectMultiple(attrs={'class': 'form-select select2', 'classdiv': 'col-12  mb-3', 'autocomplete': 'off', 'select2Label': 'select', 'data-bs-toggle': 'tooltip'})
+        widget=forms.SelectMultiple(attrs={'class': 'form-select select2 spawselect2', 'classdiv': 'col-12  mb-3', 'required':True, 'autocomplete': 'off', 'select2Label': 'select', 'data-bs-toggle': 'tooltip'})
     )
     class Meta:
         model = Campanha
@@ -36,7 +36,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('N', '2 - Deve utilizar cuponagem física no caixa')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 
-                'classdiv': 'col-12 col-md-6 mb-3', 
+                'classdiv': 'col-12 col-lg-6 mb-3', 
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -49,7 +49,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('W', '3 - Deve utilizar WhiteList')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 
-                'classdiv': 'col-12 col-md-6 mb-3', 
+                'classdiv': 'col-12 col-lg-6 mb-3', 
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -59,7 +59,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'dtinit': forms.DateInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
                 'type': 'date',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
@@ -70,7 +70,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'dtfim': forms.DateInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
                 'type': 'date',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
@@ -83,7 +83,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('S', '2 - Enviar email com números da sorte')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -96,7 +96,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('T', '3 - Acumular saldo em todas as vendas')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-8 mb-3',
+                'classdiv': 'col-12 col-lg-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -105,7 +105,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             }),
             'valor': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
@@ -118,7 +118,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('C', '2 - Restrição por fornecedor cadastrado')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -130,7 +130,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('C', '2 - Restrição por marca cadastrada')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -142,7 +142,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('C', '2 - Restrição por produto cadastrado')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -155,7 +155,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('S', '3 - Soma')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-8 mb-3',
+                'classdiv': 'col-12 col-lg-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -164,7 +164,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             }),
             'multiplicador': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
@@ -178,7 +178,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('M', '3 - Intensificador por marca múltipla')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-8 mb-3',
+                'classdiv': 'col-12 col-lg-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -187,7 +187,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             }),
             'marcavalor': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
@@ -201,7 +201,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('M', '3 - Intensificador por fornecedor múltiplo')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-8 mb-3',
+                'classdiv': 'col-12 col-lg-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -210,7 +210,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             }),
             'fornecvalor': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
@@ -224,7 +224,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('M', '3 - Intensificador por produto múltiplo')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-8 mb-3',
+                'classdiv': 'col-12 col-lg-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -233,7 +233,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             }),
             'prodvalor': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
@@ -246,7 +246,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('S', '2 - Acumular intensificadores')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-md-8 mb-3',
+                'classdiv': 'col-12 col-lg-8 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -255,7 +255,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             }),
             'limite_intensificadores': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-12 col-md-4 mb-3',
+                'classdiv': 'col-12 col-lg-4 mb-3',
                 'autocomplete': 'off',
                 'min': '1',
                 'data-bs-toggle': 'tooltip',
@@ -265,7 +265,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             }),
             'logo_campanha': forms.ClearableFileInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-12 col-md-6 mb-3',
+                'classdiv': 'col-12 col-lg-6 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -375,13 +375,8 @@ class MarcasForm(forms.ModelForm):
             'idcampanha', 'codmarca', 'tipo'
         ]
         widgets = {
-            'idcampanha': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-6 mb-3',
-                'autocomplete': 'off'
-            }),
-            'codmarca': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+            'codmarca': forms.Select(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12 marca',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
             }),
@@ -394,14 +389,21 @@ class MarcasForm(forms.ModelForm):
         }
         
         labels = {
-            'idcampanha': 'Código da Campanha',
-            'codmarca': 'Código da Marca',
+            'idcampanha': 'Campanha ativa',
+            'codmarca': 'Marca',
             'tipo': 'Qual o tipo de função da marca na campanha?'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self.fields['idcampanha'].queryset = Campanha.objects.all()
+        self.fields['idcampanha'].queryset = Campanha.objects.filter(ativo='S')
+        self.fields['idcampanha'].empty_label = None  # Define o texto para quando nada for selecionado
+        self.fields['idcampanha'].widget.attrs.update({
+            'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+            'classdiv': 'col-12 col-md-6 mb-3',
+            'autocomplete': 'off',
+            'required': True
+        })
 
 class ProdutosForm(forms.ModelForm):
     class Meta:
@@ -410,13 +412,8 @@ class ProdutosForm(forms.ModelForm):
             'idcampanha', 'codprod', 'tipo'
         ]
         widgets = {
-            'idcampanha': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-6 mb-3',
-                'autocomplete': 'off'
-            }),
-            'codprod': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+            'codprod': forms.Select(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 codprod_select',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
             }),
@@ -432,6 +429,17 @@ class ProdutosForm(forms.ModelForm):
             'codprod': 'Código do Produto',
             'tipo': 'Qual o tipo de função do produto na campanha?'
         }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['idcampanha'].queryset = Campanha.objects.filter(ativo='S')
+        self.fields['idcampanha'].empty_label = None  # Define o texto para quando nada for selecionado
+        self.fields['idcampanha'].widget.attrs.update({
+            'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+            'classdiv': 'col-12 col-md-6 mb-3',
+            'autocomplete': 'off',
+            'required': True
+        })
 
 class FornecedorForm(forms.ModelForm):
     class Meta:
@@ -440,13 +448,8 @@ class FornecedorForm(forms.ModelForm):
             'idcampanha', 'codfornec', 'tipo'
         ]
         widgets = {
-            'idcampanha': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-6 mb-3',
-                'autocomplete': 'off'
-            }),
-            'codfornec': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+            'codfornec': forms.Select(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 fornec',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
             }),
@@ -462,6 +465,17 @@ class FornecedorForm(forms.ModelForm):
             'codfornec': 'Código do Fornecedor',
             'tipo': 'Qual o tipo de função do fornecedor na campanha?'
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['idcampanha'].queryset = Campanha.objects.filter(ativo='S')
+        self.fields['idcampanha'].empty_label = None  # Define o texto para quando nada for selecionado
+        self.fields['idcampanha'].widget.attrs.update({
+            'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+            'classdiv': 'col-12 col-md-6 mb-3',
+            'autocomplete': 'off',
+            'required': True
+        })
         
 class BlackListForm(forms.ModelForm):
     class Meta:
@@ -470,13 +484,8 @@ class BlackListForm(forms.ModelForm):
             'IDCAMPANHA', 'CODCLI', 'TIPO'
         ]
         widgets = {
-            'IDCAMPANHA': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
-                'classdiv': 'col-6 mb-3',
-                'autocomplete': 'off'
-            }),
-            'CODCLI': forms.NumberInput(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+            'CODCLI': forms.Select(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 client_select',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
             }),
@@ -491,7 +500,14 @@ class BlackListForm(forms.ModelForm):
             'CODCLI': 'Código do Cliente',
             'TIPO': 'Qual tipo de lista o cliente deve se encaixar?'
         }
-
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Personalize widgets ou outros campos se necessário
+        self.fields['IDCAMPANHA'].queryset = Campanha.objects.filter(ativo='S')
+        self.fields['IDCAMPANHA'].empty_label = None  # Define o texto para quando nada for selecionado
+        self.fields['IDCAMPANHA'].widget.attrs.update({
+            'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+            'classdiv': 'col-12 col-md-6 mb-3',
+            'autocomplete': 'off',
+            'required': True
+        })

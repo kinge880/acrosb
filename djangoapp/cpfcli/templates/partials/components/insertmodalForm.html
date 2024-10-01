@@ -3,7 +3,7 @@
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 
 <!-- Modal de inserção e edição -->
-<div class="modal fade" id="insertEditModal" data-bs-keyboard="false" aria-labelledby="editModalLabel" aria-hidden="true">
+<div class="modal fade" id="insertEditModal" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
@@ -201,7 +201,6 @@
         
                 modal.find('#modalTitle').html('{{tituloEdit}} ' + data.descricao);
                 modal.find('#modalSubmitButton').attr('name', 'edit').text('Editar');
-                
                 modal.modal('show');
             }
         });
