@@ -13,17 +13,18 @@
                             {% csrf_token %}
                             <div class="mb-3 input-group">
                                 <span class="input-group-text form-agroup" id="username-addon"><i class="fa fa-user"></i></span>
-                                <input required type="text" class="form-control form-agroup" id="username" name="username" placeholder='Login' aria-describedby="username-addon">
+                                <input required type="text" class="form-control form-agroup" id="username" name="username" placeholder='Digite seu email' aria-describedby="username-addon">
                             </div>
                             <div class="mb-3 input-group">
                                 <span class="input-group-text form-agroup" id="password-addon"><i class="fas fa-lock"></i></span>
-                                <input required type="password" class="form-control form-agroup" id="password" name="password" placeholder="Senha" aria-describedby="password-addon">
+                                <input required type="password" class="form-control form-agroup" id="password" name="password" placeholder="Digite sua senha" aria-describedby="password-addon">
                             </div>
                             {% include 'partials/message.html' %}
                             <!-- Add other fields as needed -->
                             <button type="submit" class="btn btn-primary btn-big-alternative col-12 text-center">Logar</button>
                             <Label class="mt-1 text-center w-100">Ainda não tem sua conta? <a href="/accounts/clientes/cadastro/">Vamos criar!</a></Label>
-                            <Label class="mt-1 text-center w-100">Não quer logar? Vamos <a href="/">voltar a tela inicial</a></Label>
+                            <Label class="mt-1 text-center w-100">Esqueceu sua senha? <a href="/accounts/password_reset/">Clique aqui</a></Label>
+                            <Label class="mt-1 text-center w-100">Ou então vamos <a href="/">voltar a tela inicial</a></Label>
                         </form>
                     </div>
                 </div>

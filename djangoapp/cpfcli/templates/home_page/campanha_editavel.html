@@ -39,8 +39,8 @@
                 </div>  
             </div>
         {% else %}
-            <div class="container d-flex justify-content-start">
-                <div class="card mb-5 mt-5 text-bg-primary col-12 col-md-4 border-5">
+            <div class="container d-flex justify-content-start flex-wrap">
+                <div class="card mb-3 mb-md-5 mt-3 mt-md-5 text-bg-primary col-12 col-md-4 border-5">
                     <div class="card-header text-center">
                         <h5 class="card-title col-12">VÁ AS COMPRAS</h5>
                     </div>
@@ -65,7 +65,7 @@
                 </div>
                 
                 {% if not request.user.is_authenticated %}
-                    <div class="card mb-5 mt-5 text-bg-light col-12 col-md-4 border-5">
+                    <div class="card mb-3 mb-md-5 mt-md-5 text-bg-light col-12 col-md-4 border-5">
                         <div class="card-header text-center">
                             <h5 class="card-title col-12">PARTICIPE DO CLUBE</h5>
                         </div>
@@ -74,7 +74,7 @@
                         </div>
                     </div>
                 {% else %}
-                    <div class="card mb-5 mt-5 text-bg-light col-12 col-md-4 border-5">
+                    <div class="card mb-3 mb-md-5 mt-md-5 text-bg-light col-12 col-md-4 border-5">
                         <div class="card-header text-center">
                             <h5 class="card-title col-12">APROVEITE O CLUBE</h5>
                         </div>
@@ -83,7 +83,7 @@
                         </div>
                     </div>
                 {% endif %}
-                <div class="card mb-5 mt-5 text-bg-primary col-12 col-md-4 border-5">
+                <div class="card mb-3 mb-md-5 mt-md-5 text-bg-primary col-12 col-md-4 border-5">
                     <div class="card-header text-center">
                         <h5 class="card-title col-12">CONCORRA</h5>
                     </div>

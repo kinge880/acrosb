@@ -45,7 +45,7 @@ class Cliente(models.Model):
     ieent = models.CharField(max_length=15, null=True, blank=True)
     codativ = models.IntegerField(null=True, blank=True)
     ibge = models.IntegerField(null=True, blank=True)
-    aceita_comunicacao = models.BooleanField(default=False)
+    aceita_comunicacao = models.BooleanField(default=False, null=True, blank=True)
     concordo_regulamento = models.BooleanField(default=True)
     
     def __str__(self):

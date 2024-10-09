@@ -12,6 +12,10 @@ header.masthead {
     position: relative;
     {% if background_type == 'url' or background_type == 'urlf' %}
         background: url(/media/{{ background_url }}) no-repeat center center;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
     {% elif background_type == 'color' or background_type == 'colorf'  %}
         background-color: var(--background_color);
     {% else %}
@@ -61,6 +65,10 @@ header.masthead h1, header.masthead .h1 {
             background-position: center center;
             {% if background_type_mobile == 'url' or background_type_mobile == 'urlf' %}
                 background: url(/media/{{ background_url_mobile }}) no-repeat center center;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
             {% else %}
                 background-color: var(--background_color_mobile);
             {% endif %}
@@ -87,6 +95,10 @@ header.masthead h1, header.masthead .h1 {
             background-size: contain;
             {% if background_type_mobile == 'url' or background_type_mobile == 'urlf' %}
                 background: url(/media/{{ background_url_mobile }}) no-repeat center center;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
             {% else %}
                 background-color: var(--background_color_mobile);
             {% endif %}

@@ -50,7 +50,7 @@ class ProfileInline(admin.StackedInline):
     verbose_name_plural = 'Perfil'
     fk_name = 'user'
     extra = 0
-    fields = ('idempresa',)  # Adicione outros campos se necessário
+    fields = ('idempresa','client')  # Adicione outros campos se necessário
 
 class Userad(UserAdmin):
     inlines = [ProfileInline]

@@ -415,3 +415,12 @@ def pesquisacli(request):
 
     import json
     return HttpResponse(json.dumps({'data': formatted_cat}), content_type="application/json")
+
+def custom_404_view(request, exception):
+    return render(request, 'error/404.html', status=404)
+
+def custom_500_view(request):
+    return render(request, 'error/500.html', status=500)
+
+def custom_503_view(request):
+    return render(request, 'error/503.html', status=500)

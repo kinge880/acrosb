@@ -252,22 +252,26 @@ def cadastro_cliente(request):
                     )
                 ''')
                 
-                cliente.codcli = client_winthor[0]
+                new_client_winthor= exist_client_cpf_email(cursor, form.cleaned_data['email'], form.cleaned_data['cnpf_cnpj'])
+                
+                cliente.codcli = new_client_winthor[0]
             
-                user.save()
-                cliente.save()  # Agora salvamos o cliente
-                profile = Profile.objects.create(user=user, idempresa=empress, client = cliente)
-                profile.save()
-                conexao.commit()
+            user.save()
+            cliente.save()  # Agora salvamos o cliente
+            profile = Profile.objects.create(user=user, idempresa=empress, client = cliente)
+            profile.save()
+            conexao.commit()
                 
             messages.success(request, "Cadastro realizado com sucesso!")
             return redirect('login') 
 
         except IntegrityError as e:
             # Se qualquer erro ocorrer durante a transação, faça rollback
+            transaction.set_rollback(True)
             messages.error(request, f"Ocorreu um erro ao realizar o seu cadastro: {str(e)}")
         except Exception as e:
             # Mensagem genérica para outros erros
+            transaction.set_rollback(True)
             messages.error(request, f"Ocorreu um erro inesperado: {str(e)}")
     else:
         form = ClienteForm()

@@ -46,7 +46,7 @@ class ClienteForm(forms.ModelForm):
             'data_nascimento': forms.DateInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-6 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
             'senha': forms.PasswordInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3','autocomplete': 'off'}),
             'ibge': forms.HiddenInput(attrs={'class': 'form-control d-none col-12', 'classdiv': 'd-none'}),
-            'aceita_comunicacao': forms.CheckboxInput(attrs={'required': True, 'class': 'form-check-input col-12', 'classdiv': 'form-check form-switch col-12 mb-3 ms-2','autocomplete': 'off'}),
+            'aceita_comunicacao': forms.CheckboxInput(attrs={'class': 'form-check-input col-12', 'classdiv': 'form-check form-switch col-12 mb-3 ms-2','autocomplete': 'off'}),
             'concordo_regulamento': forms.CheckboxInput(attrs={'required': True,  'class': 'form-check-input col-12', 'classdiv': 'form-check form-switch col-12 mb-3 ms-2','autocomplete': 'off'})
         }
 

@@ -27,7 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'change-me')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = bool(int(os.getenv('DEBUG', 0)))
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',')
@@ -43,7 +43,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://172.16.20.106:1337',
     'http://172.16.23.23:1337',
     'http://10.10.1.6:1337',
-    'http://10.10.1.3:1337'
+    'http://10.10.1.3:1337',
+    'http://127.0.0.1:1337',
+    'http://187.62.77.174:1337',
+    'http://190.5.208.50:1337'
 ]
 
 
@@ -227,3 +230,13 @@ BATON = {
     'BATON_CLIENT_SECRET': 'e45e4w541s41ds545e4w',
 }
 
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'change-me')
+EMAIL_PORT = os.getenv('EMAIL_PORT', 'change-me')
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'change-me')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'change-me')
+PASSWORD_RESET_TIMEOUT_DAYS = 1
+EMAIL_TEMPLATE_NAME = 'password_reset_email_custom.html'
+#DEFAULT_FROM_EMAIL  = os.getenv('DEFAULT_FROM_EMAIL', 'change-me')
