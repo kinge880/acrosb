@@ -22,6 +22,7 @@ from .models import Cuponagem, Campanha
 from django.http import JsonResponse
 from django.db import models
 import math
+import random
 
 def staff_required(view_func):
     @wraps(view_func)
@@ -296,14 +297,12 @@ def home_campanha(request, idcampanha):
             FROM MSCUPONAGEMCAMPANHAPROCESSADOS 
             WHERE 
                 NUMPED = {cupom[0]} AND 
-                idcampanha = {idcampanha} AND 
-                CODCLI = {cupom[6]} AND 
-                TRUNC(DTMOV) = to_date('{cupom[4]}', 'yyyy-mm-dd')
+                idcampanha = {idcampanha}
         ''')
         numped_exist = cursor.fetchone()
         
         if numped_exist:
-            messages.warning(request, f'Opa! Parece que o seu cupom já foi processado aqui no clube, não é permitido utilizar ele novamente Ok? :)')
+            messages.warning(request, f'Opa! Parece que o seu cupom já foi processado na campanha, não é permitido utilizar ele novamente Ok? :)')
             return render(request, 'home_page/campanha_editavel.html', context)
         
         
@@ -332,9 +331,9 @@ def home_campanha(request, idcampanha):
         filiais = campanha_id[18]
         cluster_cli = campanha_id[19]
         acumula_intensificador = campanha_id[20]
-        autorizacao_campanha = campanha[21]
-        regulamento = campanha[22]
-        limite_intensificadores = campanha[23]
+        autorizacao_campanha = campanha_id[21]
+        regulamento = campanha_id[22]
+        limite_intensificadores = campanha_id[23]
         
         listprods_restringe_where = ''
         marcas_restringe_Where = ''
@@ -409,7 +408,7 @@ def home_campanha(request, idcampanha):
         #------------------------------------------------ CALCULA A BLACK LIST --------------------------------
         if cluster_cli == 'B':
             cursor_postgre.execute(f'''
-                select "CODCLI" from cpfcli_blacklist where "IDCAMPANHA"  = {idcampanha} and tipo = 'B'
+                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'B'
             ''')
             black_list = cursor_postgre.fetchall()
             
@@ -421,7 +420,7 @@ def home_campanha(request, idcampanha):
         
         elif cluster_cli == 'W':
             cursor_postgre.execute(f'''
-                select "CODCLI" from cpfcli_blacklist where "IDCAMPANHA"  = {idcampanha} and tipo = 'W'
+                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'W'
             ''')
             black_list = cursor_postgre.fetchall()
             
@@ -441,7 +440,8 @@ def home_campanha(request, idcampanha):
                 TO_CHAR(PCPEDC."DATA", 'yyyy-mm-dd'), 
                 PCPEDC.CODCLI,
                 PCCLIENT.CLIENTE,
-                PCCLIENT.EMAIL
+                PCCLIENT.EMAIL,
+                (SELECT SUM(PCPEDI.PVENDA * PCPEDI.QT) FROM PCPEDI WHERE NUMPED = PCPEDC.NUMPED and "DATA" >= trunc(PCPEDC."DATA"))
             FROM PCPEDI 
                 INNER JOIN PCPEDC ON (PCPEDC.NUMPED = PCPEDI.NUMPED)
                 INNER JOIN PCPRODUT ON (PCPEDI.CODPROD = PCPRODUT.CODPROD)
@@ -458,10 +458,11 @@ def home_campanha(request, idcampanha):
                     AND IDCAMPANHA = {idcampanha}
                 )
                 {blacklistWhere}
-                {numpedWhere}
                 {marcas_restringe_Where}
                 {listprods_restringe_where}
                 {fornec_restringe_Where}
+                {filial_restringe_Where}
+                {numpedWhere}
             GROUP BY PCPEDC.NUMPED, PCPEDC."DATA", PCPEDC.CODCLI, PCCLIENT.CLIENTE, PCCLIENT.EMAIL
             {ignora_vendas_abaixo_do_valor_cupom_having}
         ''')
@@ -469,7 +470,7 @@ def home_campanha(request, idcampanha):
         
         print(ped)
         if ped is None:
-            messages.error(request, f'Poxa! Infelizmente sua compra não se qualifica para esssa campanha :(, mas não desanime ok?! Continue comprando e acumulando mais chances de vencer!')
+            messages.error(request, f'Poxa! Infelizmente sua compra não se qualifica para esssa campanha :(, mas não desanime ok?! Leia o regulamento da campanha para entender como se qualificar e continue comprando para obter mais chances de vencer!')
             return render(request, 'home_page/campanha_editavel.html', context)
         
         multiplicador_cupom = campanha_id[5]
@@ -737,6 +738,8 @@ def home_campanha(request, idcampanha):
             
         #--------------------------------------APLICANDO BONUS NO CUPOM ORIGINAL GERAL ------------------------------------------
         if valor_bonus > 0:
+            if valor_bonus > limite_intensificadores:
+                valor_bonus = limite_intensificadores
             print('Calculando bonus final...')
             bonificadoWhere = 'S'
             
@@ -766,20 +769,35 @@ def home_campanha(request, idcampanha):
             emailcli = client[2].replace("'", "") if len(client) > 2 and client[2] else ''
             cpf_cnpj = client[3].replace("'", "") if len(client) > 3 and client[3] else ''
             telcli = client[4].replace("'", "") if len(client) > 4 and client[4] else ''
+        
+        # Função para gerar um número sorte único e rápido
+        def generate_unique_numsorte(cursor, idcampanha):
+            while True:
+                # Gera um número aleatório entre 1 e 999999
+                test = random.randint(1, 999999)
+                
+                # Verifica se o número já existe na campanha
+                cursor.execute(f"SELECT 1 FROM cpfcli_cuponagem WHERE idcampanha = {idcampanha} AND numsorte = {test}")
+                exists = cursor.fetchone()
+                
+                if not exists:
+                    return test        
                 
         if qtcupons >= 1:
             for i in range(qtcupons):
                 print(f'Gerando número da sorte pedido {ped[0]} volume {i + 1} de {qtcupons}')
+                numsorte = generate_unique_numsorte(cursor_postgre, idcampanha)
                 
                 cursor_postgre.execute(f'''
                     INSERT INTO cpfcli_cuponagem
-                    (id, dtmov, numped, valor, numsorte, codcli, nomecli, emailcli, telcli, cpf_cnpj, dataped, bonificado, ativo, idcampanha, numcaixa, numpedecf, tipo)
+                    (id, dtmov, numped, valor, numsorte, codcli, nomecli, emailcli, telcli, cpf_cnpj, dataped, 
+                    bonificado, ativo, idcampanha, numcaixa, numpedecf, tipo, tipogeracao)
                     VALUES (
                         DEFAULT, 
                         NOW(), 
                         {ped[0]},  -- Número do pedido
                         {ped[1]},  -- Valor total
-                        (SELECT COALESCE(MAX(numsorte), 0) + 1 FROM cpfcli_cuponagem WHERE idcampanha = {idcampanha} ),
+                        {numsorte},
                         {codcli},  -- Código do cliente
                         '{nomecli}', 
                         '{emailcli}', 
@@ -791,12 +809,13 @@ def home_campanha(request, idcampanha):
                         {idcampanha}, -- ID da campanha
                         NULL,
                         NULL,
-                        'NS'
+                        'NS',
+                        'M'
                     )
                 ''')
 
             # Inserção em cpfcli_campanhaprocessados
-            cursor_postgre.execute(f'''
+            """ cursor_postgre.execute(f'''
                 INSERT INTO cpfcli_campanhaprocessados
                 (id, idcampanha, codcli, dtmov, historico, numped, geroucupom, geroubonus, tipoprocessamento)
                 VALUES (
@@ -810,21 +829,16 @@ def home_campanha(request, idcampanha):
                     '{bonificadoWhere}',
                     'M'
                 )
-            ''')
+            ''') """
             
             # Inserção em cpfcli_campanhaprocessados
             cursor.execute(f'''
                 INSERT INTO MSCUPONAGEMCAMPANHAPROCESSADOS
-                (NUMPED, IDCAMPANHA, DTMOV, HISTORICO, CODCLI, GEROUCUPOM, GEROUBONUS, TIPOPROCESSAMENTO)
+                (NUMPED, IDCAMPANHA, DTMOV)
                 VALUES (
                     {ped[0]},           -- Número do pedido
                     {idcampanha},       -- ID da campanha
-                    SYSDATE,              -- Data de movimento
-                    'S',    -- Histórico de geração
-                    {codcli},           -- Código do cliente
-                    'S',                -- Gerou cupom (Sim)
-                    '{bonificadoWhere}', -- Gerou bônus (Depende da condição)
-                    'M'
+                    SYSDATE             -- Data de movimento
                 )
             ''')
             
@@ -833,10 +847,10 @@ def home_campanha(request, idcampanha):
             ''')
             qtcupons_total = cursor_postgre.fetchone()
             
-            printresult = f'Parabéns! Foi gerado {qtcupons} números da sorte :)'
+            printresult = f'Parabéns! Foi gerado {qtcupons} números da sorte :), agora você possui {qtcupons_total} números da sorte!'
             messages.success(request, printresult)
         else:
-            cursor_postgre.execute(f'''
+            """ cursor_postgre.execute(f'''
                 INSERT INTO cpfcli_campanhaprocessados
                 (id, idcampanha, codcli, dtmov, historico, numped, geroucupom, geroubonus, tipoprocessamento)
                 VALUES (
@@ -850,21 +864,16 @@ def home_campanha(request, idcampanha):
                     '{bonificadoWhere}',
                     'M'
                 )
-            ''') 
+            ''')  """
             
             # Inserção em cpfcli_campanhaprocessados
             cursor.execute(f'''
                 INSERT INTO MSCUPONAGEMCAMPANHAPROCESSADOS
-                (NUMPED, IDCAMPANHA, DTMOV, HISTORICO, CODCLI, GEROUCUPOM, GEROUBONUS, TIPOPROCESSAMENTO)
+                (NUMPED, IDCAMPANHA, DTMOV)
                 VALUES (
                     {ped[0]},           -- Número do pedido
                     {idcampanha},       -- ID da campanha
-                    SYSDATE,              -- Data de movimento
-                    'S',    -- Histórico de geração
-                    {codcli},           -- Código do cliente
-                    'N',                -- Gerou cupom (Não)
-                    '{bonificadoWhere}', -- Gerou bônus (Condição)
-                    'M'
+                    SYSDATE
                 )
             ''')
             
@@ -1071,20 +1080,35 @@ def campanhas(request):
             
         elif 'edit' in request.POST and idcampanha:
             campanha = get_object_or_404(Campanha, pk=idcampanha)
+
+            # Corrigir campos que podem ter listas como ['','url']
+            print(request.POST.items())
+
             if form.is_valid():
                 with transaction.atomic():
+                    # Atualiza os campos do objeto campanha com os valores do formulário e do dicionário
                     for field, value in form.cleaned_data.items():
-                        setattr(campanha, field, value)
+                        if field == 'logo_campanha':  # Verifica se o campo é a imagem
+                            new_image = request.FILES.get('logo_campanha')
+                            if new_image:  # Se uma nova imagem foi enviada
+                                setattr(campanha, field, value)
+                            else:  # Se não houver nova imagem, mantém a imagem antiga
+                                setattr(campanha, field, campanha.logo_campanha)
+                        else:
+                            setattr(campanha, field, value)
+
                     campanha.dtultalt = timezone.now()
+                    print(campanha.logo_campanha)
                     campanha.save()
-                    
-                    # Clear old filials and add new ones
+
+                    # Limpar antigas filiais e adicionar as novas
                     CampanhaFilial.objects.filter(idcampanha=campanha.idcampanha).delete()
                     for item in filial:
                         CampanhaFilial.objects.create(idcampanha=campanha.idcampanha, codfilial=item)
-                    
+
                     messages.success(request, f"Campanha {idcampanha} editada com sucesso")
             else:
+                # Coleta e exibe erros de validação do formulário
                 error_messages = "; ".join([f"{field}: {error}" for field, errors in form.errors.items() for error in errors])
                 messages.error(request, f"Erro ao editar campanha: {error_messages}")
 

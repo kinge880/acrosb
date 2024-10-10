@@ -98,18 +98,22 @@
     });
 </script>
 <script>
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            
-            reader.onload = function (e) {
-                const previewId = 'preview_' + input.name;
-                document.getElementById(previewId).src = e.target.result;
-            }
-            
-            reader.readAsDataURL(input.files[0]); // converte o arquivo para URL de dados base64
+    // Função para gerar pré-visualização da imagem e gerenciar inputs text
+function previewImage(input) {
+    // Verifica se há um arquivo selecionado
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const previewId = 'preview_' + input.name;
+            // Define a imagem de pré-visualização
+            document.getElementById(previewId).src = e.target.result;
         }
+
+        // Lê o arquivo e converte para URL base64
+        reader.readAsDataURL(input.files[0]);
     }
+}
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -167,21 +171,34 @@
                                 input.val(value);
                             }
                         } else if (input.is('input[type="file"]')) {
-                            // Para arquivos, apenas defina a URL da imagem de pré-visualização
                             const previewId = 'preview_' + input.attr('name');
+
+                            // Se uma URL for passada, atualize o preview e adicione o input text
                             if (value) {
+                                // Exibir a URL da imagem no preview
                                 document.getElementById(previewId).src = value;
                             } else {
+                                // Caso não haja valor, define a imagem padrão no preview
                                 document.getElementById(previewId).src = 'https://via.placeholder.com/150';
                             }
                         } else if (input.is('select')) {
                             var values = Array.isArray(value) ? value : [value];
+
+                            // Verificar se o valor é uma string única com múltiplos valores separados por vírgula
+                            if (values.length === 1 && typeof values[0] === 'string' && values[0].includes(',')) {
+                                values = values[0].split(',').map(val => val.trim()); // Divide a string por vírgula e remove espaços em branco
+                            }
+                            // Array para armazenar os valores válidos
                             var validValues = [];
+
                             for (let i = 0; i < values.length; i++) {
-                                let currentValue = values[i];
+                                let currentValue = String(values[i]).trim(); // Converte o valor para string e remove espaços em branco
+
+                                // Verifica se o valor atual existe entre as opções do select
                                 var optionExists = input.find('option[value="' + currentValue + '"]').length > 0;
+
                                 if (optionExists) {
-                                    validValues.push(currentValue);
+                                    validValues.push(currentValue); // Se o valor for válido, adiciona ao array de valores válidos
                                 } else {
                                     console.warn('Valor não encontrado nas opções do select: ' + fieldName + ' = ' + currentValue);
                                 }
