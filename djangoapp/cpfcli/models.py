@@ -43,6 +43,7 @@ class Campanha(models.Model):
     regulamento = models.TextField(max_length = 30000, blank=True, null=True)
     autorizacao_campanha = models.TextField(max_length = 1000, blank=True, null=True)
     logo_campanha = models.ImageField(upload_to='campanha/', blank=True, null=True)
+    background_campanha = models.ImageField(upload_to='campanha/', blank=True, null=True)
     
     def save(self, *args, **kwargs):     
         self.dtultalt = timezone.now()

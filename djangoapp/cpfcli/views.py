@@ -195,6 +195,22 @@ def home_campanha(request, idcampanha):
     else:
         context['encerrado'] = 'S'
     
+    def get_dados_campanha():
+        if campanha.usa_numero_da_sorte == 'S':
+            # Buscando a lista de vencedores da campanha usando ORM
+            vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=False).select_related('numsorte', 'idcampanha')
+            if request.user.is_authenticated:
+                profile = Profile.objects.get(user=request.user)
+                meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=False, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
+        else:
+            vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=True).select_related('numsorte', 'idcampanha')
+            if request.user.is_authenticated:
+                profile = Profile.objects.get(user=request.user)
+                meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=True, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
+
+        context['dados'] = vencedores
+        context['meus_dados'] = meusnumeros
+    
     if request.method == 'POST': 
         print('iniciando POST')
         conexao = conexao_oracle()
@@ -241,6 +257,7 @@ def home_campanha(request, idcampanha):
 
         if campanha_id is None:
             messages.error(request, f'Campanha {idcampanha} não encontrada')
+            get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
         cursor.execute(f'''
@@ -264,6 +281,7 @@ def home_campanha(request, idcampanha):
         
         if cupom is None:
             messages.error(request, f'Desculpe, não foi encontrada uma venda que possua os dados do seu cupom fiscal')
+            get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
         # Converter as datas da campanha para objetos datetime
@@ -273,10 +291,12 @@ def home_campanha(request, idcampanha):
         
         if cupom_data < campanha_dtinit:
             messages.error(request, f'Desculpe, sua compra foi realizada antes da campanha {campanha_id[1]} ter iniciado')
+            get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
 
         if cupom_data > campanha_dtfim:
             messages.error(request, f'Desculpe, sua compra foi realizada após a finalização da campanha {campanha_id[1]}')
+            get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
         cursor_postgre.execute(f'''
@@ -303,6 +323,7 @@ def home_campanha(request, idcampanha):
         
         if numped_exist:
             messages.warning(request, f'Opa! Parece que o seu cupom já foi processado na campanha, não é permitido utilizar ele novamente Ok? :)')
+            get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
         
@@ -405,31 +426,6 @@ def home_campanha(request, idcampanha):
             else:
                 filial_restringe_Where = ''
 
-        #------------------------------------------------ CALCULA A BLACK LIST --------------------------------
-        if cluster_cli == 'B':
-            cursor_postgre.execute(f'''
-                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'B'
-            ''')
-            black_list = cursor_postgre.fetchall()
-            
-            if black_list and len(black_list) > 0:
-                cpflist = [int(item[0]) for item in black_list]
-                blacklistWhere = build_clause("AND PCPEDC.CODCLI", cpflist, 'NOT')
-            else:
-                blacklistWhere = ''
-        
-        elif cluster_cli == 'W':
-            cursor_postgre.execute(f'''
-                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'W'
-            ''')
-            black_list = cursor_postgre.fetchall()
-            
-            if black_list and len(black_list) > 0:
-                cpflist = [int(item[0]) for item in black_list]
-                blacklistWhere = build_clause("AND PCPEDC.CODCLI", cpflist, 'IN')
-            else:
-                blacklistWhere = ''
-
         #------------------------------------------------ CALCULA OS PEDIDO--------------------------------
         numpedWhere = f"AND PCPEDC.NUMPED = {cupom[0]}"
         
@@ -457,7 +453,6 @@ def home_campanha(request, idcampanha):
                     WHERE NUMPED = PCPEDC.NUMPED 
                     AND IDCAMPANHA = {idcampanha}
                 )
-                {blacklistWhere}
                 {marcas_restringe_Where}
                 {listprods_restringe_where}
                 {fornec_restringe_Where}
@@ -471,6 +466,7 @@ def home_campanha(request, idcampanha):
         print(ped)
         if ped is None:
             messages.error(request, f'Poxa! Infelizmente sua compra não se qualifica para esssa campanha :(, mas não desanime ok?! Leia o regulamento da campanha para entender como se qualificar e continue comprando para obter mais chances de vencer!')
+            get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
         multiplicador_cupom = campanha_id[5]
@@ -478,6 +474,33 @@ def home_campanha(request, idcampanha):
         histgeracao = ''
         saldo_atual = 0
         printresult = ''
+        
+        profile = Profile.objects.get(user=request.user)
+        
+        codcli =  profile.client.codcli
+        
+        #------------------------------------------------ CALCULA A BLACK LIST --------------------------------
+        if cluster_cli == 'B':
+            cursor_postgre.execute(f'''
+                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'B' AND "CODCLI" = {codcli}
+            ''')
+            black_list = cursor_postgre.fetchone()
+            
+            if black_list:
+                messages.error(request, f'Desculpe, mas o seu usuário não pode participar da campanha, em caso de dúvidas por favor leia o regulamento')
+                get_dados_campanha()
+                return render(request, 'home_page/campanha_editavel.html', context)
+        
+        elif cluster_cli == 'W':
+            cursor_postgre.execute(f'''
+                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'W' AND "CODCLI" = {codcli}
+            ''')
+            white_list = cursor_postgre.fetchone()
+            
+            if white_list is None:
+                messages.error(request, f'Desculpe, mas o seu usuário não faz parte dos clientes participantes da campanha, em caso de dúvidas por favor leia o regulamento')
+                get_dados_campanha()
+                return render(request, 'home_page/campanha_editavel.html', context)
         
         #------------------------------------------------ COMEÇA A CALCULAR O SALDO --------------------------------
         if acumulavenda in ('S', 'T'):
@@ -487,7 +510,7 @@ def home_campanha(request, idcampanha):
                 select saldo 
                 FROM cpfcli_cuponagemsaldo 
                 WHERE 
-                    codcli = {ped[3]} AND 
+                    codcli = {codcli} AND 
                     idcampanha = {idcampanha}
             ''')
             saldo_cli = cursor_postgre.fetchone()
@@ -510,7 +533,7 @@ def home_campanha(request, idcampanha):
                         saldo = {sobra}, 
                         dtmov = NOW() 
                     WHERE 
-                        codcli = {ped[3]} AND 
+                        codcli = {codcli} AND 
                         idcampanha = {idcampanha}
                 ''')
                 histgeracao += f'$$$1 - Calculou uma sobra de R$ {sobra}'
@@ -529,7 +552,7 @@ def home_campanha(request, idcampanha):
                 cursor_postgre.execute(f'''
                     insert into cpfcli_cuponagemsaldo
                     (codcli, idcampanha, saldo, dtmov, nomecli, emailcli)
-                    VALUES ({ped[3]}, {idcampanha}, {sobra}, NOW(), '{nomecli}', '{emailcli}')
+                    VALUES ({codcli}, {idcampanha}, {sobra}, NOW(), '{nomecli}', '{emailcli}')
                 ''')
                 histgeracao += f'$$$1 - Calculou uma sobra de R$ {sobra}'
             
@@ -759,7 +782,7 @@ def home_campanha(request, idcampanha):
         
         print(qtcupons)
         cursor.execute(f'''
-            SELECT CODCLI, CLIENTE, EMAIL, CGCENT, TELCOB FROM PCCLIENT WHERE CODCLI = {ped[3]}
+            SELECT CODCLI, CLIENTE, EMAIL, CGCENT, TELCOB FROM PCCLIENT WHERE CODCLI = {codcli}
         ''')
         client = cursor.fetchone()
         
@@ -843,11 +866,11 @@ def home_campanha(request, idcampanha):
             ''')
             
             cursor_postgre.execute(f'''
-                SELECT count(DISTINCT numsorte) from cpfcli_cuponagem where codcli = {ped[3]}
+                SELECT count(DISTINCT numsorte) from cpfcli_cuponagem where codcli = {codcli} and idcampanha = {idcampanha}
             ''')
             qtcupons_total = cursor_postgre.fetchone()
             
-            printresult = f'Parabéns! Foi gerado {qtcupons} números da sorte :), agora você possui {qtcupons_total} números da sorte!'
+            printresult = f'Parabéns! Foi gerado {qtcupons} números da sorte :), agora você possui {qtcupons_total[0]} números da sorte!'
             messages.success(request, printresult)
         else:
             """ cursor_postgre.execute(f'''
@@ -884,22 +907,8 @@ def home_campanha(request, idcampanha):
         conexao_postgre.commit()
         conexao.close() 
         conexao_postgre.close()
-    
-    if campanha.usa_numero_da_sorte == 'S':
-        # Buscando a lista de vencedores da campanha usando ORM
-        vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=False).select_related('numsorte', 'idcampanha')
-        if request.user.is_authenticated:
-            profile = Profile.objects.get(user=request.user)
-            meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=False, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
-    else:
-        vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=True).select_related('numsorte', 'idcampanha')
-        if request.user.is_authenticated:
-            profile = Profile.objects.get(user=request.user)
-            meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=True, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
 
-    context['dados'] = vencedores
-    context['meus_dados'] = meusnumeros
-
+    get_dados_campanha()
     return render(request, 'home_page/campanha_editavel.html', context)
 
 @login_required(login_url="/accounts/login/")
@@ -1094,7 +1103,14 @@ def campanhas(request):
                                 setattr(campanha, field, value)
                             else:  # Se não houver nova imagem, mantém a imagem antiga
                                 setattr(campanha, field, campanha.logo_campanha)
+                        elif field == 'background_campanha':  # Verifica se o campo é a imagem 'background_campanha'
+                            new_background = request.FILES.get('background_campanha')
+                            if new_background:  # Se uma nova imagem de background foi enviada
+                                setattr(campanha, field, value)
+                            else:  # Se não houver nova imagem, mantém o background antigo
+                                setattr(campanha, field, campanha.background_campanha)
                         else:
+                            # Atualiza os demais campos normalmente
                             setattr(campanha, field, value)
 
                     campanha.dtultalt = timezone.now()

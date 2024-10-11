@@ -84,3 +84,38 @@ class PresentationSettingsAdmin(admin.ModelAdmin):
         return super().get_field_queryset(db, request, model, field_name)
 
 admin.site.register(PresentationSettings, PresentationSettingsAdmin)
+
+class ClienteAdmin(admin.ModelAdmin):
+    # Exibe esses campos na lista de objetos no admin
+    list_display = ('nome', 'cnpf_cnpj', 'telefone', 'email', 'cidade', 'estado', 'tipo_pessoa', 'aceita_comunicacao', 'concordo_regulamento')
+    
+    # Adiciona uma barra de pesquisa por nome, CNPJ/CPF e cidade
+    search_fields = ('nome', 'cnpf_cnpj', 'cidade', 'email', 'telefone')
+    
+    # Adiciona filtros laterais por tipo de pessoa, gênero, e aceitação de comunicação
+    list_filter = ('tipo_pessoa', 'genero', 'aceita_comunicacao', 'estado')
+    
+    # Permite ordenar a lista por nome e cidade
+    ordering = ('nome', 'cidade')
+    
+    # Campos que serão exibidos ao editar/criar um cliente
+    fieldsets = (
+        (None, {
+            'fields': ('nome', 'cnpf_cnpj', 'telefone', 'email', 'senha')  # Senha deve ser protegida
+        }),
+        ('Endereço', {
+            'fields': ('endereco', 'cidade', 'estado', 'bairro', 'rua', 'numero', 'cep')
+        }),
+        ('Dados Adicionais', {
+            'fields': ('tipo_pessoa', 'data_nascimento', 'genero', 'ieent', 'codcli', 'codativ', 'ibge', 'aceita_comunicacao', 'concordo_regulamento')
+        }),
+    )
+    
+    # Define quais campos devem ser lidos apenas (não editáveis) durante a edição
+    readonly_fields = ('concordo_regulamento',)
+
+    # Exibe um filtro por data de nascimento
+    date_hierarchy = 'data_nascimento'
+
+# Registra o ModelAdmin no Django Admin
+admin.site.register(Cliente, ClienteAdmin)

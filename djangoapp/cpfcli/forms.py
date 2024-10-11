@@ -18,7 +18,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'idcampanha',  'descricao', 'filial', 'usa_numero_da_sorte', 'tipo_cluster_cliente', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
             'restringe_fornec', 'restringe_marca', 'restringe_prod',
             'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor', 'acumula_intensificadores', 'limite_intensificadores',
-            'logo_campanha', 'autorizacao_campanha', 'regulamento'
+            'logo_campanha', 'background_campanha', 'autorizacao_campanha', 'regulamento'
         ]
         widgets = {
             'idcampanha': forms.HiddenInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
@@ -291,6 +291,15 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 'data-bs-custom-class': 'custom-tooltip',
                 'data-bs-placement':"bottom",
                 'title': 'Regulamento da campanha'
+            }),
+            'background_campanha': forms.ClearableFileInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-lg-6 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
+                'title': 'background da campanha'
             })
         }
         
@@ -318,7 +327,8 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'tipo_cluster_cliente': 'Qual o tipo de cluster dos clientes',
             'acumula_intensificadores': 'Acumulação de intensificadores',
             'limite_intensificadores': 'Limite de intensificadores',
-            'logo_campanha': 'Logo da campanha'
+            'logo_campanha': 'Logo da campanha',
+            'background_campanha': 'Background da campanha'
         }
 
     def __init__(self, *args, **kwargs):

@@ -6,8 +6,13 @@
     <style>
         #fundo {
             position: relative;
-            {% comment %} background: url(/media/{{ campanha.logo_campanha }})  center center; {% endcomment %}
-            background: linear-gradient(112.1deg, rgb(32, 38, 57) 11.4%, rgb(63, 76, 119) 70.2%);
+            min-height: 95vh !important;
+            {% if campanha.background_campanha %}
+                background: url(/media/{{ campanha.background_campanha }})  no-repeat center center;
+                background-size: cover;
+            {% else %}
+                background: linear-gradient(112.1deg, rgb(32, 38, 57) 11.4%, rgb(63, 76, 119) 70.2%);
+            {% endif %}
         }
         
         h1 {
@@ -28,8 +33,32 @@
             text-transform: uppercase;
         }
 
+        .button_regulamento {
+            display: inline-block;
+            background-color: #ffffff; /* Cor de fundo branca */
+            color: #000000; /* Cor do texto preta */
+            padding: 10px 20px; /* Espaçamento interno */
+            font-size: 16px; /* Tamanho do texto */
+            font-weight: bold; /* Texto em negrito */
+            border: 2px solid #000000; /* Borda preta */
+            border-radius: 10px; /* Borda arredondada */
+            text-align: center; /* Alinhamento centralizado */
+            cursor: pointer; /* Cursor de ponteiro */
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2); /* Sombra */
+            text-decoration: none; /* Remove sublinhado */
+            color: #0b5b0b;
+        }
+        
+        .button_regulamento:hover {
+            background-color: #f0f0f0; /* Cor de fundo ao passar o mouse */
+        }
+        
+        .button_regulamento:active {
+            box-shadow: none; /* Remove a sombra quando clicado */
+        }
+
     </style>
-    <div id="fundo" class="container-fluid vh-75 d-flex flex-start flex-wrap">
+    <div id="fundo" class="container-fluid">
         {% if encerrado == 'S' %}
             <div class="container-fluid vh-100 align-content-center">
                 <div class="card mb-5 mt-5 text-bg-primary pb-5 pt-5">
@@ -40,7 +69,80 @@
             </div>
         {% else %}
             <div class="container d-flex justify-content-start flex-wrap">
-                <div class="card mb-3 mb-md-5 mt-3 mt-md-5 text-bg-primary col-12 col-md-4 border-5">
+                
+                <div class="col-12 p-4 text-center d-flex align-content-between justify-content-center flex-wrap">
+                    <div class="col-12 col-sm-4 col-md-3 d-flex justify-content-end ">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#regulamentoModal" class="btn rounded-pill shadow-sm button_regulamento w-100 pe-md-2">Confira o REGULAMENTO</a>
+                    </div>
+                    {% if request.user.is_authenticated %}
+                        <div class="col-12 col-sm-4 col-md-3  d-flex justify-content-start">    
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#cupomModal" class="btn rounded-pill shadow-sm button_regulamento w-100 ps-md-2">Registre o seu CUPOM</a>
+                        </div>
+                        <div class="col-12 col-sm-4 col-md-3 d-flex justify-content-start">    
+                            <button class="btn rounded-pill shadow-sm button_regulamento w-100 ps-md-2" type="button" data-bs-toggle="collapse" data-bs-target="#minhaParticipacao" aria-expanded="false" aria-controls="minhaParticipacao">Mostrar mais INFORMAÇÕES</button>
+                        </div>
+                        <div class="modal fade" id="cupomModal" tabindex="-1" aria-labelledby="cupomModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content text-dark">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="cupomModalLabel">Registrar Cupom Fiscal</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <!-- Formulário dentro do modal -->
+                                        <form method="POST" class="needs-validation" novalidate>
+                                            {% csrf_token %}
+                                            <div class="row flex-wrap">
+                                                <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                    <input type="number" class="form-control input-cosmic-cascade-tetra-49m7" id="numeroCupom" name="numeroCupom" required>
+                                                    <label for="numeroCupom" class="form-label user-label-cosmic-cascade-tetra-49m7">Número do Cupom</label>
+                                                </div>
+                                                <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                    <input type="number" class="form-control input-cosmic-cascade-tetra-49m7" id="numeroCaixa" name="numeroCaixa" required>
+                                                    <label for="numeroCaixa" class="form-label user-label-cosmic-cascade-tetra-49m7">Número do Caixa</label>
+                                                </div>
+                                                <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                    <input type="date" class="form-control input-cosmic-cascade-tetra-49m7" id="dataCompra" name="dataCompra" required>
+                                                    <label for="dataCompra" class="form-label user-label-cosmic-cascade-tetra-49m7 user-label-date-cosmic-cascade-tetra-49m7">Data da Compra</label>
+                                                </div>
+                                                <div class="mb-3 input-group-cosmic-cascade-tetra-49m7 col-12 col-md-6">
+                                                    <input type="number" class="form-control input-cosmic-cascade-tetra-49m7" id="valorCupom" name="valorCupom" required step="any">
+                                                    <label for="valorCupom" class="form-label user-label-cosmic-cascade-tetra-49m7">Valor do Cupom</label>
+                                                </div>
+                                            </div>
+                                    </div>
+                                    <div class="modal-footer d-flex justify-content-between">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">Registrar</button>
+                                    </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12 col-sm-4 col-md-3  d-flex justify-content-start">
+                            <a href="/accounts/clientes/cadastro/" class="btn rounded-pill shadow-sm button_regulamento w-100 ps-md-2">Registre o seu CUPOM</a>
+                        </div>
+                        <div class="col-12 col-sm-4 col-md-3 d-flex justify-content-start">    
+                            <button class="btn rounded-pill shadow-sm button_regulamento w-100 ps-md-2" type="button" data-bs-toggle="collapse" data-bs-target="#minhaParticipacao" aria-expanded="false" aria-controls="minhaParticipacao">Mostrar mais INFORMAÇÕES</button>
+                        </div>
+                    {% endif %}
+                    <!-- Modal Bootstrap 5 -->
+                    <div class="modal fade" id="regulamentoModal" tabindex="-1" aria-labelledby="cupomModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content text-dark">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="cupomModalLabel">Regulamento da Campanha</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    {{campanha.regulamento | safe}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% comment %} <div class="card mb-3 mb-md-5 mt-3 mt-md-5 text-bg-primary col-12 col-md-4 border-5">
                     <div class="card-header text-center">
                         <h5 class="card-title col-12">VÁ AS COMPRAS</h5>
                     </div>
@@ -136,20 +238,22 @@
                             <a href="/accounts/clientes/cadastro/" class="text-white">Registre seu cupom fiscal aqui</a>
                         {% endif %}
                     </div>
-                </div>
+                </div> {% endcomment %}
             </div>
         {% endif %}
-        
         <div class="container">
             {% include 'partials/message.html' %}
+        </div>
+        <div class="container collapse" id="minhaParticipacao">
             {% if request.user.is_authenticated %}
-                <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5">
+        
+                <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5 table_col_data_table">
                     <div class="jumbotron jumbotron-fluid">
                         <div class="container">
                             <p class="h5 mt-3 text-center">Minha participação na campanha</p>
                         </div>
                     </div>
-                    <table class="table table-bordered table_not_search table-hover table-striped">
+                    <table class="table table-bordered table_not_search table-hover table-striped table_col_data_table">
                         <thead>
                             <tr>
                                 <th class="text-start">
@@ -191,13 +295,16 @@
                     </table>
                 </div>
             {% endif %}
-            <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5">
+        
+            <!-- Conteúdo da lista de vencedores -->
+            
+            <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5 table_col_data_table">
                 <div class="jumbotron jumbotron-fluid">
                     <div class="container">
                         <p class="h5 mt-3 text-center">Lista de vencedores</p>
                     </div>
                 </div>
-                <table class="table table-bordered table_not_search table-hover table-striped">
+                <table class="table table-bordered table_not_search table-hover table-striped table_col_data_table">
                     <thead>
                         <tr>
                             <th class="text-start">Nome</th>
@@ -230,7 +337,7 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div>        
     </div> 
 
 {% endblock %}
