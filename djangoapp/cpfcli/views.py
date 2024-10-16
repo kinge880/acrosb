@@ -184,10 +184,10 @@ def home_campanha(request, idcampanha):
         context['campanha'] = campanha
 
         if campanha.dtexclusao is not None:
-            messages.error(request, f'Campanha {idcampanha} não encontrada')
+            messages.error(request, f'Campanha {idcampanha} não encontrada. ')
             return redirect('home')
     except Campanha.DoesNotExist:
-        messages.error(request, f'Campanha {idcampanha} não encontrada')
+        messages.error(request, f'Campanha {idcampanha} não encontrada. ')
         return redirect('home')
 
     if campanha.dtfim and campanha.dtfim >= datetime.today().date() and campanha.ativo == 'S':
@@ -202,14 +202,15 @@ def home_campanha(request, idcampanha):
             if request.user.is_authenticated:
                 profile = Profile.objects.get(user=request.user)
                 meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=False, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
+                context['meus_dados'] = meusnumeros
         else:
             vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=True).select_related('numsorte', 'idcampanha')
             if request.user.is_authenticated:
                 profile = Profile.objects.get(user=request.user)
                 meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=True, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
+                context['meus_dados'] = meusnumeros
 
         context['dados'] = vencedores
-        context['meus_dados'] = meusnumeros
     
     if request.method == 'POST': 
         print('iniciando POST')
@@ -247,7 +248,8 @@ def home_campanha(request, idcampanha):
                 acumula_intensificadores,
                 autorizacao_campanha,
                 regulamento,
-                limite_intensificadores
+                limite_intensificadores,
+                restringe_tipo_client
             FROM 
                 cpfcli_campanha
             WHERE 
@@ -256,7 +258,7 @@ def home_campanha(request, idcampanha):
         campanha_id = cursor_postgre.fetchone()
 
         if campanha_id is None:
-            messages.error(request, f'Campanha {idcampanha} não encontrada')
+            messages.error(request, f'Campanha {idcampanha} não encontrada. ')
             get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
@@ -280,7 +282,7 @@ def home_campanha(request, idcampanha):
         cupom = cursor.fetchone()
         
         if cupom is None:
-            messages.error(request, f'Desculpe, não foi encontrada uma venda que possua os dados do seu cupom fiscal')
+            messages.error(request, f'Desculpe, não foi encontrada uma venda que possua os dados do seu cupom fiscal.')
             get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
@@ -290,12 +292,12 @@ def home_campanha(request, idcampanha):
         cupom_data = datetime.strptime(cupom[4], '%Y-%m-%d').date()
         
         if cupom_data < campanha_dtinit:
-            messages.error(request, f'Desculpe, sua compra foi realizada antes da campanha {campanha_id[1]} ter iniciado')
+            messages.error(request, f'Desculpe, sua compra foi realizada antes da campanha {campanha_id[1]} ter iniciado.')
             get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
 
         if cupom_data > campanha_dtfim:
-            messages.error(request, f'Desculpe, sua compra foi realizada após a finalização da campanha {campanha_id[1]}')
+            messages.error(request, f'Desculpe, sua compra foi realizada após a finalização da campanha {campanha_id[1]}.')
             get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
@@ -322,7 +324,7 @@ def home_campanha(request, idcampanha):
         numped_exist = cursor.fetchone()
         
         if numped_exist:
-            messages.warning(request, f'Opa! Parece que o seu cupom já foi processado na campanha, não é permitido utilizar ele novamente Ok? :)')
+            messages.warning(request, f'Opa! Parece que o seu cupom já foi processado na campanha, não é permitido utilizar ele novamente Ok?')
             get_dados_campanha()
             return render(request, 'home_page/campanha_editavel.html', context)
         
@@ -355,6 +357,7 @@ def home_campanha(request, idcampanha):
         autorizacao_campanha = campanha_id[21]
         regulamento = campanha_id[22]
         limite_intensificadores = campanha_id[23]
+        restricao_tipo_client = campanha_id[24]
         
         listprods_restringe_where = ''
         marcas_restringe_Where = ''
@@ -479,7 +482,23 @@ def home_campanha(request, idcampanha):
         
         codcli =  profile.client.codcli
         
-        #------------------------------------------------ CALCULA A BLACK LIST --------------------------------
+        #------------------------------------------------ CALCULA A restrição por cliente tipo --------------------------------
+        if  restricao_tipo_client and restricao_tipo_client != 'T':
+            cursor.execute(f'''
+                SELECT TIPOFJ FROM pcclient where CODCLI = {codcli}
+            ''')
+            tipopessoa = cursor.fetchone()
+            
+            if tipopessoa:
+                if restricao_tipo_client == 'J' and tipopessoa[0] != 'J':
+                    messages.error(request, f'Desculpe, mas você não pode participar da campanha, somente pessoa física pode participar.')
+                    get_dados_campanha()
+                    return render(request, 'home_page/campanha_editavel.html', context)
+                elif restricao_tipo_client == 'F' and tipopessoa[0] != 'F':
+                    messages.error(request, f'Desculpe, mas você não pode participar da campanha, somente pessoa juridica pode participar.')
+                    get_dados_campanha()
+                    return render(request, 'home_page/campanha_editavel.html', context)
+            
         if cluster_cli == 'B':
             cursor_postgre.execute(f'''
                 select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'B' AND "CODCLI" = {codcli}
@@ -487,7 +506,7 @@ def home_campanha(request, idcampanha):
             black_list = cursor_postgre.fetchone()
             
             if black_list:
-                messages.error(request, f'Desculpe, mas o seu usuário não pode participar da campanha, em caso de dúvidas por favor leia o regulamento')
+                messages.error(request, f'Desculpe, mas o seu usuário não pode participar da campanha, em caso de dúvidas por favor leia o regulamento.')
                 get_dados_campanha()
                 return render(request, 'home_page/campanha_editavel.html', context)
         
@@ -498,7 +517,7 @@ def home_campanha(request, idcampanha):
             white_list = cursor_postgre.fetchone()
             
             if white_list is None:
-                messages.error(request, f'Desculpe, mas o seu usuário não faz parte dos clientes participantes da campanha, em caso de dúvidas por favor leia o regulamento')
+                messages.error(request, f'Desculpe, mas o seu usuário não faz parte dos clientes participantes da campanha, em caso de dúvidas por favor leia o regulamento.')
                 get_dados_campanha()
                 return render(request, 'home_page/campanha_editavel.html', context)
         
@@ -900,7 +919,7 @@ def home_campanha(request, idcampanha):
                 )
             ''')
             
-            printresult = f'Poxa! Infelizmente seu cupon não conseguiu alcançar o valor necessário para gerar um número da sorte! Para mais informações por favor verifique o  regulamento da campanha'
+            printresult = f'Poxa! Infelizmente seu cupon não conseguiu alcançar o valor necessário para gerar um número da sorte! Para mais informações por favor verifique o  regulamento da campanha.'
             messages.error(request, printresult)
         
         conexao.commit()
@@ -1048,21 +1067,21 @@ def campanhas(request):
             campanha.dtexclusao = timezone.now()
             campanha.ativo = 'N'
             campanha.save()
-            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} deletada com sucesso")
+            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} deletada com sucesso.")
         
         # Handle deactivation
         elif 'desative' in request.POST and idcampanha:
             campanha = get_object_or_404(Campanha, pk=idcampanha)
             campanha.ativo = 'N'
             campanha.save()
-            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} desativada com sucesso")
+            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} desativada com sucesso.")
         
         elif 'active' in request.POST and idcampanha:
             print('entrou active')
             campanha = get_object_or_404(Campanha, pk=idcampanha)
             campanha.ativo = 'S'
             campanha.save()
-            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} ativada com sucesso")
+            messages.success(request, f"Campanha {campanha.idcampanha} - {campanha.descricao} ativada com sucesso.")
         
         elif 'insert' in request.POST:
             if form.is_valid():

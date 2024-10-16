@@ -15,5 +15,5 @@ except Exception as e:
     print(f"Error initializing Oracle Client: {e}")
 
 def conexao_oracle():
-    conexao = cx_Oracle.connect(user="LGBRASIL", password="LS16BR", dsn="142.44.191.59/wint")
+    conexao = cx_Oracle.connect(user="LGBRASIL", password="LS16BR", dsn="172.16.23.20/wint")
     return conexao

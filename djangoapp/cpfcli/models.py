@@ -36,6 +36,7 @@ class Campanha(models.Model):
     restringe_fornec = models.CharField(max_length=1, default='N')
     restringe_marca = models.CharField(max_length=1, default='N')
     restringe_prod = models.CharField(max_length=1, default='N')
+    restringe_tipo_client = models.CharField(max_length=1, default='T')
     usa_numero_da_sorte = models.CharField(max_length=1, default='S')
     tipo_cluster_cliente = models.CharField(max_length=1, default='S')
     acumula_intensificadores = models.CharField(max_length=1, default='N')

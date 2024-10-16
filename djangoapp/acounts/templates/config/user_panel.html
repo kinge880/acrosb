@@ -3,6 +3,8 @@
 {% load form_filters %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+
 <div class="container vh-75">
     <h1 class="text-center mb-4 mt-3">Configurações da Tela de Pesquisa</h1>
     {% include 'partials/message.html' %}
@@ -145,6 +147,19 @@
             </div>
         </div>
 
+        <div class="row">
+            <!-- Campos de logo para Mobile -->
+            <div id="logo_text_group_mobile" class="form-group col-12 mt-3">
+                <label for="error_message_suport">Mensagem de erro secundária</label>
+                <textarea 
+                    class="form-control summernote" 
+                    id="error_message_suport" 
+                    max_length="1500" 
+                    name="error_message_suport" 
+                    placeholder="Digite aqui uma mensagem extra que vai aparecer em situações de erro no sistema ou informação ao cliente">{{ variaveis_globais.error_message_suport }}</textarea>
+            </div>
+        </div>
+
         <div class="row mb-3 mt-4">
             <div class="col-12">
                 <button type="submit" class="btn btn-success w-100">Salvar Configurações</button>
@@ -152,8 +167,23 @@
         </div>
     </form>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        $('.summernote').summernote({
+            height: 300,  // Altura da caixa de texto do editor
+            toolbar: [
+                ['style', ['bold', 'italic', 'underline', 'clear']],
+                ['font', ['strikethrough', 'superscript', 'subscript']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']]
+            ]
+        });
+    });
+
     function toggleBackgroundFields() {
         const type = document.getElementById('background_type').value;
         document.getElementById('color_field').style.display = (type === 'color' || type === 'colorf') ? 'block' : 'none';

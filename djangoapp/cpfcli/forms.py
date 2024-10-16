@@ -16,7 +16,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
         model = Campanha
         fields = [
             'idcampanha',  'descricao', 'filial', 'usa_numero_da_sorte', 'tipo_cluster_cliente', 'dtinit', 'dtfim', 'enviaemail', 'acumulativo', 'valor', 
-            'restringe_fornec', 'restringe_marca', 'restringe_prod',
+            'restringe_fornec', 'restringe_marca', 'restringe_prod', 'restringe_tipo_client',
             'tipointensificador', 'multiplicador', 'usafornec',  'fornecvalor', 'usamarca', 'marcavalor', 'usaprod', 'prodvalor', 'acumula_intensificadores', 'limite_intensificadores',
             'logo_campanha', 'background_campanha', 'autorizacao_campanha', 'regulamento'
         ]
@@ -118,7 +118,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('C', '2 - Restrição por fornecedor cadastrado')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-lg-4 mb-3',
+                'classdiv': 'col-12 col-lg-6 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -130,7 +130,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('C', '2 - Restrição por marca cadastrada')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-lg-4 mb-3',
+                'classdiv': 'col-12 col-lg-6 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -142,7 +142,20 @@ class MscuponagemCampanhaForm(forms.ModelForm):
                 ('C', '2 - Restrição por produto cadastrado')
             ], attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
-                'classdiv': 'col-12 col-lg-4 mb-3',
+                'classdiv': 'col-12 col-lg-6 mb-3',
+                'autocomplete': 'off',
+                'data-bs-toggle': 'tooltip',
+                'data-bs-custom-class': 'custom-tooltip',
+                'data-bs-placement':"bottom",
+                'title': 'Define que a campanha só deve levar em consideração o valor dos produtos de produtos especificos na venda'
+            }),
+            'restringe_tipo_client': forms.Select(choices=[
+                ('T', '1 - Não aplicar restrição'),
+                ('F', '2 - Restringir apenas a pessoa Física'),
+                ('J', '3 - Restringir apenas a pessoa Juridica')
+            ], attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-lg-6 mb-3',
                 'autocomplete': 'off',
                 'data-bs-toggle': 'tooltip',
                 'data-bs-custom-class': 'custom-tooltip',
@@ -316,6 +329,7 @@ class MscuponagemCampanhaForm(forms.ModelForm):
             'restringe_fornec': 'Restrição por fornecedor', 
             'restringe_marca': 'Restrição por marca', 
             'restringe_prod': 'Restrição por produto',
+            'restringe_tipo_client': 'Restrição físico/juridico',
             'tipointensificador': 'Tipo de intensificador utilizado',
             'usafornec': 'Utiliza intensificador por fornecedor',
             'usamarca': 'Utiliza intensificador por marca',

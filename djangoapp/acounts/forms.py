@@ -153,5 +153,6 @@ class PresentationSettingsForm(forms.ModelForm):
             'logo_image',
             'logo_type_mobile', 
             'logo_text_mobile', 
-            'logo_image_mobile'
+            'logo_image_mobile',
+            'error_message_suport'
         ]

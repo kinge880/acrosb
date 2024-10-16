@@ -121,6 +121,8 @@ class PresentationSettings(models.Model):
     client_filter_color = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #000000
     client_filter_color_mobile = models.CharField(max_length=7, blank=True, null=True)  # Exemplo: #000000
     
+    error_message_suport = models.CharField(max_length=1500, blank=True, null=True)
+    
     def __str__(self):
         return 'Configurações de Apresentação'
     
