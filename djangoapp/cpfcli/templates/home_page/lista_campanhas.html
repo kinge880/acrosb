@@ -25,7 +25,7 @@
                                 </p>
                             </div>
                             <div class="card-footer">
-                                <small class="card-text">
+                                {% comment %} <small class="card-text">
                                     {% if campanha.count_cli > 1 %} 
                                         {{ campanha.count_cli }} Cupons gerados na campanha
                                     {% elif campanha.count_cli == 1 %}
@@ -33,7 +33,7 @@
                                     {% else %}
                                         Nenhum Cupom gerado na campanha
                                     {% endif %}
-                                </small>
+                                </small> {% endcomment %}
                             </div>
                         </a>
                     </div>
