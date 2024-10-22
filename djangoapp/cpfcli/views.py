@@ -501,7 +501,7 @@ def home_campanha(request, idcampanha):
             
         if cluster_cli == 'B':
             cursor_postgre.execute(f'''
-                select "CODCLI" from cpfcli_blacklist where "IDCAMPANHA"  = {idcampanha} and "TIPO" = 'B' AND "CODCLI" = {codcli}
+                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'B' AND "CODCLI" = {codcli}
             ''')
             black_list = cursor_postgre.fetchone()
             
@@ -512,7 +512,7 @@ def home_campanha(request, idcampanha):
         
         elif cluster_cli == 'W':
             cursor_postgre.execute(f'''
-                select "CODCLI" from cpfcli_blacklist where "IDCAMPANHA"  = {idcampanha} and "TIPO" = 'W' AND "CODCLI" = {codcli}
+                select "CODCLI" from cpfcli_blacklist where idcampanha  = {idcampanha} and "TIPO" = 'W' AND "CODCLI" = {codcli}
             ''')
             white_list = cursor_postgre.fetchone()
             
