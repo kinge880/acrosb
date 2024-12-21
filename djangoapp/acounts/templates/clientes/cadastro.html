@@ -160,5 +160,36 @@
             });
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Seleciona todos os campos de entrada dentro do formulário
+        const formFields = document.querySelectorAll('form input, form select, form textarea');
+    
+        formFields.forEach(field => {
+            // Adiciona um ouvinte de evento para o evento 'input' ou 'change'
+            field.addEventListener('input', function () {
+                // Remove a classe 'is-invalid' do input
+                this.classList.remove('is-invalid');
+    
+                // Remove o feedback de erro
+                const parentDiv = this.closest('.input-group-cosmic-cascade-tetra-49m7');
+                if (parentDiv) {
+                    const errorDiv = parentDiv.querySelector('.invalid-feedback');
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                }
+    
+                // Verifica o comprimento máximo do campo se o atributo maxlength estiver presente
+                const maxLength = this.getAttribute('maxlength');
+                if (maxLength && this.value.length > maxLength) {
+                    // Corta o valor se ultrapassar o limite máximo
+                    this.value = this.value.substring(0, maxLength);
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}
+
+

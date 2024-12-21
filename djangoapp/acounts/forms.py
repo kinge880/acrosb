@@ -30,25 +30,116 @@ class ClienteForm(forms.ModelForm):
             ('F', 'Física'),
             ('J', 'Jurídica'),
         ]
-        widgets = {
-            'nome': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 mb-3', 'autocomplete': 'off'}),
+        widgets = widgets = {
+            'nome': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '60'
+            }),
             'tipo_pessoa': forms.Select(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off' }),
-            'cnpf_cnpj': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'telefone': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'email': forms.EmailInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'cep': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'cidade': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'estado': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'bairro': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'rua': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'numero': forms.TextInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'genero': forms.Select(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12', 'classdiv': 'col-12 col-md-6 mb-3', 'autocomplete': 'off'}),
-            'data_nascimento': forms.DateInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'type': 'date', 'classdiv': 'col-12 col-md-6 mb-3', 'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7', 'autocomplete': 'off'}),
-            'senha': forms.PasswordInput(attrs={'required': True, 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12', 'classdiv': 'col-12 col-md-6 mb-3','autocomplete': 'off'}),
-            'ibge': forms.HiddenInput(attrs={'class': 'form-control d-none col-12', 'classdiv': 'd-none'}),
-            'aceita_comunicacao': forms.CheckboxInput(attrs={'class': 'form-check-input col-12', 'classdiv': 'form-check form-switch col-12 mb-3 ms-2','autocomplete': 'off'}),
-            'concordo_regulamento': forms.CheckboxInput(attrs={'required': True,  'class': 'form-check-input col-12', 'classdiv': 'form-check form-switch col-12 mb-3 ms-2','autocomplete': 'off'})
+            'cnpf_cnpj': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '18'
+            }),
+            'telefone': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '13'
+            }),
+            'email': forms.EmailInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '100'
+            }),
+            'cep': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '9'
+            }),
+            'cidade': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '15'
+            }),
+            'estado': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '2'
+            }),
+            'bairro': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '40'
+            }),
+            'rua': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '40'
+            }),
+            'numero': forms.TextInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '6'
+            }),
+            'genero': forms.Select(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off'
+            }),
+            'data_nascimento': forms.DateInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'type': 'date',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'classlabel': 'user-label-date-cosmic-cascade-tetra-49m7',
+                'autocomplete': 'off'
+            }),
+            'senha': forms.PasswordInput(attrs={
+                'required': True,
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12',
+                'classdiv': 'col-12 col-md-6 mb-3',
+                'autocomplete': 'off',
+                'maxlength': '100'
+            }),
+            'ibge': forms.HiddenInput(attrs={
+                'class': 'form-control d-none col-12',
+                'classdiv': 'd-none'
+            }),
+            'aceita_comunicacao': forms.CheckboxInput(attrs={
+                'class': 'form-check-input col-12',
+                'classdiv': 'form-check form-switch col-12 mb-3 ms-2',
+                'autocomplete': 'off'
+            }),
+            'concordo_regulamento': forms.CheckboxInput(attrs={
+                'required': True,
+                'class': 'form-check-input col-12',
+                'classdiv': 'form-check form-switch col-12 mb-3 ms-2',
+                'autocomplete': 'off'
+            })
         }
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,8 +170,47 @@ class ClienteForm(forms.ModelForm):
         self.fields['confirmar_senha'].label = 'Confirmar Senha'
         self.fields['ibge'].label = ''
         self.fields['aceita_comunicacao'].label = 'Aceito receber comunicações do clube de ofertas'
-        self.fields['concordo_regulamento'].label = 'Afirmo que todos os dados acima são verdadeiros e concordo com as <a href="/politicas-privacidade">políticas de privacidade</a>'
-        
+        self.fields['concordo_regulamento'].label = 'Afirmo que todos os dados acima são verdadeiros e concordo com as <a href="/accounts/politicas/privacidade/">políticas de privacidade</a>'
+    
+    def clean_nome(self):
+        nome = self.cleaned_data.get('nome', '')
+        return nome[:40]  # Trunca se exceder 60 caracteres
+
+    def clean_telefone(self):
+        telefone = self.cleaned_data.get('telefone', '')
+        return telefone[:13]  # Trunca para 13 caracteres
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '')
+        email = email[:100]  # Trunca para 100 caracteres
+        if Cliente.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este e-mail já está cadastrado.")
+        return email
+
+    def clean_cidade(self):
+        cidade = self.cleaned_data.get('cidade', '')
+        return cidade[:15]  # Trunca para 15 caracteres
+
+    def clean_estado(self):
+        estado = self.cleaned_data.get('estado', '')
+        return estado[:2]  # Trunca para 2 caracteres
+
+    def clean_bairro(self):
+        bairro = self.cleaned_data.get('bairro', '')
+        return bairro[:40]  # Trunca para 40 caracteres
+
+    def clean_rua(self):
+        rua = self.cleaned_data.get('rua', '')
+        return rua[:40]  # Trunca para 40 caracteres
+
+    def clean_numero(self):
+        numero = self.cleaned_data.get('numero', '')
+        return numero[:6]  # Trunca para 6 caracteres
+
+    def clean_cep(self):
+        cep = self.cleaned_data.get('cep', '')
+        return cep[:9]  # Trunca para 9 caracteres
+    
     def clean_cnpf_cnpj(self):
         cpf_cnpj = self.cleaned_data.get('cnpf_cnpj')
         tipo_pessoa = self.cleaned_data.get('tipo_pessoa')
@@ -132,7 +262,6 @@ class ClienteForm(forms.ModelForm):
         if Cliente.objects.filter(cnpf_cnpj=cnpf_cnpj).exists():
             raise forms.ValidationError("Este CPF/CNPJ já está cadastrado.")
         return cnpf_cnpj
-
 
 class PresentationSettingsForm(forms.ModelForm):
     class Meta:

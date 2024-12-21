@@ -17,6 +17,7 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
     # Página de confirmação após a redefinição da senha
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
+    path('politicas/privacidade/', views.privacity, name='politicas'),
 ]
 
 if settings.DEBUG:

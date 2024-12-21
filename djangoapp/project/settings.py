@@ -27,7 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'change-me')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = bool(int(os.getenv('DEBUG', 0)))
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',')
@@ -176,9 +176,6 @@ if DEBUG:
     STATICFILES_DIRS = (
     DATA_DIR / 'static',
 )
-
-USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = DATA_DIR / 'media'

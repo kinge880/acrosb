@@ -215,7 +215,7 @@ def cadastro_cliente(request):
                         NULL, -- DTBLOQ (nulo se não bloqueado)
                         SYSDATE, -- DTCADASTRO
                         {codpraca},  -- CODPRACA
-                        '{cliente.nome}',     -- FANTASIA
+                        '{cliente.nome[:40]}',     -- FANTASIA
                         NULL, -- OBS2
                         NULL, -- PONTOREFER
                         NULL, -- OBSCREDITO
@@ -306,3 +306,8 @@ def config_user_page(request):
         'form': form
     }
     return render(request, 'config/user_panel.html', context)
+
+
+def privacity(request):
+    
+    return render(request, 'privacity-template.html')
