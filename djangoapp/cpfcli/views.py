@@ -23,6 +23,8 @@ from django.http import JsonResponse
 from django.db import models
 import math
 import random
+from django.db.models import F, Subquery, OuterRef, Value, CharField
+from django.db.models.functions import Concat, Substr
 
 def staff_required(view_func):
     @wraps(view_func)
@@ -105,11 +107,8 @@ def home(request):
         # Obter campanhas que não foram excluídas (onde dtexclusao é None)
         campaigns = Campanha.objects.filter(
             dtexclusao__isnull=True,
-            dtfim__gte=date.today(),
+            dtfim__gte=date.today() - timedelta(days= 10),
             dtinit__lte=date.today()
-        ).annotate(
-            count_cupons=models.Count('cuponagem__id', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=True)),
-            count_cupomcx=models.Count('cuponagem__id', distinct=True, filter=models.Q(cuponagem__numcaixa__isnull=False))
         ).exclude(ativo='N')
         
         print(campaigns)
@@ -118,18 +117,7 @@ def home(request):
         processed_campaigns = []
         
         for campanha in campaigns:
-            if campanha.dtfim and campanha.dtfim <= datetime.today().date() and campanha.count_cupons and campanha.count_cupons > 0 and campanha.usa_numero_da_sorte == 'S':
-                # O dia atual é superior à data de término da campanha
-                permite_sorteio = 'S'
-            else:
-                # A campanha ainda está ativa
-                permite_sorteio = 'N'
             
-            if campanha.usa_numero_da_sorte == 'S':
-                count_cli = campanha.count_cupons
-            else:
-                count_cli = campanha.count_cupomcx
-                
             # Criar dicionário para cada campanha
             campanha_dict = {
                 'IDCAMPANHA': campanha.idcampanha,
@@ -141,8 +129,6 @@ def home(request):
                 'USAFORNEC': campanha.usafornec,
                 'USAPROD': campanha.usaprod,
                 'ATIVO': campanha.ativo,
-                'count_cli': count_cli,  # Contagem de cupons
-                'permite_sorteio': permite_sorteio,
                 'usa_numero_da_sorte': campanha.usa_numero_da_sorte,
                 'logo_campanha': campanha.logo_campanha
             }
@@ -150,16 +136,13 @@ def home(request):
             # Calcular total de dias e dias restantes
             total_days = (campanha.dtfim - campanha.dtinit).days
             days_remaining = (campanha.dtfim - today).days
-            # Calcular progresso
-            if total_days > 0 and days_remaining > 0:
-                progress = 100.0 - (days_remaining / total_days * 100)
-            else:
-                progress = 100.0
 
             # Adicionar dados calculados ao dicionário
             campanha_dict['total_days'] = total_days
+            campanha_dict['origi_days_remaining'] = days_remaining
+            if days_remaining < 0:
+                days_remaining = 0
             campanha_dict['days_remaining'] = days_remaining
-            campanha_dict['progress'] = progress
 
             # Adicionar dicionário à lista de campanhas processadas
             processed_campaigns.append(campanha_dict)
@@ -197,14 +180,40 @@ def home_campanha(request, idcampanha):
     
     def get_dados_campanha():
         if campanha.usa_numero_da_sorte == 'S':
-            # Buscando a lista de vencedores da campanha usando ORM
-            vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=False).select_related('numsorte', 'idcampanha')
+            
+            # Adicionar informações de Cuponagem aos vencedores
+            vencedores = CuponagemVencedores.objects.filter(
+                idcampanha=idcampanha,
+                numsorte__isnull=False
+            ).annotate(
+                nomecli=Concat(
+                    Substr(
+                        Subquery(
+                            Cuponagem.objects.filter(
+                                numsorte=OuterRef('numsorte')
+                            ).values('nomecli')[:1]
+                        ),
+                        1, 10  # Pega a primeira palavra
+                    ),
+                    Value(' '),
+                    Substr(
+                        Subquery(
+                            Cuponagem.objects.filter(
+                                numsorte=OuterRef('numsorte')
+                            ).values('nomecli')[:1]
+                        ),
+                        2, 1  # Pega a inicial da segunda palavra
+                    ),
+                    output_field=CharField()
+                )
+            ).select_related('idcampanha')
+            
             if request.user.is_authenticated:
                 profile = Profile.objects.get(user=request.user)
                 meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=False, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
                 context['meus_dados'] = meusnumeros
         else:
-            vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=True).select_related('numsorte', 'idcampanha')
+            vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha, numsorte__isnull=True).select_related('idcampanha')
             if request.user.is_authenticated:
                 profile = Profile.objects.get(user=request.user)
                 meusnumeros = Cuponagem.objects.filter(idcampanha=idcampanha, numsorte__isnull=True, ativo = 'S', codcli = profile.client.codcli).select_related('idcampanha')
@@ -2013,7 +2022,7 @@ def agent_manager(request):
     status = request.GET.get('status')
 
     # Inicializa a queryset com todos os agentes
-    agents = Agent.objects.all()
+    agents = Agent.objects.all().order_by('numcaixa')
 
     # Aplica os filtros com base nos parâmetros recebidos
     if codfilial:

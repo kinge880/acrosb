@@ -130,7 +130,7 @@ class CuponagemVencedores(models.Model):
     codcli = models.IntegerField()  # Código do cliente
     dtsorteio = models.DateTimeField()  # Data e hora do sorteio
     numsorteio = models.IntegerField()  # Número do sorteio
-    numsorte = models.ForeignKey(Cuponagem, on_delete=models.CASCADE, db_column='numsorte')  # Número da sorte
+    numsorte = models.IntegerField()  # Número da sorte
 
     class Meta:
         indexes = [

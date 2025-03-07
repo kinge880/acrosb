@@ -42,7 +42,6 @@ def logout_view(request):
 #controles de login e cadastro de usuário
 @anonymous_required
 def login(request):
-    
     if request.method == 'POST' :
         usuario = request.POST.get("username")
         senha = request.POST.get("password")
@@ -306,7 +305,6 @@ def config_user_page(request):
         'form': form
     }
     return render(request, 'config/user_panel.html', context)
-
 
 def privacity(request):
     

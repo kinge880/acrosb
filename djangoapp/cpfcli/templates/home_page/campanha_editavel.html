@@ -60,12 +60,15 @@
     </style>
     <div id="fundo" class="container-fluid">
         {% if encerrado == 'S' %}
-            <div class="container-fluid vh-100 align-content-center">
+            <div class="container-fluid ">
                 <div class="card mb-5 mt-5 text-bg-primary pb-5 pt-5">
                     <div class="card-body text-center p-5">
                         <p class="card-text h2">A CAMPANHA {{campanha.descricao}} ESTÁ ENCERRADA!</p>
                     </div>
-                </div>  
+                </div> 
+                <div class="mb-3">    
+                    <button class="btn rounded-pill shadow-sm button_regulamento w-100 ps-md-2" type="button" data-bs-toggle="collapse" data-bs-target="#minhaParticipacao" aria-expanded="false" aria-controls="minhaParticipacao">Mostrar mais INFORMAÇÕES</button>
+                </div>
             </div>
         {% else %}
             <div class="container d-flex justify-content-start flex-wrap">
@@ -300,7 +303,6 @@
             {% endif %}
         
             <!-- Conteúdo da lista de vencedores -->
-            
             <div class="table-responsive card text-bg-light ps-3 pe-3 pb-3 mb-5 table_col_data_table">
                 <div class="jumbotron jumbotron-fluid">
                     <div class="container">
@@ -312,28 +314,28 @@
                         <tr>
                             <th class="text-start">Nome</th>
                             <th class="text-start">Data do sorteio</th>
-                            <th class="text-start">
+                            {% comment %} <th class="text-start">
                                 {% if campanha.usa_numero_da_sorte == 'S' %}
                                     Número da sorte
                                 {% else %}
                                     Cupom
                                 {% endif %}
-                            </th>
+                            </th> {% endcomment %}
                             <th class="text-start">Número do sorteio</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for dado in dados %}
                             <tr>
-                                <td class="text-start">{{dado.numsorte.nomecli}}</td>
+                                <td class="text-start">{{dado.nomecli}}</td>
                                 <td class="text-start">{{dado.dtsorteio}}</td>
-                                <td class="text-start">
+                                {% comment %} <td class="text-start">
                                     {% if campanha.usa_numero_da_sorte == 'S' %}
                                         {{dado.numsorte}}
                                     {% else %}
-                                        {{dado.numpedecf}}
+                                        {{dado.numsorte}}
                                     {% endif %}
-                                </td>
+                                </td> {% endcomment %}
                                 <td class="text-start">{{dado.numsorteio}}</td>
                             </tr>
                         {% endfor %}
