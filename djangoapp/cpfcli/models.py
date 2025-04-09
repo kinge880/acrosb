@@ -45,6 +45,11 @@ class Campanha(models.Model):
     autorizacao_campanha = models.TextField(max_length = 1000, blank=True, null=True)
     logo_campanha = models.ImageField(upload_to='campanha/', blank=True, null=True)
     background_campanha = models.ImageField(upload_to='campanha/', blank=True, null=True)
+    restringe_tipo_client = models.CharField(max_length=1, default='S')
+    mensagemcampanha = models.TextField(max_length = 300, blank=True, null=True)
+    texto_mensagem_caixa = models.TextField(max_length=200, blank=True, null=True)
+    texto_cor_mensagem_caixa = models.CharField(max_length=100, blank=True, null=True)
+    url_mensagem_caixa = models.CharField(max_length=150, blank=True, null=True)
     
     def save(self, *args, **kwargs):     
         self.dtultalt = timezone.now()
@@ -192,7 +197,7 @@ class BlackList(models.Model):
     TIPO = models.CharField(default='N')
     
     def save(self, *args, **kwargs):     
-        self.dtmov = timezone.now()
+        self.DTMOV = timezone.now()
         super().save(*args, **kwargs)
         
     def __str__(self):

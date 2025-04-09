@@ -1892,17 +1892,28 @@ def gerador(request, idcampanha):
         CuponagemVencedores.objects.create(
             idcampanha_id=idcampanha,
             codcli=cuponagem_sorteado.codcli,
-            dtsorteio=timezone.now(),
+            dtsorteio=timezone.now(), 
             numsorteio=CuponagemVencedores.objects.filter(idcampanha_id=idcampanha).count() + 1,
-            numsorte=cuponagem_sorteado
+            numsorte=cuponagem_sorteado.numsorte
         )
 
         # Obtem o número do sorteio atual
-        context['numsorteio'] = CuponagemVencedores.objects.filter(
+        vencedor = CuponagemVencedores.objects.filter(
             idcampanha_id=idcampanha,
-            numsorte=cuponagem_sorteado,
+            numsorte=cuponagem_sorteado.numsorte,
             codcli=cuponagem_sorteado.codcli
         ).first()
+
+        context['numsorteio'] = vencedor
+
+        # Agora busca o nome do cliente na tabela Cuponagem
+        if vencedor:
+            cliente = Cuponagem.objects.filter(
+                idcampanha_id=idcampanha,
+                numsorte=vencedor.numsorte
+            ).order_by('-dataped').first()  # Usa o mais recente, se houver mais de um
+
+            context['nome_vencedor'] = cliente.nomecli if cliente else "Nome não encontrado"
     else:
         messages.error(request, f'Não foi possivel sortear nenhum número na campanha')
 
@@ -1993,7 +2004,6 @@ def sorteioganhadores(request, idcampanha):
     context = {}
     context['title'] = f'Lista de números da sorte na campanha {idcampanha}'
 
-    # Verificando se a campanha existe e se não foi excluída
     try:
         campanha = Campanha.objects.get(idcampanha=idcampanha)
         context['campanha'] = campanha.descricao
@@ -2004,11 +2014,32 @@ def sorteioganhadores(request, idcampanha):
         messages.error(request, f'Campanha {idcampanha} não encontrada no sistema')
         return redirect('campanha')
 
-    # Buscando a lista de vencedores da campanha usando ORM
-    vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha).select_related('numsorte', 'idcampanha')
+    # Buscando os ganhadores da campanha
+    vencedores = CuponagemVencedores.objects.filter(idcampanha=idcampanha)
 
-    context['dados'] = vencedores
+    # Lista para guardar os dados completos
+    dados_ganhadores = []
 
+    for v in vencedores:
+        cliente = Cuponagem.objects.filter(
+            idcampanha=idcampanha,
+            numsorte=v.numsorte
+        ).order_by('-dtmov').first()
+
+        dados_ganhadores.append({
+            'numsorteio': v.numsorteio,
+            'dtsorteio': v.dtsorteio,
+            'numsorte': v.numsorte,
+            'codcli': v.codcli,
+            'nomecli': cliente.nomecli if cliente else 'Desconhecido',
+            'emailcli': cliente.emailcli if cliente else 'Sem email',
+            'telcli': cliente.telcli if cliente else 'Sem telefone',
+            'cpf_cnpj': cliente.cpf_cnpj if cliente else 'Sem CPF/CNPJ',
+        })
+
+    context['dados'] = dados_ganhadores
+
+    print(dados_ganhadores)
     return render(request, 'sorteio/ganhadores.html', context)
 
 
@@ -2022,7 +2053,7 @@ def agent_manager(request):
     status = request.GET.get('status')
 
     # Inicializa a queryset com todos os agentes
-    agents = Agent.objects.all().order_by('numcaixa')
+    agents = Agent.objects.all()
 
     # Aplica os filtros com base nos parâmetros recebidos
     if codfilial:
