@@ -5,40 +5,36 @@
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 
-<div class="container vh-75">
-    <h1 class="text-center mb-4 mt-3">Configurações da Tela de Pesquisa</h1>
+<div class="container py-4">
+    <h2 class="mb-4 text-center">Configurações Visuais do Sistema</h2>
     {% include 'partials/message.html' %}
-
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="row g-4">
         {% csrf_token %}
-
-        <div class="col-12 row">
-            <div class="col-md-6 col-12 ">
-                <!-- Configurações para Desktop -->
-                <div class="form-group col-12 mb-3">
-                    <label for="background_type">Tipo de Fundo (Desktop):</label>
-                    <select class="form-select" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
-                        <option value="" {% if variaveis_globais.background_type == '' %}selected{% endif %}>0 - Sem background personalizado</option>
-                        <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
-                        <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
-                        <option value="colorf" {% if variaveis_globais.background_type == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
-                        <option value="urlf" {% if variaveis_globais.background_type == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
-                    </select>
-                </div>
-
-                <div class="row mb-3">
-                    <div id="filter_group" class="form-group col-12" style="display: {% if variaveis_globais.background_type|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
-                        <label for="filter_color">Cor do Filtro (Desktop):</label>
-                        <input type="color" class="form-control" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}">
+        <!-- Card Desktop -->
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Aparência no Desktop</h5>
+                    <div class="mb-3">
+                        <label for="background_type" class="form-label fw-semibold">Tipo de Fundo</label>
+                        <select class="form-select form-select-sm" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
+                            <option value="" {% if variaveis_globais.background_type == '' %}selected{% endif %}>0 - Sem background personalizado</option>
+                            <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
+                            <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
+                            <option value="colorf" {% if variaveis_globais.background_type == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
+                            <option value="urlf" {% if variaveis_globais.background_type == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
+                        </select>
                     </div>
-                    <!-- Campos de cor e imagem para Desktop -->
-                    <div id="color_field" class="form-group col-12" style="display: {% if variaveis_globais.background_type|in_list:'color,colorf' %}block{% else %}none{% endif %};">
-                        <label for="background_color">Cor de Fundo (Desktop):</label>
-                        <input type="color" class="form-control" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
+                    <div id="filter_group" class="mb-3" style="display: {% if variaveis_globais.background_type|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
+                        <label for="filter_color" class="form-label fw-semibold">Cor do Filtro</label>
+                        <input type="color" class="form-control form-control-sm" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}">
                     </div>
-
-                    <div id="background_image_group" class="form-group col-12" style="display: {% if variaveis_globais.background_type|in_list:'url,urlf' %}block{% else %}none{% endif %};">
-                        <label for="background_image">Imagem de Fundo (Desktop):</label>
+                    <div id="color_field" class="mb-3" style="display: {% if variaveis_globais.background_type|in_list:'color,colorf' %}block{% else %}none{% endif %};">
+                        <label for="background_color" class="form-label fw-semibold">Cor de Fundo</label>
+                        <input type="color" class="form-control form-control-sm" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
+                    </div>
+                    <div id="background_image_group" class="mb-3" style="display: {% if variaveis_globais.background_type|in_list:'url,urlf' %}block{% else %}none{% endif %};">
+                        <label for="background_image" class="form-label fw-semibold">Imagem de Fundo</label>
                         <input type="file" class="form-control-file d-none" id="background_image" name="background_url" onchange="previewBackgroundImage(event)">
                         <div id="background_container" class="mt-2">
                             {% if variaveis_globais.background_url %}
@@ -50,31 +46,32 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-12 ">
-                <div class="form-group col-12 mb-3">
-                    <label for="background_type_mobile">Tipo de Fundo (Mobile):</label>
-                    <select class="form-select" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
-                        <option value="" {% if variaveis_globais.background_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
-                        <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
-                        <option value="url" {% if variaveis_globais.background_type_mobile == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
-                        <option value="colorf" {% if variaveis_globais.background_type_mobile == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
-                        <option value="urlf" {% if variaveis_globais.background_type_mobile == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
-                    </select>
-                </div>
-
-                <div class="row mb-3">
-                    <div id="filter_group_mobile" class="form-group col-12" style="display: {% if variaveis_globais.background_type_mobile|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
-                        <label for="filter_color_mobile">Cor do Filtro (Mobile):</label>
-                        <input type="color" class="form-control" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}">
+        </div>
+        <!-- Card Mobile -->
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Aparência no Mobile</h5>
+                    <div class="mb-3">
+                        <label for="background_type_mobile" class="form-label fw-semibold">Tipo de Fundo</label>
+                        <select class="form-select form-select-sm" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
+                            <option value="" {% if variaveis_globais.background_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
+                            <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
+                            <option value="url" {% if variaveis_globais.background_type_mobile == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
+                            <option value="colorf" {% if variaveis_globais.background_type_mobile == 'colorf' %}selected{% endif %}>3 - Fundo em cor sólida com filtro</option>
+                            <option value="urlf" {% if variaveis_globais.background_type_mobile == 'urlf' %}selected{% endif %}>4 - Fundo com imagem e filtro</option>
+                        </select>
                     </div>
-                    <!-- Campos de cor e imagem para Mobile -->
-                    <div id="color_field_mobile" class="form-group col-12" style="display: {% if variaveis_globais.background_type_mobile|in_list:'color,colorf' %}block{% else %}none{% endif %};">
-                        <label for="background_color_mobile">Cor de Fundo (Mobile):</label>
-                        <input type="color" class="form-control" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
+                    <div id="filter_group_mobile" class="mb-3" style="display: {% if variaveis_globais.background_type_mobile|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
+                        <label for="filter_color_mobile" class="form-label fw-semibold">Cor do Filtro</label>
+                        <input type="color" class="form-control form-control-sm" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}">
                     </div>
-
-                    <div id="background_image_group_mobile" class="form-group col-12" style="display: {% if variaveis_globais.background_type_mobile|in_list:'url,urlf' %}block{% else %}none{% endif %};">
-                        <label for="background_image_mobile">Imagem de Fundo (Mobile):</label>
+                    <div id="color_field_mobile" class="mb-3" style="display: {% if variaveis_globais.background_type_mobile|in_list:'color,colorf' %}block{% else %}none{% endif %};">
+                        <label for="background_color_mobile" class="form-label fw-semibold">Cor de Fundo</label>
+                        <input type="color" class="form-control form-control-sm" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
+                    </div>
+                    <div id="background_image_group_mobile" class="mb-3" style="display: {% if variaveis_globais.background_type_mobile|in_list:'url,urlf' %}block{% else %}none{% endif %};">
+                        <label for="background_image_mobile" class="form-label fw-semibold">Imagem de Fundo</label>
                         <input type="file" class="form-control-file d-none" id="background_image_mobile" name="background_url_mobile" onchange="previewBackgroundImageMobile(event)">
                         <div id="background_container_mobile" class="mt-2">
                             {% if variaveis_globais.background_url_mobile %}
@@ -87,83 +84,84 @@
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            <!-- Configurações de Logo para Desktop e Mobile -->
-            <div class="form-group col-md-6 mb-3">
-                <label for="logo_type">Tipo de Logo na Barra Superior (Desktop):</label>
-                <select class="form-select" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
-                    <option value="" {% if variaveis_globais.logo_type == '' %}selected{% endif %}>Selecionar...</option>
-                    <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo em texto</option>
-                    <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
-                </select>
-            </div>
-
-            <div class="form-group col-md-6 mb-3">
-                <label for="logo_type_mobile">Tipo de Logo (Mobile):</label>
-                <select class="form-select" id="logo_type_mobile" name="logo_type_mobile" onchange="toggleMobileLogoFields()">
-                    <option value="" {% if variaveis_globais.logo_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
-                    <option value="text" {% if variaveis_globais.logo_type_mobile == 'text' %}selected{% endif %}>1 - Logo em texto</option>
-                    <option value="image" {% if variaveis_globais.logo_type_mobile == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="row">
-            <!-- Campos de logo para Desktop -->
-            <div id="logo_text_group" class="form-group col-md-6" style="display: {% if variaveis_globais.logo_type == 'text' %}block{% else %}none{% endif %};">
-                <label for="logo_text">Texto na Barra Superior (Desktop):</label>
-                <input type="text" class="form-control" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
-            </div>
-
-            <div id="logo_image_group" class="form-group col-md-6" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
-                <label for="logo_image">Logo em Imagem (Desktop):</label>
-                <input type="file" class="form-control-file d-none" id="logo_image" name="logo_image" onchange="previewLogoImage(event)">
-                <div id="logo_container" class="mt-2">
-                    {% if variaveis_globais.logo_image %}
-                        <img src="/media/{{ variaveis_globais.logo_image }}" alt="Logo Atual" class="img-thumbnail w-100" onclick="document.getElementById('logo_image').click()">
-                    {% else %}
-                        <span class="text-muted">Nenhuma Imagem</span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Campos de logo para Mobile -->
-            <div id="logo_text_group_mobile" class="form-group col-md-6" style="display: {% if variaveis_globais.logo_type_mobile == 'text' %}block{% else %}none{% endif %};">
-                <label for="logo_text_mobile">Texto na Barra Superior (Mobile):</label>
-                <input type="text" class="form-control" id="logo_text_mobile" name="logo_text_mobile" value="{{ variaveis_globais.logo_text_mobile }}">
-            </div>
-
-            <div id="logo_image_group_mobile" class="form-group col-md-6" style="display: {% if variaveis_globais.logo_type_mobile == 'image' %}block{% else %}none{% endif %};">
-                <label for="logo_image_mobile">Logo em Imagem (Mobile):</label>
-                <input type="file" class="form-control-file d-none" id="logo_image_mobile" name="logo_image_mobile" onchange="previewLogoImageMobile(event)">
-                <div id="logo_container_mobile" class="mt-2">
-                    {% if variaveis_globais.logo_image_mobile %}
-                        <img src="/media/{{ variaveis_globais.logo_image_mobile }}" alt="Logo Atual (Mobile)" class="img-thumbnail w-100" onclick="document.getElementById('logo_image_mobile').click()">
-                    {% else %}
-                        <span class="text-muted">Nenhuma Imagem</span>
-                    {% endif %}
+        <!-- Card Logo -->
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Logo Desktop</h5>
+                    <div class="mb-3">
+                        <label for="logo_type" class="form-label fw-semibold">Tipo de Logo</label>
+                        <select class="form-select form-select-sm" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
+                            <option value="" {% if variaveis_globais.logo_type == '' %}selected{% endif %}>Selecionar...</option>
+                            <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo em texto</option>
+                            <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
+                        </select>
+                    </div>
+                    <div id="logo_text_group" class="mb-3" style="display: {% if variaveis_globais.logo_type == 'text' %}block{% else %}none{% endif %};">
+                        <label for="logo_text" class="form-label fw-semibold">Texto na Barra Superior</label>
+                        <input type="text" class="form-control form-control-sm" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
+                    </div>
+                    <div id="logo_image_group" class="mb-3" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
+                        <label for="logo_image" class="form-label fw-semibold">Logo em Imagem</label>
+                        <input type="file" class="form-control-file d-none" id="logo_image" name="logo_image" onchange="previewLogoImage(event)">
+                        <div id="logo_container" class="mt-2">
+                            {% if variaveis_globais.logo_image %}
+                                <img src="/media/{{ variaveis_globais.logo_image }}" alt="Logo Atual" class="img-thumbnail w-100" onclick="document.getElementById('logo_image').click()">
+                            {% else %}
+                                <span class="text-muted">Nenhuma Imagem</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            <!-- Campos de logo para Mobile -->
-            <div id="logo_text_group_mobile" class="form-group col-12 mt-3">
-                <label for="error_message_suport">Mensagem de erro secundária</label>
-                <textarea 
-                    class="form-control summernote" 
-                    id="error_message_suport" 
-                    max_length="1500" 
-                    name="error_message_suport" 
-                    placeholder="Digite aqui uma mensagem extra que vai aparecer em situações de erro no sistema ou informação ao cliente">{{ variaveis_globais.error_message_suport }}</textarea>
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Logo Mobile</h5>
+                    <div class="mb-3">
+                        <label for="logo_type_mobile" class="form-label fw-semibold">Tipo de Logo</label>
+                        <select class="form-select form-select-sm" id="logo_type_mobile" name="logo_type_mobile" onchange="toggleMobileLogoFields()">
+                            <option value="" {% if variaveis_globais.logo_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
+                            <option value="text" {% if variaveis_globais.logo_type_mobile == 'text' %}selected{% endif %}>1 - Logo em texto</option>
+                            <option value="image" {% if variaveis_globais.logo_type_mobile == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
+                        </select>
+                    </div>
+                    <div id="logo_text_group_mobile" class="mb-3" style="display: {% if variaveis_globais.logo_type_mobile == 'text' %}block{% else %}none{% endif %};">
+                        <label for="logo_text_mobile" class="form-label fw-semibold">Texto na Barra Superior</label>
+                        <input type="text" class="form-control form-control-sm" id="logo_text_mobile" name="logo_text_mobile" value="{{ variaveis_globais.logo_text_mobile }}">
+                    </div>
+                    <div id="logo_image_group_mobile" class="mb-3" style="display: {% if variaveis_globais.logo_type_mobile == 'image' %}block{% else %}none{% endif %};">
+                        <label for="logo_image_mobile" class="form-label fw-semibold">Logo em Imagem</label>
+                        <input type="file" class="form-control-file d-none" id="logo_image_mobile" name="logo_image_mobile" onchange="previewLogoImageMobile(event)">
+                        <div id="logo_container_mobile" class="mt-2">
+                            {% if variaveis_globais.logo_image_mobile %}
+                                <img src="/media/{{ variaveis_globais.logo_image_mobile }}" alt="Logo Atual (Mobile)" class="img-thumbnail w-100" onclick="document.getElementById('logo_image_mobile').click()">
+                            {% else %}
+                                <span class="text-muted">Nenhuma Imagem</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="row mb-3 mt-4">
-            <div class="col-12">
-                <button type="submit" class="btn btn-success w-100">Salvar Configurações</button>
+        <!-- Mensagem de erro secundária -->
+        <div class="col-12">
+            <div class="card shadow-sm rounded-3">
+                <div class="card-body">
+                    <label for="error_message_suport" class="form-label fw-semibold">Mensagem de erro secundária</label>
+                    <textarea 
+                        class="form-control summernote" 
+                        id="error_message_suport" 
+                        max_length="1500" 
+                        name="error_message_suport" 
+                        placeholder="Digite aqui uma mensagem extra que vai aparecer em situações de erro no sistema ou informação ao cliente">{{ variaveis_globais.error_message_suport }}</textarea>
+                </div>
             </div>
+        </div>
+        <!-- Botão -->
+        <div class="col-12">
+            <button type="submit" class="btn btn-success w-100">Salvar Configurações</button>
         </div>
     </form>
 </div>

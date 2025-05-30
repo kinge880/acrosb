@@ -3,6 +3,19 @@
 {% block title %}Clube de promoções{% endblock %}
 
 {% block content %}
+<style>
+.transition-scale {
+    transition: transform 0.4s ease-in-out;
+}
+.transition-scale:hover {
+    transform: scale(1.05);
+}
+.object-fit-cover {
+    object-fit: cover;
+    object-position: center;
+    min-height: 180px;
+}
+</style>
 
 <header class="masthead">
     <div class="container-fluid position-relative">
@@ -10,10 +23,12 @@
             {% if listacampanhas %}
                 {% for campanha in listacampanhas %}
                     <div class="col-md-4 col-12 mb-4">
-                        <a href="campanha/{{ campanha.IDCAMPANHA }}/" class="card text-center text-decoration-none ">
-                            <img src="media/{{ campanha.logo_campanha }}" class="card-img-top img-responsive" alt="..." style="max-height: 16rem; min-height: 16rem;">
+                        <a href="campanha/{{ campanha.IDCAMPANHA }}/" class="card text-center text-decoration-none shadow-sm border-0 rounded-4 h-100">
+                            <div class="card-img-top ratio ratio-16x9 overflow-hidden">
+                                <img src="media/{{ campanha.logo_campanha }}" class="w-100 h-100 object-fit-cover object-center transition-scale" alt="Imagem da campanha">
+                            </div>
                             <div class="card-body">
-                                <p class="card-title w-100 text-center h5 text-truncate-2-lines" title="{{ campanha.DESCRICAO }}">
+                                <p class="card-title w-100 text-center h5 text-truncate-2-lines fw-bold" title="{{ campanha.DESCRICAO }}">
                                     {{ campanha.DESCRICAO }}
                                 </p>
                                 <p class="card-subtitle text-muted w-100 h6 text-center">

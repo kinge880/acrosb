@@ -13,31 +13,148 @@
             </div>
             <div class="modal-body modal-body1 row flex-wrap" id="bodyinsere">
                 <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
-                {% for field in form %}
-                    <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {% if field.field.widget.input_type == "file" %} file-input-container d-flex flex-column text-center {% endif %} {{ field.field.widget.attrs.classdiv }}">
-                        {% if field.field.widget.input_type == "file" %}
-                            <label for="preview_{{ field.name }}" class="{{ field.field.widget.attrs.classlabel }}">{{ field.label }}</label>
-                            <input type="file" id="{{ field.id_for_label }}" name="{{ field.name }}" class="d-none" onchange="previewImage(this)" accept="image/*">
-                            <img id="preview_{{ field.name }}" class="img-thumbnail {{ field.field.widget.attrs.class }}" src="{% if field.value %}{{ field.value }}{% else %}https://via.placeholder.com/1920x1080{% endif %}" alt="Preview Image" style="cursor: pointer" onclick="document.getElementById('{{ field.id_for_label }}').click();">
-                        
-                        {% else %}
-                            {% if field.field.widget.attrs.select2Label %}
-                                <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {% endif %}
-                            {{ field }}
-                            {% if not field.field.widget.attrs.select2Label %}
-                                <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
-                            {% endif %}
-                        {% endif %}
-                        {% if field.errors %}
-                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
-                                {% for error in field.errors %}
-                                    <p>{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-3" id="campaignFormTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="true">
+                            <i class="fa fa-info-circle"></i> Informações Básicas
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="restrictions-tab" data-bs-toggle="tab" data-bs-target="#restrictions" type="button" role="tab" aria-controls="restrictions" aria-selected="false">
+                            <i class="fa fa-ban"></i> Restrições
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="intensifiers-tab" data-bs-toggle="tab" data-bs-target="#intensifiers" type="button" role="tab" aria-controls="intensifiers" aria-selected="false">
+                            <i class="fa fa-star"></i> Intensificadores
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab" aria-controls="messages" aria-selected="false">
+                            <i class="fa fa-comment"></i> Mensagens
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button" role="tab" aria-controls="media" aria-selected="false">
+                            <i class="fa fa-image"></i> Mídia
+                        </button>
+                    </li>
+                </ul>
+                <!-- Tab Content -->
+                <div class="tab-content flex-wrap" id="campaignFormContent">
+                    <!-- Basic Information Tab -->
+                    <div class="tab-pane fade show active row p-2 g-2" id="basic" role="tabpanel" aria-labelledby="basic-tab">
+                        <div class="row g-2">
+                            {% for field in form %}
+                                {% if field.name in 'idcampanha,descricao,filial,usa_numero_da_sorte,tipo_cluster_cliente,dtinit,dtfim,enviaemail,acumulativo,valor' %}
+                                    <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {% if field.field.widget.input_type == "file" %} file-input-container d-flex flex-column text-center {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-12 mb-2' }}">
+                                        {% if field.field.widget.attrs.select2Label %}
+                                            <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                        {% endif %}
+                                        {{ field }}
+                                        {% if not field.field.widget.attrs.select2Label %}
+                                            <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                                        {% endif %}
+                                        {% if field.errors %}
+                                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
+                                                {% for error in field.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
-                {% endfor %}
+
+                    <!-- Restrictions Tab -->
+                    <div class="tab-pane fade row p-2 g-2" id="restrictions" role="tabpanel" aria-labelledby="restrictions-tab">
+                        <div class="row g-2">
+                            {% for field in form %}
+                                {% if field.name in 'restringe_fornec,restringe_marca,restringe_prod,restringe_tipo_client' %}
+                                    <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-12 mb-2' }}">
+                                        {{ field }}
+                                        <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                                        {% if field.errors %}
+                                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
+                                                {% for error in field.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Intensifiers Tab -->
+                    <div class="tab-pane fade row p-2 g-2" id="intensifiers" role="tabpanel" aria-labelledby="intensifiers-tab">
+                        <div class="row g-2">
+                            {% for field in form %}
+                                {% if field.name in 'tipointensificador,multiplicador,usafornec,fornecvalor,usamarca,marcavalor,usaprod,prodvalor,acumula_intensificadores,limite_intensificadores' %}
+                                    <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-12 mb-2' }}">
+                                        {{ field }}
+                                        <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                                        {% if field.errors %}
+                                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
+                                                {% for error in field.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Messages Tab -->
+                    <div class="tab-pane fade row p-2 g-2" id="messages" role="tabpanel" aria-labelledby="messages-tab">
+                        <div class="row g-2">
+                            {% for field in form %}
+                                {% if field.name in 'mensagemcampanha,texto_mensagem_caixa,texto_cor_mensagem_caixa,url_mensagem_caixa,autorizacao_campanha,regulamento' %}
+                                    <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-12 mb-2' }}">
+                                        {{ field }}
+                                        <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                                        {% if field.errors %}
+                                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
+                                                {% for error in field.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Media Tab -->
+                    <div class="tab-pane fade row p-2 g-2" id="media" role="tabpanel" aria-labelledby="media-tab">
+                        <div class="row g-2">
+                            {% for field in form %}
+                                {% if field.name in 'logo_campanha,background_campanha' %}
+                                    <div class="{% if field.field.widget.input_type == "file" %} file-input-container d-flex flex-column text-center {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-12 mb-2' }}">
+                                        <label for="preview_{{ field.name }}" class="{{ field.field.widget.attrs.classlabel }}">{{ field.label }}</label>
+                                        <input type="file" id="{{ field.id_for_label }}" name="{{ field.name }}" class="d-none" onchange="previewImage(this)" accept="image/*">
+                                        <img id="preview_{{ field.name }}" class="img-thumbnail {{ field.field.widget.attrs.class }}" src="{% if field.value %}{{ field.value }}{% else %}https://via.placeholder.com/1920x1080{% endif %}" alt="Preview Image" style="cursor: pointer" onclick="document.getElementById('{{ field.id_for_label }}').click();">
+                                        {% if field.errors %}
+                                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
+                                                {% for error in field.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer d-flex justify-content-between flex-nowrap">
                 <button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Cancelar</button>
@@ -80,11 +197,55 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         });
+
+        // Tab navigation with required fields validation and icon feedback
+        const tabButtons = Array.from(document.querySelectorAll('#campaignFormTabs button'));
+        tabButtons.forEach((btn) => {
+            btn.addEventListener('show.bs.tab', function (e) {
+                const currentTab = document.querySelector('.tab-pane.active');
+                if (currentTab && !btn.classList.contains('active')) {
+                    const requiredFields = currentTab.querySelectorAll('input[required], select[required], textarea[required]');
+                    let allValid = true;
+
+                    requiredFields.forEach(field => {
+                        if (!field.value) {
+                            field.classList.add('is-invalid');
+                            allValid = false;
+                        } else {
+                            field.classList.remove('is-invalid');
+                        }
+                    });
+
+                    // Find the tab button corresponding to the current tab
+                    const tabButton = document.querySelector(`#campaignFormTabs button[data-bs-target="#${currentTab.id}"]`);
+                    if (tabButton) {
+                        tabButton.classList.remove('text-success', 'text-warning', 'text-danger');
+                        tabButton.innerHTML = tabButton.innerHTML.replace(/\s*<i class="fa fa-(check-circle|exclamation-triangle|exclamation-circle)"><\/i>/g, '');
+                    }
+
+                    if (!allValid) {
+                        e.preventDefault();
+                        if (tabButton) {
+                            tabButton.classList.add('text-danger');
+                            tabButton.innerHTML += ' <i class="fa fa-exclamation-circle"></i>';
+                        }
+                        alert('Preencha todos os campos obrigatórios antes de avançar.');
+                    } else {
+                        if (tabButton) {
+                            tabButton.classList.add('text-success');
+                            tabButton.innerHTML += ' <i class="fa fa-check-circle"></i>';
+                        }
+                    }
+                }
+            });
+        });
     });
 
+    // Update modal shown event
     $('#insertEditModal').on('shown.bs.modal', function () {
+        // Initialize SummerNote editor
         $('.summernote').summernote({
-            height: 300,  // Altura da caixa de texto do editor
+            height: 200,
             toolbar: [
                 ['style', ['bold', 'italic', 'underline', 'clear']],
                 ['font', ['strikethrough', 'superscript', 'subscript']],
@@ -94,8 +255,65 @@
                 ['height', ['height']]
             ]
         });
+        
+        // Initialize tabs if not already initialized
+        var firstTabEl = document.querySelector('#campaignFormTabs li:first-child button')
+        if (firstTabEl) {
+            new bootstrap.Tab(firstTabEl).show()
+        }
+        
         $('.dropdown-toggle').dropdown();
     });
+
+    // Improved: Remove duplicated validation icons and update only once
+    function validateTabFields(tabId) {
+        const tab = document.querySelector(tabId);
+        if (!tab) return;
+        const fields = tab.querySelectorAll('input, select, textarea');
+        const tabButton = document.querySelector(`[data-bs-target="${tabId}"]`);
+        let isValid = true;
+        let isComplete = true;
+        fields.forEach(field => {
+            if (field.hasAttribute('required') && !field.value) {
+                isComplete = false;
+            }
+            if (field.classList.contains('is-invalid')) {
+                isValid = false;
+            }
+        });
+        // Remove previous icons and classes
+        tabButton.classList.remove('text-danger', 'text-warning', 'text-success');
+        tabButton.innerHTML = tabButton.innerHTML.replace(/\s*<i class="fa fa-(exclamation-circle|exclamation-triangle|check-circle)"><\/i>/g, '');
+        // Add icon according to state
+        if (!isValid) {
+            tabButton.classList.add('text-danger');
+            tabButton.innerHTML += ' <i class="fa fa-exclamation-circle"></i>';
+        } else if (!isComplete) {
+            tabButton.classList.add('text-warning');
+            tabButton.innerHTML += ' <i class="fa fa-exclamation-triangle"></i>';
+        } else {
+            tabButton.classList.add('text-success');
+            tabButton.innerHTML += ' <i class="fa fa-check-circle"></i>';
+        }
+    }
+
+    // Call this function whenever a tab is shown or fields are changed
+    document.querySelectorAll('#campaignFormTabs button[data-bs-toggle="tab"]').forEach(tabButton => {
+        tabButton.addEventListener('shown.bs.tab', e => {
+            const target = e.target.getAttribute('data-bs-target');
+            validateTabFields(target);
+        });
+    });
+    // Monitor field changes to update tab validation indicators
+    document.querySelectorAll('#insertEditModal input, #insertEditModal select, #insertEditModal textarea').forEach(field => {
+        field.addEventListener('change', () => {
+            const tabPane = field.closest('.tab-pane');
+            if (tabPane) {
+                validateTabFields('#' + tabPane.id);
+            }
+        });
+    });
+
 </script>
 <script>
     // Função para gerar pré-visualização da imagem e gerenciar inputs text
