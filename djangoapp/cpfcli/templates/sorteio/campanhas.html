@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Campanhas{% endblock %}
 
-{% block content %}
+{% block styles %}
 <style>
     .card-body {
         position: relative;
@@ -32,43 +32,45 @@
     .card-body:hover {
     }
 </style>
-<div class="container-fluid vh-75 d-flex flex-start flex-wrap">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-3/4 flex flex-start flex-wrap">
     <div class="container-fluid">
         {% include 'partials/message.html' %}
         
-        <div class="row mt-3">
+        <div class="flex flex-wrap -mx-4 mt-3">
             {% for campanha in listacampanhas %}
-            <div class="col-md-4 col-12 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title w-100 text-center">Código {{ campanha.IDCAMPANHA }} - {{ campanha.DESCRICAO }}</h5>
-                        <h6 class="card-subtitle mb-3 text-muted w-100 text-center">{{ campanha.dtinit }} - {{ campanha.dtfim }}</h6>
+            <div class="w-full md:w-1/3 px-4 mb-4">
+                <div class="rounded shadow border group">
+                    <div class="p-4 relative overflow-hidden">
+                        <h5 class="text-center font-bold text-lg w-full">Código {{ campanha.IDCAMPANHA }} - {{ campanha.DESCRICAO }}</h5>
+                        <h6 class="text-center text-gray-500 mb-3 w-full">{{ campanha.dtinit }} - {{ campanha.dtfim }}</h6>
             
-                        <div class="progress mb-3">
+                        <div class="w-full bg-gray-200 rounded mb-3">
                             <!-- Exibe o valor da progress como texto -->
-                            <div class="progress-bar progress-bar-striped progress-bar-animated {% if campanha.usa_numero_da_sorte == 'N' %} bg-info {% endif %}" 
-                                    role="progressbar" 
-                                    style="width: {{campanha.progress|floatformat:0}}%;" 
-                                    aria-valuenow="{{ campanha.progress}}" 
-                                    aria-valuemin="0" 
-                                    aria-valuemax="100">
+                            <div class="{% if campanha.usa_numero_da_sorte == 'N' %} bg-blue-400 {% else %} bg-blue-600 {% endif %} 
+                                    text-center text-white py-1
+                                    animate-pulse bg-striped
+                                    rounded" 
+                                    style="width: {{campanha.progress|floatformat:0}}%;">
                                     {{ campanha.progress|floatformat:1 }}%
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <p class="card-text">
-                                Status: <span class="badge {% if campanha.ATIVO == 'S' %}bg-success{% else %}bg-danger{% endif %}">
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm">
+                                Status: <span class="px-2 py-1 text-xs rounded text-white {% if campanha.ATIVO == 'S' %}bg-green-500{% else %}bg-red-500{% endif %}">
                                     {% if campanha.ATIVO == 'S' %}Ativa{% else %}Inativa{% endif %}
                                 </span>
                             </p>
                             {% if campanha.usa_numero_da_sorte == 'S' %}
-                                <h5 class="card-text mb-3">{{ campanha.count_cupons }} Números Gerados</h5>
+                                <h5 class="font-medium mb-3">{{ campanha.count_cupons }} Números Gerados</h5>
                             {% else %}
-                                <h5 class="card-text mb-3">{{ campanha.count_cupomcx }} Cupons Impressos</h5>
+                                <h5 class="font-medium mb-3">{{ campanha.count_cupomcx }} Cupons Impressos</h5>
                             {% endif %}
                         </div>
-                        <!-- Container for additional options -->
-                        <div class="card-options">
+                        <!-- Container for additional options - with working hover effect -->
+                        <div class="flex justify-between items-center">
                             <a class="btn btn-primary btn-sm {% if campanha.permite_sorteio == 'N' %} disabled {% endif %}" href="{{campanha.IDCAMPANHA}}/">Sortear</a>
                             <a class="btn btn-secondary btn-sm {% if campanha.permite_sorteio == 'N' %} disabled {% endif %}" href="/ganhadores/{{campanha.IDCAMPANHA}}/">Ganhadores</a>
                         </div>

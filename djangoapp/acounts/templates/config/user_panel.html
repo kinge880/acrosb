@@ -5,19 +5,19 @@
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 
-<div class="container py-4">
-    <h2 class="mb-4 text-center">Configurações Visuais do Sistema</h2>
+<div class="container mx-auto px-4 py-4">
+    <h2 class="mb-4 text-center text-2xl font-bold">Configurações Visuais do Sistema</h2>
     {% include 'partials/message.html' %}
-    <form method="post" enctype="multipart/form-data" class="row g-4">
+    <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {% csrf_token %}
         <!-- Card Desktop -->
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Aparência no Desktop</h5>
+        <div>
+            <div class="shadow rounded-lg bg-white p-4 h-full flex flex-col">
+                <div class="flex-1">
+                    <h5 class="text-lg font-semibold mb-3">Aparência no Desktop</h5>
                     <div class="mb-3">
-                        <label for="background_type" class="form-label fw-semibold">Tipo de Fundo</label>
-                        <select class="form-select form-select-sm" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
+                        <label for="background_type" class="block text-sm font-medium mb-1">Tipo de Fundo</label>
+                        <select class="block w-full p-2 text-sm rounded border border-gray-300" id="background_type" name="background_type" onchange="toggleBackgroundFields()">
                             <option value="" {% if variaveis_globais.background_type == '' %}selected{% endif %}>0 - Sem background personalizado</option>
                             <option value="color" {% if variaveis_globais.background_type == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
                             <option value="url" {% if variaveis_globais.background_type == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
@@ -26,21 +26,21 @@
                         </select>
                     </div>
                     <div id="filter_group" class="mb-3" style="display: {% if variaveis_globais.background_type|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
-                        <label for="filter_color" class="form-label fw-semibold">Cor do Filtro</label>
-                        <input type="color" class="form-control form-control-sm" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}">
+                        <label for="filter_color" class="block text-sm font-medium mb-1">Cor do Filtro</label>
+                        <input type="color" class="block w-full p-2 rounded border border-gray-300" id="filter_color" name="filter_color" value="{{ variaveis_globais.filter_color }}">
                     </div>
                     <div id="color_field" class="mb-3" style="display: {% if variaveis_globais.background_type|in_list:'color,colorf' %}block{% else %}none{% endif %};">
-                        <label for="background_color" class="form-label fw-semibold">Cor de Fundo</label>
-                        <input type="color" class="form-control form-control-sm" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
+                        <label for="background_color" class="block text-sm font-medium mb-1">Cor de Fundo</label>
+                        <input type="color" class="block w-full p-2 rounded border border-gray-300" id="background_color" name="background_color" value="{{ variaveis_globais.background_color }}">
                     </div>
                     <div id="background_image_group" class="mb-3" style="display: {% if variaveis_globais.background_type|in_list:'url,urlf' %}block{% else %}none{% endif %};">
-                        <label for="background_image" class="form-label fw-semibold">Imagem de Fundo</label>
-                        <input type="file" class="form-control-file d-none" id="background_image" name="background_url" onchange="previewBackgroundImage(event)">
+                        <label for="background_image" class="block text-sm font-medium mb-1">Imagem de Fundo</label>
+                        <input type="file" class="hidden" id="background_image" name="background_url" onchange="previewBackgroundImage(event)">
                         <div id="background_container" class="mt-2">
                             {% if variaveis_globais.background_url %}
-                                <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="img-thumbnail w-100" onclick="document.getElementById('background_image').click()">
+                                <img src="/media/{{ variaveis_globais.background_url }}" alt="Imagem de Fundo Atual" class="w-full rounded border cursor-pointer" onclick="document.getElementById('background_image').click()">
                             {% else %}
-                                <span class="text-muted">Nenhuma Imagem</span>
+                                <span class="text-gray-500">Nenhuma Imagem</span>
                             {% endif %}
                         </div>
                     </div>
@@ -48,13 +48,13 @@
             </div>
         </div>
         <!-- Card Mobile -->
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Aparência no Mobile</h5>
+        <div>
+            <div class="shadow rounded-lg bg-white p-4 h-full flex flex-col">
+                <div class="flex-1">
+                    <h5 class="text-lg font-semibold mb-3">Aparência no Mobile</h5>
                     <div class="mb-3">
-                        <label for="background_type_mobile" class="form-label fw-semibold">Tipo de Fundo</label>
-                        <select class="form-select form-select-sm" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
+                        <label for="background_type_mobile" class="block text-sm font-medium mb-1">Tipo de Fundo</label>
+                        <select class="block w-full p-2 text-sm rounded border border-gray-300" id="background_type_mobile" name="background_type_mobile" onchange="toggleBackgroundFieldsMobile()">
                             <option value="" {% if variaveis_globais.background_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
                             <option value="color" {% if variaveis_globais.background_type_mobile == 'color' %}selected{% endif %}>1 - Fundo em cor sólida</option>
                             <option value="url" {% if variaveis_globais.background_type_mobile == 'url' %}selected{% endif %}>2 - Fundo com imagem</option>
@@ -63,21 +63,21 @@
                         </select>
                     </div>
                     <div id="filter_group_mobile" class="mb-3" style="display: {% if variaveis_globais.background_type_mobile|in_list:'urlf,colorf' %}block{% else %}none{% endif %};">
-                        <label for="filter_color_mobile" class="form-label fw-semibold">Cor do Filtro</label>
-                        <input type="color" class="form-control form-control-sm" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}">
+                        <label for="filter_color_mobile" class="block text-sm font-medium mb-1">Cor do Filtro</label>
+                        <input type="color" class="block w-full p-2 rounded border border-gray-300" id="filter_color_mobile" name="filter_color_mobile" value="{{ variaveis_globais.filter_color_mobile }}">
                     </div>
                     <div id="color_field_mobile" class="mb-3" style="display: {% if variaveis_globais.background_type_mobile|in_list:'color,colorf' %}block{% else %}none{% endif %};">
-                        <label for="background_color_mobile" class="form-label fw-semibold">Cor de Fundo</label>
-                        <input type="color" class="form-control form-control-sm" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
+                        <label for="background_color_mobile" class="block text-sm font-medium mb-1">Cor de Fundo</label>
+                        <input type="color" class="block w-full p-2 rounded border border-gray-300" id="background_color_mobile" name="background_color_mobile" value="{{ variaveis_globais.background_color_mobile }}">
                     </div>
                     <div id="background_image_group_mobile" class="mb-3" style="display: {% if variaveis_globais.background_type_mobile|in_list:'url,urlf' %}block{% else %}none{% endif %};">
-                        <label for="background_image_mobile" class="form-label fw-semibold">Imagem de Fundo</label>
-                        <input type="file" class="form-control-file d-none" id="background_image_mobile" name="background_url_mobile" onchange="previewBackgroundImageMobile(event)">
+                        <label for="background_image_mobile" class="block text-sm font-medium mb-1">Imagem de Fundo</label>
+                        <input type="file" class="hidden" id="background_image_mobile" name="background_url_mobile" onchange="previewBackgroundImageMobile(event)">
                         <div id="background_container_mobile" class="mt-2">
                             {% if variaveis_globais.background_url_mobile %}
-                                <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="img-thumbnail w-100" onclick="document.getElementById('background_image_mobile').click()">
+                                <img src="/media/{{ variaveis_globais.background_url_mobile }}" alt="Imagem de Fundo Atual (Mobile)" class="w-full rounded border cursor-pointer" onclick="document.getElementById('background_image_mobile').click()">
                             {% else %}
-                                <span class="text-muted">Nenhuma Imagem</span>
+                                <span class="text-gray-500">Nenhuma Imagem</span>
                             {% endif %}
                         </div>
                     </div>
@@ -85,60 +85,60 @@
             </div>
         </div>
         <!-- Card Logo -->
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Logo Desktop</h5>
+        <div>
+            <div class="shadow rounded-lg bg-white p-4 h-full flex flex-col">
+                <div class="flex-1">
+                    <h5 class="text-lg font-semibold mb-3">Logo Desktop</h5>
                     <div class="mb-3">
-                        <label for="logo_type" class="form-label fw-semibold">Tipo de Logo</label>
-                        <select class="form-select form-select-sm" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
+                        <label for="logo_type" class="block text-sm font-medium mb-1">Tipo de Logo</label>
+                        <select class="block w-full p-2 text-sm rounded border border-gray-300" id="logo_type" name="logo_type" onchange="toggleLogoFields()">
                             <option value="" {% if variaveis_globais.logo_type == '' %}selected{% endif %}>Selecionar...</option>
                             <option value="text" {% if variaveis_globais.logo_type == 'text' %}selected{% endif %}>1 - Logo em texto</option>
                             <option value="image" {% if variaveis_globais.logo_type == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
                         </select>
                     </div>
                     <div id="logo_text_group" class="mb-3" style="display: {% if variaveis_globais.logo_type == 'text' %}block{% else %}none{% endif %};">
-                        <label for="logo_text" class="form-label fw-semibold">Texto na Barra Superior</label>
-                        <input type="text" class="form-control form-control-sm" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
+                        <label for="logo_text" class="block text-sm font-medium mb-1">Texto na Barra Superior</label>
+                        <input type="text" class="block w-full p-2 rounded border border-gray-300" id="logo_text" name="logo_text" value="{{ variaveis_globais.logo_text }}">
                     </div>
                     <div id="logo_image_group" class="mb-3" style="display: {% if variaveis_globais.logo_type == 'image' %}block{% else %}none{% endif %};">
-                        <label for="logo_image" class="form-label fw-semibold">Logo em Imagem</label>
-                        <input type="file" class="form-control-file d-none" id="logo_image" name="logo_image" onchange="previewLogoImage(event)">
+                        <label for="logo_image" class="block text-sm font-medium mb-1">Logo em Imagem</label>
+                        <input type="file" class="hidden" id="logo_image" name="logo_image" onchange="previewLogoImage(event)">
                         <div id="logo_container" class="mt-2">
                             {% if variaveis_globais.logo_image %}
-                                <img src="/media/{{ variaveis_globais.logo_image }}" alt="Logo Atual" class="img-thumbnail w-100" onclick="document.getElementById('logo_image').click()">
+                                <img src="/media/{{ variaveis_globais.logo_image }}" alt="Logo Atual" class="w-full rounded border cursor-pointer" onclick="document.getElementById('logo_image').click()">
                             {% else %}
-                                <span class="text-muted">Nenhuma Imagem</span>
+                                <span class="text-gray-500">Nenhuma Imagem</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-3 h-100">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Logo Mobile</h5>
+        <div>
+            <div class="shadow rounded-lg bg-white p-4 h-full flex flex-col">
+                <div class="flex-1">
+                    <h5 class="text-lg font-semibold mb-3">Logo Mobile</h5>
                     <div class="mb-3">
-                        <label for="logo_type_mobile" class="form-label fw-semibold">Tipo de Logo</label>
-                        <select class="form-select form-select-sm" id="logo_type_mobile" name="logo_type_mobile" onchange="toggleMobileLogoFields()">
+                        <label for="logo_type_mobile" class="block text-sm font-medium mb-1">Tipo de Logo</label>
+                        <select class="block w-full p-2 text-sm rounded border border-gray-300" id="logo_type_mobile" name="logo_type_mobile" onchange="toggleMobileLogoFields()">
                             <option value="" {% if variaveis_globais.logo_type_mobile == '' %}selected{% endif %}>Selecionar...</option>
                             <option value="text" {% if variaveis_globais.logo_type_mobile == 'text' %}selected{% endif %}>1 - Logo em texto</option>
                             <option value="image" {% if variaveis_globais.logo_type_mobile == 'image' %}selected{% endif %}>2 - Logo em imagem</option>
                         </select>
                     </div>
                     <div id="logo_text_group_mobile" class="mb-3" style="display: {% if variaveis_globais.logo_type_mobile == 'text' %}block{% else %}none{% endif %};">
-                        <label for="logo_text_mobile" class="form-label fw-semibold">Texto na Barra Superior</label>
-                        <input type="text" class="form-control form-control-sm" id="logo_text_mobile" name="logo_text_mobile" value="{{ variaveis_globais.logo_text_mobile }}">
+                        <label for="logo_text_mobile" class="block text-sm font-medium mb-1">Texto na Barra Superior</label>
+                        <input type="text" class="block w-full p-2 rounded border border-gray-300" id="logo_text_mobile" name="logo_text_mobile" value="{{ variaveis_globais.logo_text_mobile }}">
                     </div>
                     <div id="logo_image_group_mobile" class="mb-3" style="display: {% if variaveis_globais.logo_type_mobile == 'image' %}block{% else %}none{% endif %};">
-                        <label for="logo_image_mobile" class="form-label fw-semibold">Logo em Imagem</label>
-                        <input type="file" class="form-control-file d-none" id="logo_image_mobile" name="logo_image_mobile" onchange="previewLogoImageMobile(event)">
+                        <label for="logo_image_mobile" class="block text-sm font-medium mb-1">Logo em Imagem</label>
+                        <input type="file" class="hidden" id="logo_image_mobile" name="logo_image_mobile" onchange="previewLogoImageMobile(event)">
                         <div id="logo_container_mobile" class="mt-2">
                             {% if variaveis_globais.logo_image_mobile %}
-                                <img src="/media/{{ variaveis_globais.logo_image_mobile }}" alt="Logo Atual (Mobile)" class="img-thumbnail w-100" onclick="document.getElementById('logo_image_mobile').click()">
+                                <img src="/media/{{ variaveis_globais.logo_image_mobile }}" alt="Logo Atual (Mobile)" class="w-full rounded border cursor-pointer" onclick="document.getElementById('logo_image_mobile').click()">
                             {% else %}
-                                <span class="text-muted">Nenhuma Imagem</span>
+                                <span class="text-gray-500">Nenhuma Imagem</span>
                             {% endif %}
                         </div>
                     </div>
@@ -146,22 +146,20 @@
             </div>
         </div>
         <!-- Mensagem de erro secundária -->
-        <div class="col-12">
-            <div class="card shadow-sm rounded-3">
-                <div class="card-body">
-                    <label for="error_message_suport" class="form-label fw-semibold">Mensagem de erro secundária</label>
-                    <textarea 
-                        class="form-control summernote" 
-                        id="error_message_suport" 
-                        max_length="1500" 
-                        name="error_message_suport" 
-                        placeholder="Digite aqui uma mensagem extra que vai aparecer em situações de erro no sistema ou informação ao cliente">{{ variaveis_globais.error_message_suport }}</textarea>
-                </div>
+        <div class="col-span-1 md:col-span-2">
+            <div class="shadow rounded-lg bg-white p-4">
+                <label for="error_message_suport" class="block text-sm font-medium mb-1">Mensagem de erro secundária</label>
+                <textarea 
+                    class="block w-full p-2 rounded border border-gray-300 summernote" 
+                    id="error_message_suport" 
+                    max_length="1500" 
+                    name="error_message_suport" 
+                    placeholder="Digite aqui uma mensagem extra que vai aparecer em situações de erro no sistema ou informação ao cliente">{{ variaveis_globais.error_message_suport }}</textarea>
             </div>
         </div>
         <!-- Botão -->
-        <div class="col-12">
-            <button type="submit" class="btn btn-success w-100">Salvar Configurações</button>
+        <div class="col-span-1 md:col-span-2">
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded transition">Salvar Configurações</button>
         </div>
     </form>
 </div>
@@ -213,7 +211,7 @@
         const previewImage = document.createElement('img');
         previewImage.src = URL.createObjectURL(event.target.files[0]);
         previewImage.alt = "Preview da Imagem";
-        previewImage.className = "img-thumbnail w-100";
+        previewImage.className = "w-full rounded border cursor-pointer";
         previewImage.onclick = function() { document.getElementById('background_image').click() };
         previewContainer.innerHTML = '';
         previewContainer.appendChild(previewImage);
@@ -224,7 +222,7 @@
         const previewImage = document.createElement('img');
         previewImage.src = URL.createObjectURL(event.target.files[0]);
         previewImage.alt = "Preview da Imagem";
-        previewImage.className = "img-thumbnail w-100";
+        previewImage.className = "w-full rounded border cursor-pointer";
         previewImage.onclick = function() { document.getElementById('background_image_mobile').click() };
         previewContainer.innerHTML = '';
         previewContainer.appendChild(previewImage);
@@ -235,7 +233,7 @@
         const previewImage = document.createElement('img');
         previewImage.src = URL.createObjectURL(event.target.files[0]);
         previewImage.alt = "Preview da Logo";
-        previewImage.className = "img-thumbnail w-100";
+        previewImage.className = "w-full rounded border cursor-pointer";
         previewImage.onclick = function() { document.getElementById('logo_image').click() };
         previewContainer.innerHTML = '';
         previewContainer.appendChild(previewImage);
@@ -246,7 +244,7 @@
         const previewImage = document.createElement('img');
         previewImage.src = URL.createObjectURL(event.target.files[0]);
         previewImage.alt = "Preview da Logo";
-        previewImage.className = "img-thumbnail w-100";
+        previewImage.className = "w-full rounded border cursor-pointer";
         previewImage.onclick = function() { document.getElementById('logo_image_mobile').click() };
         previewContainer.innerHTML = '';
         previewContainer.appendChild(previewImage);

@@ -3,15 +3,17 @@
 
 <div class="modal fade" id="modaldinamico" tabindex="-1" aria-labelledby="dynamicmodalTitle" aria-hidden="true">
     <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="dynamicmodalTitle">Dados do Objeto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="flex flex-col bg-white rounded-lg shadow-xl">
+            <div class="flex items-center justify-between border-b p-4">
+                <h5 class="text-lg font-medium" id="dynamicmodalTitle">Dados do Objeto</h5>
+                <button type="button" class="text-gray-400 hover:text-gray-500" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-body">
+            <div class="p-4">
                 <form id="dataForm">
                     <!-- O conteúdo será preenchido dinamicamente -->
-                    <div class="row" id="dynamicDataContainer"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="dynamicDataContainer"></div>
                 </form>
             </div>
         </div>
@@ -47,18 +49,23 @@
                 // Limpa o conteúdo anterior
                 container.empty();
 
-                // Adiciona as colunas e valores como "cards"
+                // Adiciona as colunas e valores como "cards" usando Tailwind CSS
                 columns.forEach(function(column) {
                     var translatedColumnName = translateColumnName(column);
-                    dynamicmodalTitle.html(title)
-                    var card = $('<div>', { class: 'col-md-4 mb-3' });  // Define o layout da coluna
+                    dynamicmodalTitle.html(title);
+                    
+                    // Cria o elemento div com classes Tailwind
+                    var card = $('<div>', { class: 'flex flex-col h-full bg-white border border-blue-300 rounded-lg shadow-md overflow-hidden' });
+                    
+                    // Define o conteúdo do card com classes Tailwind
                     var cardContent = `
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="card-title">${translatedColumnName}</h6>
-                                <p class="card-text">${data[column]}</p>
-                            </div>
+                        <div class="bg-blue-50 px-4 py-2 border-b border-blue-300">
+                            <h6 class="font-medium text-blue-800">${translatedColumnName}</h6>
+                        </div>
+                        <div class="flex-grow p-4">
+                            <p class="text-gray-700">${data[column] || 'N/A'}</p>
                         </div>`;
+                    
                     card.append(cardContent);
                     container.append(card);
                 });

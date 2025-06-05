@@ -1,10 +1,9 @@
 {% load static %}
 {% block content %}
 
-
 <!-- Navbar & Hero Start -->
 <div class="position-relative p-0  {% if request.path != '/' %} {% endif %}">
-    <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 {% if request.path != '/' %} sticky-top on-top shadow-sm {% else %} navbarstickyhome {% endif %}">
+    <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 {% if request.path != '/' %} sticky-top on-top shadow-sm {% else %} navbarstickyhome {% endif %} flex items-center justify-between">
         <a href="/" class="navbar-brand p-0">
             {% if variaveis_globais.logo_type and  variaveis_globais.logo_type == 'image' %}
                 <div class="desktop-logo">
@@ -22,15 +21,18 @@
                 </div>
             {% endif %}
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-            <span class="fa fa-bars"></span>
+        <button id="mobile-menu-button" class="block md:hidden text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
         </button>
-        <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div id="navbarCollapse" class="hidden md:flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
             <div class="navbar-nav ms-auto py-0">
                 {% if not request.user.is_authenticated %}
                     <a class="nav-link" href="/accounts/clientes/cadastro/">Cadastro de cliente</a>
                 {% endif %}
-                {% if request.user.username %} 
+                {% if request.user.username %}
                     {% if request.user.is_staff or request.user.is_superuser %}
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -75,5 +77,12 @@
     </nav>
 </div>
 <!-- Navbar End -->
+
+<script>
+    document.getElementById('mobile-menu-button').addEventListener('click', function () {
+        const menu = document.getElementById('navbarCollapse');
+        menu.classList.toggle('hidden');
+    });
+</script>
 
 {% endblock %}
