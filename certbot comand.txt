@@ -1,0 +1,2 @@
+certbot certonly --webroot -w /var/www/certbot -d festapremiadasupernordeste.com.br -d www.festapremiadasupernordeste.com.br
+certbot certonly --webroot -w /var/www/certbot -d sysclient.com.br
