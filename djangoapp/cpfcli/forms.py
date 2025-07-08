@@ -411,8 +411,8 @@ class MarcasForm(forms.ModelForm):
             'idcampanha', 'codmarca', 'tipo'
         ]
         widgets = {
-            'codmarca': forms.Select(attrs={
-                'class': 'input-cosmic-cascade-tetra-49m7 form-select col-12 marca',
+            'codmarca': forms.NumberInput(attrs={
+                'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 marca',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
             }),
@@ -448,7 +448,7 @@ class ProdutosForm(forms.ModelForm):
             'idcampanha', 'codprod', 'tipo'
         ]
         widgets = {
-            'codprod': forms.Select(attrs={
+            'codprod': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 codprod_select',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
@@ -484,7 +484,7 @@ class FornecedorForm(forms.ModelForm):
             'idcampanha', 'codfornec', 'tipo'
         ]
         widgets = {
-            'codfornec': forms.Select(attrs={
+            'codfornec': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 fornec',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'
@@ -520,7 +520,7 @@ class BlackListForm(forms.ModelForm):
             'IDCAMPANHA', 'CODCLI', 'TIPO'
         ]
         widgets = {
-            'CODCLI': forms.Select(attrs={
+            'CODCLI': forms.NumberInput(attrs={
                 'class': 'input-cosmic-cascade-tetra-49m7 form-control col-12 client_select',
                 'classdiv': 'col-6 mb-3',
                 'autocomplete': 'off'

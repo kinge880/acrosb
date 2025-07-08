@@ -1,0 +1,252 @@
+{% load static %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+
+<!-- Modal de inserção e edição -->
+<div class="modal fade" id="insertEditModal" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between border-b p-4">
+                    <h5 class="text-lg font-medium" id="modalTitle">{{ tituloInsere }}</h5>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto" id="bodyinsere">
+                    <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}" />
+
+                    {% for field in form %}
+                        <div class="{% if field.field.widget.input_type != "checkbox" %} relative {% endif %}
+                                    {% if field.field.widget.input_type == "file" %} flex flex-col items-center text-center {% endif %}
+                                    {{ field.field.widget.attrs.classdiv|default:'col-span-1 mb-4' }}
+                                    w-full border border-blue-500 rounded-md focus-within:ring-2 focus-within:ring-blue-300">
+                            
+                            {% if field.field.widget.attrs.select2Label %}
+                                <label class="block text-sm font-medium text-gray-700 mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% endif %}
+
+                            {% if field.field.widget.input_type == "file" %}
+                                <input type="file" id="{{ field.id_for_label }}" name="{{ field.name }}" class="hidden" onchange="previewImage(this)" accept="image/*">
+                                <img id="preview_{{ field.name }}" class="rounded border border-gray-200 shadow {{ field.field.widget.attrs.class }}" src="{% if field.value %}{{ field.value }}{% else %}https://via.placeholder.com/1920x1080{% endif %}" alt="Preview Image" style="cursor: pointer" onclick="document.getElementById('{{ field.id_for_label }}').click();">
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+
+                            {% if not field.field.widget.attrs.select2Label %}
+                                <label class="{% if field.field.widget.input_type != "checkbox" %} absolute left-2 -top-2 text-xs bg-white px-1 text-gray-600 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div id="{{ field.id_for_label }}Feedback" class="text-red-500 text-xs mt-1">
+                                    {% for error in field.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="flex flex-wrap justify-end border-t gap-2 p-4 max-w-6xl mx-auto">
+                    <button type="button" class="min-w-[120px] bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition duration-150 ease-in-out" data-bs-dismiss="modal">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                    <button type="submit" name="insert" id="modalSubmitButton" class="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition duration-150 ease-in-out">
+                        <i class="fas fa-save mr-2"></i>Salvar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de inserção -->
+<div class="modal fade" id="insertModalPlanilha" data-bs-keyboard="false" aria-labelledby="insertModalPlanilhaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between border-b p-4">
+                    <h5 class="text-lg font-medium" id="insertModalPlanilhaLabel">{{tituloPlanilha}}</h5>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-4 flex flex-wrap" id="bodyinsere">
+                    <div class="w-full my-3">
+                        <label for="planilhas"
+                            class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 ease-in-out"
+                            id="drop-zone-planilha">
+                            <div id="upload-placeholder" class="flex flex-col items-center justify-center transition-opacity duration-300 ease-in-out">
+                                <svg class="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M4 12l8-8m0 0l8 8m-8-8v16"/>
+                                </svg>
+                                <p class="text-sm font-medium text-gray-600">Clique ou arraste o arquivo</p>
+                                <p class="text-xs text-gray-400">.xls, .xlsx até 25MB</p>
+                            </div>
+                            <div id="upload-success" class="hidden flex-col items-center justify-center text-green-600 transition-opacity duration-300 ease-in-out">
+                                <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <p class="text-sm font-semibold">Arquivo pronto para envio</p>
+                            </div>
+                            <input id="planilhas" name="planilhas" type="file" class="hidden" required />
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between border-t p-4 space-x-2">
+                    <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded" data-bs-dismiss="modal">Cancelar</button>
+                    <a href="/baixar-modelo/{{tipolink}}/" class="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded">
+                        <i class="fas fa-download mr-1"></i> Baixar modelo
+                    </a>
+                    <button type="submit" name="insertp" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">Salvar</button>
+                    <button type="submit" name="insertp2" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">Salvar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+
+$('#insertEditModal').on('shown.bs.modal', function () {
+    $('.summernote').summernote({
+        height: 200,
+        toolbar: [
+            ['style', ['bold', 'italic', 'underline', 'clear']],
+            ['font', ['strikethrough', 'superscript', 'subscript']],
+            ['fontsize', ['fontsize']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['height', ['height']]
+        ]
+    });
+
+    $('#id_filial').select2({
+        width: '100%',
+        placeholder: 'Selecione as filiais',
+        allowClear: true,
+        dropdownParent: $('#insertEditModal')
+    });
+
+    $('.dropdown-toggle').dropdown();
+});
+</script>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const previewId = 'preview_' + input.name;
+            document.getElementById(previewId).src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var insertEditModal = document.getElementById('insertEditModal');
+    insertEditModal.addEventListener('show.bs.modal', function () {
+        fetch("{% url 'get_csrf_token' %}")
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('input[name="csrfmiddlewaretoken"]').value = data.csrfToken;
+            })
+            .catch(error => console.error('Error:', error));
+    });
+});
+
+function loadEditData(id) {
+    $.ajax({
+        url: '/get_data/',
+        method: 'GET',
+        data: { 
+            id: id,
+            app_name: '{{appname}}',
+            model_name: '{{modelname}}',
+            id_name: '{{primarykey}}',
+            transation: 'N'
+        },
+        success: function(data) {
+            var modal = $('#insertEditModal');
+            var form = modal.find('form');
+            form[0].reset();
+            modal.find(".select2").val('').trigger('change');
+            $('.summernote').summernote('destroy');
+            form.removeClass('was-validated');
+
+            modal.find('input, select, textarea').each(function() {
+                var input = $(this);
+                var fieldName = input.attr('name');
+                if (fieldName && data[fieldName] !== undefined) {
+                    var value = data[fieldName];
+                    if (input.is('input[type="date"]')) {
+                        if (value) {
+                            var date = new Date(value);
+                            value = date.toISOString().split('T')[0];
+                            input.val(value);
+                        }
+                    } else if (input.is('input[type="datetime-local"]')) {
+                        if (value) {
+                            var date = new Date(value);
+                            value = date.toISOString().slice(0, 16);
+                            input.val(value);
+                        }
+                    } else if (input.is('input[type="file"]')) {
+                        const previewId = 'preview_' + input.attr('name');
+                        if (value) {
+                            document.getElementById(previewId).src = value;
+                        } else {
+                            document.getElementById(previewId).src = 'https://via.placeholder.com/150';
+                        }
+                    } else if (input.is('select')) {
+                        var values = Array.isArray(value) ? value : [value];
+                        if (values.length === 1 && typeof values[0] === 'string' && values[0].includes(',')) {
+                            values = values[0].split(',').map(val => val.trim());
+                        }
+                        var validValues = [];
+                        for (let i = 0; i < values.length; i++) {
+                            let currentValue = String(values[i]).trim();
+                            var optionExists = input.find('option[value="' + currentValue + '"]').length > 0;
+                            if (optionExists) {
+                                validValues.push(currentValue);
+                            } else {
+                                console.warn('Valor não encontrado nas opções do select: ' + fieldName + ' = ' + currentValue);
+                            }
+                        }
+                        if (validValues.length > 0) {
+                            if (input.hasClass('select2')) {
+                                input.val(validValues).trigger('change');
+                            } else {
+                                input.val(validValues);
+                            }
+                        }
+                    } else {
+                        input.val(value);
+                    }
+                }
+            });
+
+            modal.find('#modalTitle').html('{{tituloEdit}} ' + data.descricao);
+            modal.find('#modalSubmitButton').attr('name', 'edit').text('Editar');
+            modal.modal('show');
+        }
+    });
+}
+</script>
+{% endblock %}
