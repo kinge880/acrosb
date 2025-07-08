@@ -7,42 +7,191 @@
     <div class="modal-dialog modal-xl">
         <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">{{ tituloInsere }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body modal-body1 row flex-wrap" id="bodyinsere">
-                <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
-                {% for field in form %}
-                    <div class="{% if field.field.widget.input_type != "checkbox" %} input-group-cosmic-cascade-tetra-49m7 {% endif %} {% if field.field.widget.input_type == "file" %} file-input-container d-flex flex-column text-center {% endif %} {{ field.field.widget.attrs.classdiv }}">
-                        {% if field.field.widget.input_type == "file" %}
-                            <label for="preview_{{ field.name }}" class="{{ field.field.widget.attrs.classlabel }}">{{ field.label }}</label>
-                            <input type="file" id="{{ field.id_for_label }}" name="{{ field.name }}" class="d-none" onchange="previewImage(this)" accept="image/*">
-                            <img id="preview_{{ field.name }}" class="img-thumbnail {{ field.field.widget.attrs.class }}" src="{% if field.value %}{{ field.value }}{% else %}https://via.placeholder.com/1920x1080{% endif %}" alt="Preview Image" style="cursor: pointer" onclick="document.getElementById('{{ field.id_for_label }}').click();">
-                        
-                        {% else %}
-                            {% if field.field.widget.attrs.select2Label %}
-                                <label class="" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {% endif %}
-                            {{ field }}
-                            {% if not field.field.widget.attrs.select2Label %}
-                                <label class="{% if field.field.widget.input_type != "checkbox" %} user-label-cosmic-cascade-tetra-49m7 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
-                            {% endif %}
-                        {% endif %}
-                        {% if field.errors %}
-                            <div id="{{ field.id_for_label }}Feedback" class="invalid-feedback">
-                                {% for error in field.errors %}
-                                    <p>{{ error }}</p>
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between border-b p-4">
+                    <h5 class="text-lg font-medium" id="modalTitle">{{ tituloInsere }}</h5>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-4 flex flex-col space-y-4" id="bodyinsere">
+                    <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
+                    
+                    <!-- Tab Navigation -->
+                    <ul class="flex flex-wrap overflow-x-auto whitespace-nowrap border-b w-full mb-4" id="campaignFormTabs" role="tablist">
+                        <li class="flex-none mr-1 md:mr-2" role="presentation">
+                            <button class="inline-block py-2 px-3 md:px-4 text-sm md:text-base border-b-2 rounded-t-lg font-medium transition-colors duration-200 aria-selected:border-blue-500 aria-selected:text-blue-600 text-gray-500 hover:text-gray-600 hover:border-gray-300" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="true">
+                                <i class="fa fa-info-circle"></i> <span class="hidden sm:inline">Informações Básicas</span><span class="sm:hidden">Info</span>
+                            </button>
+                        </li>
+                        <li class="flex-none mr-1 md:mr-2" role="presentation">
+                            <button class="inline-block py-2 px-3 md:px-4 text-sm md:text-base border-b-2 rounded-t-lg font-medium transition-colors duration-200 aria-selected:border-blue-500 aria-selected:text-blue-600 text-gray-500 hover:text-gray-600 hover:border-gray-300" id="restrictions-tab" data-bs-toggle="tab" data-bs-target="#restrictions" type="button" role="tab" aria-controls="restrictions" aria-selected="false">
+                                <i class="fa fa-ban"></i> <span class="hidden sm:inline">Restrições</span><span class="sm:hidden">Rest.</span>
+                            </button>
+                        </li>
+                        <li class="flex-none mr-1 md:mr-2" role="presentation">
+                            <button class="inline-block py-2 px-3 md:px-4 text-sm md:text-base border-b-2 rounded-t-lg font-medium transition-colors duration-200 aria-selected:border-blue-500 aria-selected:text-blue-600 text-gray-500 hover:text-gray-600 hover:border-gray-300" id="intensifiers-tab" data-bs-toggle="tab" data-bs-target="#intensifiers" type="button" role="tab" aria-controls="intensifiers" aria-selected="false">
+                                <i class="fa fa-star"></i> <span class="hidden sm:inline">Intensificadores</span><span class="sm:hidden">Int.</span>
+                            </button>
+                        </li>
+                        <li class="flex-none mr-1 md:mr-2" role="presentation">
+                            <button class="inline-block py-2 px-3 md:px-4 text-sm md:text-base border-b-2 rounded-t-lg font-medium transition-colors duration-200 aria-selected:border-blue-500 aria-selected:text-blue-600 text-gray-500 hover:text-gray-600 hover:border-gray-300" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab" aria-controls="messages" aria-selected="false">
+                                <i class="fa fa-comment"></i> <span class="hidden sm:inline">Mensagens</span><span class="sm:hidden">Msg</span>
+                            </button>
+                        </li>
+                        <li class="flex-none" role="presentation">
+                            <button class="inline-block py-2 px-3 md:px-4 text-sm md:text-base border-b-2 rounded-t-lg font-medium transition-colors duration-200 aria-selected:border-blue-500 aria-selected:text-blue-600 text-gray-500 hover:text-gray-600 hover:border-gray-300" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button" role="tab" aria-controls="media" aria-selected="false">
+                                <i class="fa fa-image"></i> <span class="hidden sm:inline">Mídia</span><span class="sm:hidden">Mídia</span>
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content w-full" id="campaignFormContent">
+                        <!-- Basic Information Tab -->
+                        <div class="tab-pane block p-2" id="basic" role="tabpanel" aria-labelledby="basic-tab">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto">
+                                {% for field in form %}
+                                    {% if field.name in 'idcampanha,descricao, valor,usa_numero_da_sorte,tipo_cluster_cliente,dtinit,dtfim,enviaemail,acumulativo, filial' %}
+                                        <div class="{% if field.field.widget.input_type != "checkbox" %} relative {% endif %} 
+                                            {% if field.field.widget.input_type == "file" %} flex flex-col items-center {% endif %} 
+                                            {% if field.name == 'filial' %} col-span-1 md:col-span-2 {% endif %}
+                                            {{ field.field.widget.attrs.classdiv|default:'col-span-1 mb-4' }} w-full border border-blue-500 rounded-md focus-within:ring-2 focus-within:ring-blue-300">
+                                            {% if field.field.widget.attrs.select2Label %}
+                                                <label class="block text-sm font-medium text-gray-700 mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                            {% endif %}
+                                            
+                                            {% if field.name == 'filial' %}
+                                                <select id="{{ field.id_for_label }}" name="{{ field.name }}" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500" {% if field.field.required %}required{% endif %} multiple>
+                                                    {% for option in field.field.choices %}
+                                                        <option value="{{ option.0 }}" {% if option.0 in field.value %}selected{% endif %}>{{ option.1 }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            {% else %}
+                                                {{ field }}
+                                            {% endif %}
+                                            
+                                            {% if not field.field.widget.attrs.select2Label %}
+                                                <label class="{% if field.field.widget.input_type != "checkbox" %} absolute left-2 -top-2 text-xs bg-white px-1 text-gray-600 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                                            {% endif %}
+                                            {% if field.errors %}
+                                                <div id="{{ field.id_for_label }}Feedback" class="text-red-500 text-xs mt-1">
+                                                    {% for error in field.errors %}
+                                                        <p>{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
-                        {% endif %}
+                        </div>
+
+                        <!-- Restrictions Tab -->
+                        <div class="tab-pane hidden p-2" id="restrictions" role="tabpanel" aria-labelledby="restrictions-tab">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+                                {% for field in form %}
+                                    {% if field.name in 'restringe_fornec,restringe_marca,restringe_prod,restringe_tipo_client' %}
+                                        <div class="{% if field.field.widget.input_type != "checkbox" %} relative {% endif %}">
+                                            {% if field.name == 'restringe_fornec' %}
+                                                <p class="text-sm font-medium text-gray-700 mb-1">Restrição por fornecedor</p>
+                                            {% elif field.name == 'restringe_marca' %}
+                                                <p class="text-sm font-medium text-gray-700 mb-1">Restrição por marca</p>
+                                            {% elif field.name == 'restringe_prod' %}
+                                                <p class="text-sm font-medium text-gray-700 mb-1">Restrição por produto</p>
+                                            {% elif field.name == 'restringe_tipo_client' %}
+                                                <p class="text-sm font-medium text-gray-700 mb-1">Restrição físico/jurídico</p>
+                                            {% endif %}
+                                            <div class="w-full border border-blue-500 rounded-md focus-within:ring-2 focus-within:ring-blue-300">
+                                                {{ field }}
+                                            </div>
+                                            {% if field.errors %}
+                                                <div id="{{ field.id_for_label }}Feedback" class="text-red-500 text-xs mt-1">
+                                                    {% for error in field.errors %}
+                                                        <p>{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Intensifiers Tab -->
+                        <div class="tab-pane hidden p-2" id="intensifiers" role="tabpanel" aria-labelledby="intensifiers-tab">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto">
+                                {% for field in form %}
+                                    {% if field.name in 'tipointensificador,multiplicador,usafornec,fornecvalor,usamarca,marcavalor,usaprod,prodvalor,acumula_intensificadores,limite_intensificadores' %}
+                                        <div class="{% if field.field.widget.input_type != "checkbox" %} relative {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-span-1 mb-4' }} w-full border border-blue-500 rounded-md focus-within:ring-2 focus-within:ring-blue-300">
+                                            {{ field }}
+                                            <label class="{% if field.field.widget.input_type != "checkbox" %} absolute left-2 -top-2 text-xs bg-white px-1 text-gray-600 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                                            {% if field.errors %}
+                                                <div id="{{ field.id_for_label }}Feedback" class="text-red-500 text-xs mt-1">
+                                                    {% for error in field.errors %}
+                                                        <p>{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Messages Tab -->
+                        <div class="tab-pane hidden p-2" id="messages" role="tabpanel" aria-labelledby="messages-tab">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto">
+                                {% for field in form %}
+                                    {% if field.name in 'mensagemcampanha,texto_mensagem_caixa,texto_cor_mensagem_caixa,url_mensagem_caixa,autorizacao_campanha,regulamento' %}
+                                        <div class="{% if field.field.widget.input_type != "checkbox" %} relative {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-span-1 mb-4' }} w-full border border-blue-500 rounded-md focus-within:ring-2 focus-within:ring-blue-300">
+                                            {{ field }}
+                                            <label class="{% if field.field.widget.input_type != "checkbox" %} absolute left-2 -top-2 text-xs bg-white px-1 text-gray-600 {% endif %} {{ field.field.widget.attrs.classlabel }}" for="{{ field.id_for_label }}">{{ field.label|safe }}</label>
+                                            {% if field.errors %}
+                                                <div id="{{ field.id_for_label }}Feedback" class="text-red-500 text-xs mt-1">
+                                                    {% for error in field.errors %}
+                                                        <p>{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Media Tab -->
+                        <div class="tab-pane hidden p-2" id="media" role="tabpanel" aria-labelledby="media-tab">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto">
+                                {% for field in form %}
+                                    {% if field.name in 'logo_campanha,background_campanha' %}
+                                        <div class="{% if field.field.widget.input_type == "file" %} flex flex-col items-center text-center {% endif %} {{ field.field.widget.attrs.classdiv|default:'col-span-1 mb-4' }} w-full border border-blue-500 rounded-md focus-within:ring-2 focus-within:ring-blue-300">
+                                            <label for="preview_{{ field.name }}" class="block text-sm font-medium text-gray-700 mb-2 {{ field.field.widget.attrs.classlabel }}">{{ field.label }}</label>
+                                            <input type="file" id="{{ field.id_for_label }}" name="{{ field.name }}" class="hidden" onchange="previewImage(this)" accept="image/*">
+                                            <img id="preview_{{ field.name }}" class="rounded border border-gray-200 shadow {{ field.field.widget.attrs.class }}" src="{% if field.value %}{{ field.value }}{% else %}https://via.placeholder.com/1920x1080{% endif %}" alt="Preview Image" style="cursor: pointer" onclick="document.getElementById('{{ field.id_for_label }}').click();">
+                                            {% if field.errors %}
+                                                <div id="{{ field.id_for_label }}Feedback" class="text-red-500 text-xs mt-1">
+                                                    {% for error in field.errors %}
+                                                        <p>{{ error }}</p>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
-                {% endfor %}
-            </div>
-            <div class="modal-footer d-flex justify-content-between flex-nowrap">
-                <button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" name="insert" id="modalSubmitButton" class="btn btn-primary btn-sm col-5">Salvar</button>
-                <button type="submit" name="insert" class="btn btn-primary btn-sm col-5 d-none">Salvar2</button>
+                </div>
+                <div class="flex flex-wrap justify-end border-t gap-2 p-4 max-w-6xl mx-auto">
+                    <button type="button" class="min-w-[120px] bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition duration-150 ease-in-out" data-bs-dismiss="modal">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                    <button type="submit" name="insert" id="modalSubmitButton" class="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition duration-150 ease-in-out">
+                        <i class="fas fa-save mr-2"></i>Salvar
+                    </button>
+                    <button type="submit" name="insert" class="hidden min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">Salvar2</button>
+                </div>
             </div>
         </form>
     </div>
@@ -54,24 +203,92 @@
     <div class="modal-dialog modal-lg">
         <form novalidate class="modal-content needs-validation" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="modal-header">
-                <h5 class="modal-title" id="insertModalPlanilhaLabel">{{tituloPlanilha}}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap" id="bodyinsere">
-                <div class="mb-3 mt-3 col-12">
-                    <input type="file" class="form-control" id="planilhas" name="planilhas" placeholder="Selecione uma planilha no modelo abaixo" required>
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between border-b p-4">
+                    <h5 class="text-lg font-medium" id="insertModalPlanilhaLabel">{{tituloPlanilha}}</h5>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-            <div class="modal-footer d-flex justify-content-between flex-nowrap">
-                <button type="button" class="btn btn-secondary btn-sm col-4" data-bs-dismiss="modal">Cancelar</button>
-                <a href="/baixar-modelo/{{tipolink}}/" class="btn btn-info btn-sm col-3">Baixar modelo</a>
-                <button type="submit" name="insertp" class="btn btn-primary btn-sm col-4">Salvar</button>
-                <button type="submit" name="insertp2" class="btn btn-primary d-none">Salvar</button>
+                <div class="p-4 flex flex-wrap" id="bodyinsere">
+                    <div class="w-full my-3">
+                        <label for="planilhas"
+                            class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 ease-in-out"
+                            id="drop-zone-planilha">
+                            <div id="upload-placeholder" class="flex flex-col items-center justify-center transition-opacity duration-300 ease-in-out">
+                                <svg class="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M4 12l8-8m0 0l8 8m-8-8v16"/>
+                                </svg>
+                                <p class="text-sm font-medium text-gray-600">Clique ou arraste o arquivo</p>
+                                <p class="text-xs text-gray-400">.xls, .xlsx até 25MB</p>
+                            </div>
+                            <div id="upload-success" class="hidden flex-col items-center justify-center text-green-600 transition-opacity duration-300 ease-in-out">
+                                <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <p class="text-sm font-semibold">Arquivo pronto para envio</p>
+                            </div>
+                            <input id="planilhas" name="planilhas" type="file" class="hidden" required />
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between border-t p-4 space-x-2">
+                    <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded" data-bs-dismiss="modal">Cancelar</button>
+                    <a href="/baixar-modelo/{{tipolink}}/" class="bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded">
+                        <i class="fas fa-download mr-1"></i> Baixar modelo
+                    </a>
+                    <button type="submit" name="insertp" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">Salvar</button>
+                    <button type="submit" name="insertp2" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">Salvar</button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dropZone = document.getElementById('drop-zone-planilha');
+    const fileInput = document.getElementById('planilhas');
+    const placeholder = document.getElementById('upload-placeholder');
+    const success = document.getElementById('upload-success');
+
+    if (!dropZone || !fileInput) return;
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, e => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, e => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        });
+    });
+
+    dropZone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            placeholder.classList.add('hidden');
+            success.classList.remove('hidden');
+            dropZone.classList.add('border-green-500', 'bg-green-50');
+            dropZone.classList.remove('border-gray-300');
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            placeholder.classList.add('hidden');
+            success.classList.remove('hidden');
+            dropZone.classList.add('border-green-500', 'bg-green-50');
+            dropZone.classList.remove('border-gray-300');
+        }
+    });
+});
+</script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
 
 <script>
@@ -80,11 +297,55 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         });
+
+        // Tab navigation with required fields validation and icon feedback
+        const tabButtons = Array.from(document.querySelectorAll('#campaignFormTabs button'));
+        tabButtons.forEach((btn) => {
+            btn.addEventListener('show.bs.tab', function (e) {
+                const currentTab = document.querySelector('.tab-pane.active');
+                if (currentTab && !btn.classList.contains('active')) {
+                    const requiredFields = currentTab.querySelectorAll('input[required], select[required], textarea[required]');
+                    let allValid = true;
+
+                    requiredFields.forEach(field => {
+                        if (!field.value) {
+                            field.classList.add('is-invalid');
+                            allValid = false;
+                        } else {
+                            field.classList.remove('is-invalid');
+                        }
+                    });
+
+                    // Find the tab button corresponding to the current tab
+                    const tabButton = document.querySelector(`#campaignFormTabs button[data-bs-target="#${currentTab.id}"]`);
+                    if (tabButton) {
+                        tabButton.classList.remove('text-success', 'text-warning', 'text-danger');
+                        tabButton.innerHTML = tabButton.innerHTML.replace(/\s*<i class="fa fa-(check-circle|exclamation-triangle|exclamation-circle)"><\/i>/g, '');
+                    }
+
+                    if (!allValid) {
+                        e.preventDefault();
+                        if (tabButton) {
+                            tabButton.classList.add('text-danger');
+                            tabButton.innerHTML += ' <i class="fa fa-exclamation-circle"></i>';
+                        }
+                        alert('Preencha todos os campos obrigatórios antes de avançar.');
+                    } else {
+                        if (tabButton) {
+                            tabButton.classList.add('text-success');
+                            tabButton.innerHTML += ' <i class="fa fa-check-circle"></i>';
+                        }
+                    }
+                }
+            });
+        });
     });
 
+    // Update modal shown event
     $('#insertEditModal').on('shown.bs.modal', function () {
+        // Initialize SummerNote editor
         $('.summernote').summernote({
-            height: 300,  // Altura da caixa de texto do editor
+            height: 200,
             toolbar: [
                 ['style', ['bold', 'italic', 'underline', 'clear']],
                 ['font', ['strikethrough', 'superscript', 'subscript']],
@@ -94,8 +355,73 @@
                 ['height', ['height']]
             ]
         });
+        
+        // Initialize select2 for filial multiselect
+        $('#id_filial').select2({
+            width: '100%',
+            placeholder: 'Selecione as filiais',
+            allowClear: true,
+            dropdownParent: $('#insertEditModal')
+        });
+        
+        // Initialize tabs if not already initialized
+        var firstTabEl = document.querySelector('#campaignFormTabs li:first-child button')
+        if (firstTabEl) {
+            new bootstrap.Tab(firstTabEl).show()
+        }
+        
         $('.dropdown-toggle').dropdown();
     });
+
+    // Improved: Remove duplicated validation icons and update only once
+    function validateTabFields(tabId) {
+        const tab = document.querySelector(tabId);
+        if (!tab) return;
+        const fields = tab.querySelectorAll('input, select, textarea');
+        const tabButton = document.querySelector(`[data-bs-target="${tabId}"]`);
+        let isValid = true;
+        let isComplete = true;
+        fields.forEach(field => {
+            if (field.hasAttribute('required') && !field.value) {
+                isComplete = false;
+            }
+            if (field.classList.contains('is-invalid')) {
+                isValid = false;
+            }
+        });
+        // Remove previous icons and classes
+        tabButton.classList.remove('text-danger', 'text-warning', 'text-success');
+        tabButton.innerHTML = tabButton.innerHTML.replace(/\s*<i class="fa fa-(exclamation-circle|exclamation-triangle|check-circle)"><\/i>/g, '');
+        // Add icon according to state
+        if (!isValid) {
+            tabButton.classList.add('text-danger');
+            tabButton.innerHTML += ' <i class="fa fa-exclamation-circle"></i>';
+        } else if (!isComplete) {
+            tabButton.classList.add('text-warning');
+            tabButton.innerHTML += ' <i class="fa fa-exclamation-triangle"></i>';
+        } else {
+            tabButton.classList.add('text-success');
+            tabButton.innerHTML += ' <i class="fa fa-check-circle"></i>';
+        }
+    }
+
+    // Call this function whenever a tab is shown or fields are changed
+    document.querySelectorAll('#campaignFormTabs button[data-bs-toggle="tab"]').forEach(tabButton => {
+        tabButton.addEventListener('shown.bs.tab', e => {
+            const target = e.target.getAttribute('data-bs-target');
+            validateTabFields(target);
+        });
+    });
+    // Monitor field changes to update tab validation indicators
+    document.querySelectorAll('#insertEditModal input, #insertEditModal select, #insertEditModal textarea').forEach(field => {
+        field.addEventListener('change', () => {
+            const tabPane = field.closest('.tab-pane');
+            if (tabPane) {
+                validateTabFields('#' + tabPane.id);
+            }
+        });
+    });
+
 </script>
 <script>
     // Função para gerar pré-visualização da imagem e gerenciar inputs text
@@ -120,7 +446,7 @@ function previewImage(input) {
         var insertEditModal = document.getElementById('insertEditModal');
         
         insertEditModal.addEventListener('show.bs.modal', function () {
-            fetch("{% url 'get_csrf_token' %}")  // Substitua 'get_csrf_token' pela URL da view criada
+            fetch("{% url 'get_csrf_token' %}")
                 .then(response => response.json())
                 .then(data => {
                     // Atualiza o campo CSRF token
@@ -132,7 +458,7 @@ function previewImage(input) {
     
     function loadEditData(id) {
         $.ajax({
-            url: '/get_data/', // Endpoint que retorna os dados da campanha
+            url: '/get_data/',
             method: 'GET',
             data: { 
                 id: id,
@@ -142,7 +468,7 @@ function previewImage(input) {
                 transation: 'N'
             },
             success: function(data) {
-                console.log(data)
+                console.log(data);
                 var modal = $('#insertEditModal');
                 var form = modal.find('form');
                 form[0].reset();
@@ -152,12 +478,11 @@ function previewImage(input) {
     
                 modal.find('input, select, textarea').each(function() {
                     var input = $(this);
-                    var fieldName = input.attr('name'); // Obtém o nome do campo
+                    var fieldName = input.attr('name');
                 
                     if (fieldName && data[fieldName] !== undefined) {
                         var value = data[fieldName];
                 
-                        // Verifica se o campo é do tipo date ou datetime-local
                         if (input.is('input[type="date"]')) {
                             if (value) {
                                 var date = new Date(value);
@@ -173,36 +498,31 @@ function previewImage(input) {
                         } else if (input.is('input[type="file"]')) {
                             const previewId = 'preview_' + input.attr('name');
 
-                            // Se uma URL for passada, atualize o preview e adicione o input text
                             if (value) {
-                                // Exibir a URL da imagem no preview
                                 document.getElementById(previewId).src = value;
                             } else {
-                                // Caso não haja valor, define a imagem padrão no preview
                                 document.getElementById(previewId).src = 'https://via.placeholder.com/150';
                             }
                         } else if (input.is('select')) {
                             var values = Array.isArray(value) ? value : [value];
 
-                            // Verificar se o valor é uma string única com múltiplos valores separados por vírgula
                             if (values.length === 1 && typeof values[0] === 'string' && values[0].includes(',')) {
-                                values = values[0].split(',').map(val => val.trim()); // Divide a string por vírgula e remove espaços em branco
+                                values = values[0].split(',').map(val => val.trim());
                             }
-                            // Array para armazenar os valores válidos
+                            
                             var validValues = [];
 
                             for (let i = 0; i < values.length; i++) {
-                                let currentValue = String(values[i]).trim(); // Converte o valor para string e remove espaços em branco
-
-                                // Verifica se o valor atual existe entre as opções do select
+                                let currentValue = String(values[i]).trim();
                                 var optionExists = input.find('option[value="' + currentValue + '"]').length > 0;
 
                                 if (optionExists) {
-                                    validValues.push(currentValue); // Se o valor for válido, adiciona ao array de valores válidos
+                                    validValues.push(currentValue);
                                 } else {
                                     console.warn('Valor não encontrado nas opções do select: ' + fieldName + ' = ' + currentValue);
                                 }
                             }
+                            
                             if (validValues.length > 0) {
                                 if (input.hasClass('select2')) {
                                     input.val(validValues).trigger('change');

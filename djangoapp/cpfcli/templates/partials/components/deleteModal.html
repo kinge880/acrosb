@@ -7,26 +7,30 @@
         <form class="modal-content needs-validation" method="POST">
             {% csrf_token %}
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Deletar</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body modal-body1 d-flex justify-content-start flex-wrap">
-                    <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
-                    <div class="text-center w-100 mt-5 mb-4">
-                        <i class="fa-solid fa-circle-xmark fa-6x " style="color: Tomato;"></i>
+                <div class="flex flex-col">
+                    <div class="flex items-center justify-between border-b p-4">
+                        <h5 class="text-lg font-medium" id="modalTitle">Deletar</h5>
+                        <button type="button" class="text-gray-400 hover:text-gray-500" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="text-center w-100 mb-3">
-                        <h4 class="modal-title">Você tem certeza?</h4>
+                    <div class="flex flex-wrap justify-start p-6">
+                        <input type="hidden" name="{{primarykey}}" id="id_{{primarykey}}"/>
+                        <div class="w-full mt-5 mb-4 text-center">
+                            <i class="fa-solid fa-circle-xmark text-red-500 text-6xl"></i>
+                        </div>
+                        <div class="w-full mb-3 text-center">
+                            <h4 class="text-xl font-bold">Você tem certeza?</h4>
+                        </div>
+                        <div class="w-full">
+                            <p class="text-center text-gray-600">Deseja realmente deletar? A ação não pode ser desfeita</p>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <p class="text-center">Deseja realmente deletar? A ação não pode ser desfeita</p>
+                    <div class="flex items-center justify-center border-t p-4 space-x-2">
+                        <button type="button" class="w-1/2 bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" name="delete" id="modalSubmitButton" class="w-1/2 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded">Deletar</button>
+                        <button type="submit" name="delete2" class="hidden w-1/2 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded">Deletar</button>
                     </div>
-                </div>
-                <div class="modal-footer d-flex justify-content-center flex-nowrap">
-                    <button type="button" class="btn btn-secondary col-6" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" name="delete" id="modalSubmitButton" class="btn btn-danger col-6">Deletar</button>
-                    <button type="submit" name="delete2"  class="btn btn-danger col-6 d-none">Deletar</button>
                 </div>
             </div>
         </form>

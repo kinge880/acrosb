@@ -47,6 +47,9 @@ def login(request):
         senha = request.POST.get("password")
         
         user = authenticate(username=usuario, password=senha)
+        
+        print(f'Usuário: {usuario}, Senha: {senha}')
+        print(f'Usuário autenticado: {user}')
 
         if user:
             loginDjango(request, user)
@@ -279,30 +282,37 @@ def cadastro_cliente(request):
 
 @login_required(login_url="/accounts/login/")
 def config_user_page(request):
+    # Obtém o profile e empresa do usuário logado uma única vez
+    profile = Profile.objects.get(user=request.user)
+    idempres = empresa.objects.get(id=profile.idempresa.id)
+    instance = PresentationSettings.objects.first() or PresentationSettings()
+
     if request.method == 'POST':
-        profile = Profile.objects.get(user=request.user)
-        idempres = empresa.objects.get(id=profile.idempresa.id)
-        
+        # Cria uma cópia dos dados do formulário e adiciona o idempresa
         dictform = request.POST.copy()
         dictform['idempresa'] = idempres
-        
-        form = PresentationSettingsForm(dictform, request.FILES, instance=PresentationSettings.objects.first())
+
+        # Inicializa o formulário com os dados do POST e arquivos enviados
+        form = PresentationSettingsForm(dictform, request.FILES, instance=instance)
+
         if form.is_valid():
             form.save()
             messages.success(request, 'Configurações salvas com sucesso!')
             return redirect('userpagepanel')
         else:
+            # Exibe mensagem de erro geral
             messages.error(request, 'Erro ao salvar configurações. Verifique os campos e tente novamente.')
-            # Adiciona os erros de validação aos messages
+            # Exibe mensagens de erro específicas de cada campo
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"Erro no campo '{field}': {error}")
     else:
-        instance = PresentationSettings.objects.first() or PresentationSettings()
+        # Inicializa o formulário com os dados atuais
         form = PresentationSettingsForm(instance=instance)
 
     context = {
-        'form': form
+        'form': form,
+        'title': 'Painel do Usuário'
     }
     return render(request, 'config/user_panel.html', context)
 
