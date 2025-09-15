@@ -3,47 +3,85 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-    <div class="container-fluid vh-75 d-flex flex-start flex-wrap">
-        <div class="container-fluid">
-            {% include 'partials/message.html' %}
-            <div class="mt-3 table-responsive">
-                <table class="table tableSearch table-primary table-hover table-striped">
-                    <thead>
+<div class="container-fluid vh-75 d-flex flex-start flex-wrap">
+    <div class="container-fluid">
+        {% include 'partials/message.html' %}
+        <div class="mt-3 table-responsive">
+            <table class="table tableSearch table-primary table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-start">CÓDIGO CAMPANHA</th>
+                        <th class="text-start">CODFORNEC</th>
+                        <th class="text-start">DESCRIÇÃO</th>
+                        <th class="text-start">DT CADASTRO</th>
+                        <th class="text-start">TIPO</th>
+                        <th class="text-start">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dado in dados %}
                         <tr>
-                            <th class="text-start">CÓDIGO CAMPANHA</th>
-                            <th class="text-start">CODFORNEC</th>
-                            <th class="text-start">DESCRIÇÃO</th>
-                            <th class="text-start">DT CADASTRO</th>
-                            <th class="text-start">TIPO</th>
-                            <th class="text-start">AÇÕES</th>
+                            <td class="text-start">{{ dado.idcampanha }}</td>
+                            <td class="text-start">{{ dado.codfornec }}</td>
+                            <td class="text-start">{{ dado.nomefornec }}</td>
+                            <td class="text-start">{{ dado.dtmov }}</td>
+                            <td class="text-start">{{ dado.tipo }}</td>
+                            <td class="text-start col-2">
+                                <button 
+                                    type="button" 
+                                    class="btn btn-danger btn-sm delete-btn" 
+                                    onclick="loadDataDelete({{ dado.id }})">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for dado in dados %}
-                            <tr>
-                                <td class="text-start">{{dado.idcampanha}}</td>
-                                <td class="text-start">{{dado.codfornec}}</td>
-                                <td class="text-start">{{dado.nomefornec}}</td>
-                                <td class="text-start">{{dado.dtmov}}</td>
-                                <td class="text-start">{{dado.tipo}}</td>
-                                <td class="text-start col-2">
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-danger btn-sm delete-btn" 
-                                        onclick="loadDataDelete({{dado.id}})">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Nenhum fornecedor encontrado.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-                {% include 'partials/components/insertmodal.html' %}
-                {% include 'partials/components/deleteModal.html' %}
-                {% include 'select2filtros.html' %}
+            <!-- Paginação -->
+            <div class="mt-3 d-flex justify-content-center">
+                <nav>
+                    <ul class="pagination">
+                        {% if dados.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">&laquo; Primeiro</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ dados.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo; Primeiro</span></li>
+                            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                        {% endif %}
+
+                        <li class="page-item disabled">
+                            <span class="page-link">Página {{ dados.number }} de {{ dados.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if dados.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ dados.next_page_number }}">Próxima</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ dados.paginator.num_pages }}">Última &raquo;</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+                            <li class="page-item disabled"><span class="page-link">Última &raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
             </div>
-        </div>
-    </div> 
 
+            {% include 'partials/components/insertmodal.html' %}
+            {% include 'partials/components/deleteModal.html' %}
+            {% include 'select2filtros.html' %}
+        </div>
+    </div>
+</div>
 {% endblock %}
